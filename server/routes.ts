@@ -92,14 +92,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: function (req, file, cb) {
+      // Check the mimetype first (more reliable)
+      const allowedMimeTypes = [
+        'image/jpeg', 
+        'image/png', 
+        'image/gif', 
+        'application/pdf', 
+        'application/msword', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ];
+      
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        return cb(null, true);
+      }
+      
+      // Fallback to extension checking for compatibility
       const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
       const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-      const mimetype = filetypes.test(file.mimetype);
       
-      if (mimetype && extname) {
+      if (extname) {
         return cb(null, true);
       } else {
-        cb(new Error("Invalid file type. Only JPEG, PNG, GIF, PDF, DOC, and DOCX are allowed."));
+        cb(new Error("Unsupported image type. Supported types are: ('.png', '.jpg', '.webp', '.gif')"));
       }
     }
   });
