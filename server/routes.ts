@@ -369,12 +369,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Set the subscription price based on the plan
-      // Monthly = $30, Weekly = $10, or the provided amount
       let finalAmount = amount;
+      
+      // Standard pricing tiers
       if (plan === 'monthly') {
-        finalAmount = 30;
-      } else if (plan === 'weekly') {
-        finalAmount = 10;
+        finalAmount = 50;
+      } else if (plan === 'annual') {
+        finalAmount = 1000;
+      } else if (plan === 'basic_document') {
+        finalAmount = 5.99;
+      } 
+      // Low-income pricing tiers
+      else if (plan === 'low_income_year') {
+        finalAmount = 25;
+      } else if (plan === 'low_income_doc') {
+        finalAmount = 0.99;
       }
       
       const paymentIntent = await stripe.paymentIntents.create({
@@ -382,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: "cad",
         metadata: {
           plan,
-          type: 'subscription'
+          type: plan.includes('_doc') ? 'one-time' : 'subscription'
         }
       });
       

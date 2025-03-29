@@ -1,0 +1,53 @@
+<section id="pricing" style="background-color: #f5f5f5; padding: 60px 20px; font-family: Arial, sans-serif;">
+  <div style="max-width: 1000px; margin: auto;">
+    <h2 style="text-align: center; font-size: 36px; color: #333;">Choose Your Access Plan</h2>
+    <p style="text-align: center; font-size: 18px; color: #555; max-width: 700px; margin: 20px auto;">
+      Whether you need full support or just one letter, we’ve got an option for you. No lawyers. No stress. Just help.
+    </p>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin-top: 40px;">
+
+      <!-- Monthly Plan -->
+      <div style="flex: 1 1 300px; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h3 style="font-size: 24px; color: #000;">Standard Monthly</h3>
+        <p style="font-size: 28px; color: #000;"><strong>$50/month</strong></p>
+        <ul style="list-style: none; padding-left: 0; line-height: 1.6;">
+          <li>Unlimited form access</li>
+          <li>All legal tools included</li>
+          <li>Priority updates + features</li>
+        </ul>
+        <button style="margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Subscribe Monthly</button>
+      </div>
+
+      <!-- Annual Plan -->
+      <div style="flex: 1 1 300px; background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <h3 style="font-size: 24px; color: #000;">Standard Yearly</h3>
+        <p style="font-size: 28px; color: #000;"><strong>$1000/year</strong></p>
+        <ul style="list-style: none; padding-left: 0; line-height: 1.6;">
+          <li>Unlimited form access</li>
+          <li>Best for advocates & legal orgs</li>
+          <li>VIP feature access</li>
+        </ul>
+        <button style="margin-top: 20px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">Subscribe Yearly</button>
+      </div>
+
+      <!-- Low Income Option -->
+      <div style="flex: 1 1 300px; background-color: #222; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); color: #fff;">
+        <h3 style="font-size: 24px;">Low-Income Access</h3>
+        <p style="font-size: 28px;"><strong>$25/year</strong></p>
+        <p style="font-size: 16px; color: #ccc;">OR $0.99 per form</p>
+        <ul style="list-style: none; padding-left: 0; line-height: 1.6; color: #ccc;">
+          <li>No proof required</li>
+          <li>Self-declared support tier</li>
+          <li>Same access, lower cost</li>
+        </ul>
+        <button style="margin-top: 20px; padding: 10px 20px; background-color: #ff4f4f; color: white; border: none; border-radius: 5px;">Choose Support Tier</button>
+      </div>
+
+    </div>
+
+    <p style="text-align: center; font-size: 14px; margin-top: 40px; color: #777;">
+      We believe justice should be accessible to all. If you're facing financial hardship, choose the support tier that works for you.
+    </p>
+  </div>
+</section>

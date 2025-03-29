@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useLocation } from 'wouter';
-import { AlertCircle, Check, Loader2 } from 'lucide-react';
+import { AlertCircle, Check, Loader2, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -93,19 +93,14 @@ export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState("");
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "weekly" | "basic_document">("monthly");
-  const [planAmount, setPlanAmount] = useState(30);
-
-  const handlePlanChange = (value: "monthly" | "weekly" | "basic_document") => {
-    setSelectedPlan(value);
-    if (value === "monthly") {
-      setPlanAmount(30);
-    } else if (value === "weekly") {
-      setPlanAmount(10);
-    } else if (value === "basic_document") {
-      setPlanAmount(5.99);
-    }
-  };
+  const [selectedPlan, setSelectedPlan] = useState<
+    "monthly" | 
+    "annual" | 
+    "basic_document" | 
+    "low_income_year" |
+    "low_income_doc"
+  >("monthly");
+  const [planAmount, setPlanAmount] = useState(50);
   
   useEffect(() => {
     // Create subscription payment intent
@@ -143,115 +138,192 @@ export default function Subscribe() {
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-4">AI Assistant Subscription</h1>
+        <h1 className="text-3xl font-bold mb-4">AI-Powered Legal Help</h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Get unlimited access to our AI assistant to help you with your legal questions and document preparation.
+          Access powerful legal document tools and AI assistance to help you fight back against unfair treatment.
         </p>
       </div>
       
+      {/* Pricing Tiers */}
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Standard Access</h2>
+            
+            <Card className={`hover:shadow-md transition-shadow ${selectedPlan === "monthly" ? "border-2 border-primary" : ""}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <span>Monthly Unlimited</span>
+                  <span className="text-primary">$50/month</span>
+                </CardTitle>
+                <CardDescription>Unlimited full access</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 pb-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Unlimited AI assistant access</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> All document templates</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Premium support</div>
+                </div>
+                <Button 
+                  variant={selectedPlan === "monthly" ? "default" : "outline"} 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setSelectedPlan("monthly");
+                    setPlanAmount(50);
+                  }}
+                >
+                  {selectedPlan === "monthly" ? "Selected" : "Select Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className={`hover:shadow-md transition-shadow ${selectedPlan === "annual" ? "border-2 border-primary" : ""}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <span>Annual Access</span>
+                  <span className="text-primary">$1000/year</span>
+                </CardTitle>
+                <CardDescription>For professionals, advocates, etc.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 pb-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Save $200 compared to monthly</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Access to all future templates</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Priority customer service</div>
+                </div>
+                <Button 
+                  variant={selectedPlan === "annual" ? "default" : "outline"} 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setSelectedPlan("annual");
+                    setPlanAmount(1000);
+                  }}
+                >
+                  {selectedPlan === "annual" ? "Selected" : "Select Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className={`hover:shadow-md transition-shadow ${selectedPlan === "basic_document" ? "border-2 border-primary" : ""}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <span>Pay-Per-Document</span>
+                  <span className="text-primary">$5.99 each</span>
+                </CardTitle>
+                <CardDescription>Pay as you go for any legal letter</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 pb-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Purchase only what you need</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> No recurring charges</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Email delivery included</div>
+                </div>
+                <Button 
+                  variant={selectedPlan === "basic_document" ? "default" : "outline"} 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setSelectedPlan("basic_document");
+                    setPlanAmount(5.99);
+                  }}
+                >
+                  {selectedPlan === "basic_document" ? "Selected" : "Select Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-gray-800 border-b pb-2">Low-Income Access (Honor System)</h2>
+            
+            <Alert className="bg-blue-50 border-blue-200 mb-4">
+              <Info className="h-4 w-4 text-blue-600" />
+              <AlertTitle className="text-blue-800">We believe access to justice is a right, not a privilege</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                If you're struggling financially, you can choose a lower-cost option—no proof required.
+              </AlertDescription>
+            </Alert>
+            
+            <Card className={`hover:shadow-md transition-shadow ${selectedPlan === "low_income_year" ? "border-2 border-primary" : ""}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <span>Annual Access</span>
+                  <span className="text-primary">$25/year</span>
+                </CardTitle>
+                <CardDescription>Discounted subscription for those who need it</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 pb-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Full access to all features</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Renewed yearly at discounted rate</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Same support as standard plans</div>
+                </div>
+                <Button 
+                  variant={selectedPlan === "low_income_year" ? "default" : "outline"} 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setSelectedPlan("low_income_year");
+                    setPlanAmount(25);
+                  }}
+                >
+                  {selectedPlan === "low_income_year" ? "Selected" : "Select Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <Card className={`hover:shadow-md transition-shadow ${selectedPlan === "low_income_doc" ? "border-2 border-primary" : ""}`}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <span>Budget Document</span>
+                  <span className="text-primary">$0.99 each</span>
+                </CardTitle>
+                <CardDescription>Budget-friendly, no-questions-asked option</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0 pb-4">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Same quality documents</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Pay for only what you need</div>
+                  <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Still includes email delivery</div>
+                </div>
+                <Button 
+                  variant={selectedPlan === "low_income_doc" ? "default" : "outline"} 
+                  className="w-full mt-4"
+                  onClick={() => {
+                    setSelectedPlan("low_income_doc");
+                    setPlanAmount(0.99);
+                  }}
+                >
+                  {selectedPlan === "low_income_doc" ? "Selected" : "Select Plan"}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            <div className="bg-gray-50 p-4 rounded-lg border mt-6">
+              <p className="text-sm text-gray-700">
+                <strong>Our commitment to accessibility:</strong> We offer low-income options on an honor system because we believe fighting for your rights shouldn't be limited by financial barriers. We trust our community to choose the option that truly reflects their situation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Payment Section */}
       <div className="max-w-lg mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">Choose Your Plan</CardTitle>
-            <CardDescription className="text-center">Select the plan that works best for you</CardDescription>
+            <CardTitle>Complete Your Purchase</CardTitle>
+            <CardDescription>Secure payment processing via Stripe</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-6">
-              <RadioGroup 
-                value={selectedPlan} 
-                onValueChange={(value) => handlePlanChange(value as "monthly" | "weekly" | "basic_document")}
-                className="space-y-4"
-              >
-                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "monthly" ? "border-primary" : "border-gray-200"}`}>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value="monthly" id="monthly" />
-                    <Label htmlFor="monthly" className="flex-1 cursor-pointer">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-lg">Premium Unlimited</p>
-                          <div className="flex items-center">
-                            <p className="text-primary font-semibold mr-2">$30/month</p>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Most Value</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  {selectedPlan === "monthly" && (
-                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Unlimited access to AI legal assistant</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Premium document templates</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Priority support</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> In-depth document reviews</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> File unlimited disputes</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "weekly" ? "border-primary" : "border-gray-200"}`}>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value="weekly" id="weekly" />
-                    <Label htmlFor="weekly" className="flex-1 cursor-pointer">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-lg">Weekly Access</p>
-                          <p className="text-primary font-semibold">$10/week</p>
-                        </div>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  {selectedPlan === "weekly" && (
-                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> 7 days of AI legal assistance</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Standard document templates</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Standard support</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Basic document reviews</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> File up to 3 disputes per week</div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "basic_document" ? "border-primary" : "border-gray-200"}`}>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <RadioGroupItem value="basic_document" id="basic_document" />
-                    <Label htmlFor="basic_document" className="flex-1 cursor-pointer">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-bold text-lg">Single Document</p>
-                          <div className="flex items-center">
-                            <p className="text-primary font-semibold mr-2">$5.99 one-time</p>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Basic</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </Label>
-                  </div>
-                  
-                  {selectedPlan === "basic_document" && (
-                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Single document generation</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Basic templates only</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> No AI assistance</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Email support only</div>
-                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Valid for 1 document only</div>
-                    </div>
-                  )}
-                </div>
-              </RadioGroup>
-              
-              <Separator className="my-6" />
-              
-              <div className="flex justify-between font-semibold">
-                <span>Total</span>
-                <span>${planAmount} CAD</span>
+              <div className="flex justify-between font-medium pb-4 mb-4 border-b">
+                <span>Selected Plan:</span>
+                <span className="text-primary font-semibold">${planAmount} CAD</span>
               </div>
+              
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <SubscriptionForm />
+              </Elements>
             </div>
-            
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <SubscriptionForm />
-            </Elements>
           </CardContent>
           <CardFooter className="flex justify-center text-xs text-gray-500">
             <div className="text-center">
