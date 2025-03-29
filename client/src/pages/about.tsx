@@ -17,52 +17,58 @@ export default function About() {
           </p>
         </div>
 
-        {/* Founder story */}
-        <Card className="border-none shadow-lg overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-2xl font-bold text-red-700">Founder's Story: Why I Built SmartDispute.ai Canada</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Founder story - dark themed section */}
+        <div className="bg-gray-900 text-white rounded-lg shadow-xl overflow-hidden">
+          <div className="max-w-5xl mx-auto px-6 py-12">
+            <h2 className="text-3xl font-bold text-red-500 mb-8">Why I Built SmartDispute.ai Canada</h2>
+            
             <div className="md:flex gap-8 items-start">
               <div className="mb-6 md:mb-0 md:w-1/3 flex-shrink-0">
                 <img 
                   src={teresaPhoto} 
-                  alt="Teresa, Founder of SmartDispute.ai Canada" 
+                  alt="Teresa Bertin, Founder of SmartDispute.ai Canada" 
                   className="rounded-lg shadow-lg w-full h-auto object-cover aspect-square"
                 />
               </div>
-              <div className="space-y-4 text-gray-700 md:w-2/3">
-                <p className="font-medium italic">
-                  I didn't build this platform because I wanted to.
+              
+              <div className="space-y-4 md:w-2/3">
+                <p className="text-lg leading-relaxed">
+                  I didn't build this platform because I wanted to.<br />  
                   I built it because I had no choice.
                 </p>
-                <p>
-                  My name is Teresa. I'm a Métis mother, self-represented advocate, and survivor of a broken system. Over the past two years, I've fought tooth and nail to protect my kids from unsafe housing, health threats, and systemic neglect. My two-year-old son was hospitalized with respiratory illness because of untreated mold. I was served eviction notices while begging for repairs. I watched agencies like By-law and CAS weaponize their power instead of offering help. And I did it all without a lawyer, because I couldn't afford one—and most Canadians can't.
+                
+                <p className="text-lg leading-relaxed">
+                  My name is <strong>Teresa Bertin</strong>. I'm a Métis mother, self-represented advocate, and survivor of a broken system. Over the past two years, I've fought tooth and nail to protect my kids from unsafe housing, health threats, and systemic neglect.
+                  My two-year-old son was hospitalized with respiratory illness because of untreated mold. I was served eviction notices while begging for repairs. I watched agencies like By-law and CAS weaponize their power instead of offering help. And I did it all without a lawyer—because I couldn't afford one.
                 </p>
-                <p>
-                  I learned to draft legal documents on my own.
-                  I filed T2 and T6 applications.
-                  I documented everything.
-                  And I won battles I was never supposed to win.
+                
+                <p className="text-lg leading-relaxed">
+                  I learned to draft legal documents on my own. I filed T2 and T6 applications. I documented everything. And I won battles I was never supposed to win.
                 </p>
-                <p>
-                  Through that fight, I realized something: it's not that people don't want to fight back—it's that they don't know how. The system is designed to confuse and exhaust you. Legal help is a luxury. But your rights? Your rights are not.
+                
+                <p className="text-lg leading-relaxed">
+                  Through that fight, I realized something: <em>it's not that people don't want to fight back—it's that they don't know how.</em> The system is designed to confuse and exhaust you. Legal help is a luxury. But your rights? Your rights are not.
                 </p>
-                <p>
-                  That's why I created SmartDispute.ai Canada—an AI-powered legal assistant that helps everyday people fight back, one letter at a time. It starts with credit disputes and housing complaints, and it's growing into a full-blown toolkit for self-represented warriors. No legalese. No $300/hour bills. Just help, when you need it most.
+                
+                <p className="text-lg leading-relaxed">
+                  That's why I created <strong>SmartDispute.ai Canada</strong>—an AI-powered legal assistant that helps everyday people fight back, one letter at a time. It starts with credit disputes and housing complaints, and it's growing into a full-blown toolkit for self-represented warriors.
                 </p>
-                <p className="font-bold">
-                  This isn't just an app.<br/>
-                  It's my resistance.<br/>
-                  It's my answer to the question: "What now?"
+                
+                <p className="text-lg leading-relaxed font-medium">
+                  This isn't just an app.<br />  
+                  It's my resistance.<br />  
+                  It's my answer to the question: <em>"What now?"</em>
                 </p>
-                <p className="font-medium">
+                
+                <p className="text-lg leading-relaxed">
                   And if it helps you protect your home, fix your credit, or keep your family together—then it's already working.
                 </p>
+                
+                <p className="text-gray-400 text-right pt-6 italic">— Teresa Bertin, Founder</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <Separator />
 

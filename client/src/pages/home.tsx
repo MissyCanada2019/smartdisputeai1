@@ -7,7 +7,10 @@ import {
   Gavel, 
   FileText, 
   DollarSign, 
-  Shield 
+  Shield,
+  Play,
+  Star,
+  User 
 } from "lucide-react";
 
 export default function Home() {
@@ -132,44 +135,144 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Features */}
+      {/* Dispute Assistant Section */}
       <div className="py-16 bg-white rounded-lg shadow-sm">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">How LegalAssist Works</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Dispute Assistant</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Our simple process makes it easy to create professional legal documents at a fraction of traditional costs.
+            Our guided process makes it easy to create powerful legal documents that get results.
           </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto px-4">
-          <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="h-8 w-8 text-primary" />
+        {/* Video explainer placeholder - can be replaced with actual video later */}
+        <div className="max-w-3xl mx-auto mb-12 bg-gray-100 rounded-lg overflow-hidden relative">
+          <div className="aspect-w-16 aspect-h-9">
+            <div className="w-full h-full flex items-center justify-center p-4 text-center">
+              <div>
+                <Play className="h-16 w-16 text-primary/50 mx-auto mb-4" />
+                <p className="text-lg font-medium">Explainer Video Coming Soon</p>
+                <p className="text-sm text-gray-500">Learn how SmartDispute.ai helps you fight back in just 30 seconds</p>
+              </div>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Choose Your Document</h3>
-            <p className="text-gray-600">
-              Select from document templates specifically designed for government agency disputes.
-            </p>
+          </div>
+        </div>
+        
+        {/* Step by step process with numbers */}
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Line connecting steps on desktop */}
+            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-0.5 bg-primary/20 z-0"></div>
+            
+            {/* Step 1 */}
+            <div className="relative z-10">
+              <div className="flex flex-col items-center">
+                <div className="bg-primary w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-6">
+                  1
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Choose Your Issue</h3>
+                <p className="text-gray-600 text-center">
+                  Select the dispute type that matches your situation from our specialized categories.
+                </p>
+              </div>
+            </div>
+            
+            {/* Step 2 */}
+            <div className="relative z-10">
+              <div className="flex flex-col items-center">
+                <div className="bg-primary w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-6">
+                  2
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Answer Questions</h3>
+                <p className="text-gray-600 text-center">
+                  Our AI guides you through a few simple questions to customize your document.
+                </p>
+              </div>
+            </div>
+            
+            {/* Step 3 */}
+            <div className="relative z-10">
+              <div className="flex flex-col items-center">
+                <div className="bg-primary w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold mb-6">
+                  3
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Download Your Letter</h3>
+                <p className="text-gray-600 text-center">
+                  Get your professional-quality document ready to send to agencies and organizations.
+                </p>
+              </div>
+            </div>
           </div>
           
-          <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Gavel className="h-8 w-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Fill in Your Details</h3>
-            <p className="text-gray-600">
-              Enter your information using our simple forms with clear instructions.
-            </p>
+          <div className="text-center mt-12">
+            <Link href="/document-selection">
+              <Button size="lg" className="text-lg px-8">
+                Start Your Dispute Now
+              </Button>
+            </Link>
           </div>
-          
-          <div className="text-center">
-            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <DollarSign className="h-8 w-8 text-primary" />
+        </div>
+      </div>
+      
+      {/* Testimonials / Real Stories Section */}
+      <div className="py-16 bg-gray-50 rounded-lg">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Real Success Stories</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            See how SmartDispute.ai has helped everyday Canadians stand up to systemic challenges.
+          </p>
+        </div>
+        
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Testimonial 1 */}
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <div className="flex items-start mb-4">
+                <div className="bg-primary/20 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Sarah M., Toronto</h3>
+                  <p className="text-sm text-gray-500">Landlord-Tenant Dispute</p>
+                </div>
+              </div>
+              <div className="mb-4">
+                <p className="italic text-gray-700">
+                  "After months of ignored maintenance requests and a broken heating system, my landlord finally took action when I sent the T6 application letter from SmartDispute. The step-by-step guidance gave me the confidence to stand up for my rights."
+                </p>
+              </div>
+              <div className="flex items-center text-yellow-400">
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+              </div>
             </div>
-            <h3 className="text-xl font-semibold mb-2">Pay What You Can</h3>
-            <p className="text-gray-600">
-              Benefit from our sliding scale pricing based on your income level.
-            </p>
+            
+            {/* Testimonial 2 */}
+            <div className="bg-white p-6 rounded-lg shadow border">
+              <div className="flex items-start mb-4">
+                <div className="bg-primary/20 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                  <User className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Marcus T., Ottawa</h3>
+                  <p className="text-sm text-gray-500">CAS Interaction</p>
+                </div>
+              </div>
+              <div className="mb-4">
+                <p className="italic text-gray-700">
+                  "When CAS showed up at our door, I was terrified. The documents I got from SmartDispute helped me understand my rights and communicate effectively. Instead of feeling powerless, I was prepared and confident during what could have been a traumatic process."
+                </p>
+              </div>
+              <div className="flex items-center text-yellow-400">
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+                <Star className="h-5 w-5 fill-current" />
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -1,0 +1,31 @@
+<section id="founder-story" style="background-color:#111; color:#fff; padding: 60px 20px; font-family: 'Arial', sans-serif;">
+  <div style="max-width: 900px; margin: auto;">
+    <h2 style="font-size: 32px; color: #ff4f4f; margin-bottom: 20px;">Why I Built SmartDispute.ai Canada</h2>
+    <p style="font-size: 18px; line-height: 1.7;">
+      I didn’t build this platform because I wanted to.  
+      I built it because I had no choice.
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      My name is <strong>Teresa Bertin</strong>. I’m a Métis mother, self-represented advocate, and survivor of a broken system. Over the past two years, I’ve fought tooth and nail to protect my kids from unsafe housing, health threats, and systemic neglect.
+      My two-year-old son was hospitalized with respiratory illness because of untreated mold. I was served eviction notices while begging for repairs. I watched agencies like By-law and CAS weaponize their power instead of offering help. And I did it all without a lawyer—because I couldn’t afford one.
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      I learned to draft legal documents on my own. I filed T2 and T6 applications. I documented everything. And I won battles I was never supposed to win.
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      Through that fight, I realized something: <em>it’s not that people don’t want to fight back—it's that they don’t know how.</em> The system is designed to confuse and exhaust you. Legal help is a luxury. But your rights? Your rights are not.
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      That’s why I created <strong>SmartDispute.ai Canada</strong>—an AI-powered legal assistant that helps everyday people fight back, one letter at a time. It starts with credit disputes and housing complaints, and it’s growing into a full-blown toolkit for self-represented warriors.
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      This isn’t just an app.  
+      It’s my resistance.  
+      It’s my answer to the question: <em>“What now?”</em>
+    </p>
+    <p style="font-size: 18px; line-height: 1.7;">
+      And if it helps you protect your home, fix your credit, or keep your family together—then it’s already working.
+    </p>
+    <p style="margin-top: 40px; font-size: 16px; color: #aaa;">— Teresa Bertin, Founder</p>
+  </div>
+</section>
