@@ -21,6 +21,7 @@ import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
 import Chat from "@/pages/chat";
+import Resources from "@/pages/resources";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/about" component={About} />
       <Route path="/chat" component={Chat} />
+      <Route path="/resources" component={Resources} />
       <Route component={NotFound} />
     </Switch>
   );

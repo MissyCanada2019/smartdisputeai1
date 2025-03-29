@@ -16,7 +16,7 @@ export default function Header() {
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l9 6 9-6M3 12l9 6 9-6M3 18l9 6 9-6" />
           </svg>
-          <span className="text-xl font-semibold text-primary">SmartDisputesAICanada</span>
+          <span className="text-xl font-semibold text-primary">SmartDispute.ai Canada</span>
         </Link>
         
         <nav className="hidden md:flex space-x-6">
@@ -31,6 +31,9 @@ export default function Header() {
           </Link>
           <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
             Chat
+          </Link>
+          <Link href="/resources" className={`text-gray-600 hover:text-primary font-medium ${location === '/resources' ? 'text-primary' : ''}`}>
+            Resources
           </Link>
           <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
             About
