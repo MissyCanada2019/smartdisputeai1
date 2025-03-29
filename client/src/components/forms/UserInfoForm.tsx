@@ -8,12 +8,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/lib/formContext";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 
 export default function UserInfoForm() {
   const [formState, setFormState] = useFormState();
   const { toast } = useToast();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   
   const form = useForm<UserInfoFormValues>({
     resolver: zodResolver(userInfoFormSchema),

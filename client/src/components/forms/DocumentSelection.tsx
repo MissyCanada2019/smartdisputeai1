@@ -3,13 +3,13 @@ import { DocumentTemplate } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/lib/formContext";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import DocumentCard from "@/components/documents/DocumentCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentSelectionForm() {
   const [formState, setFormState] = useFormState();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   
   // If there's a province in userInfo, filter templates by province
   const province = formState.userInfo?.province;

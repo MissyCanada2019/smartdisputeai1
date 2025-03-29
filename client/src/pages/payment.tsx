@@ -2,12 +2,12 @@ import ProgressTracker from "@/components/common/ProgressTracker";
 import TemplateSidebar from "@/components/forms/TemplateSidebar";
 import PaymentForm from "@/components/checkout/PaymentForm";
 import { useFormState } from "@/lib/formContext";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useEffect } from "react";
 
 export default function Payment() {
   const [formState] = useFormState();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   
   // Check if we have the necessary data to proceed
   useEffect(() => {

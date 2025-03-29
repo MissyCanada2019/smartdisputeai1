@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import ProgressTracker from "@/components/common/ProgressTracker";
 import TemplateSidebar from "@/components/forms/TemplateSidebar";
 import DocumentPreviewer from "@/components/forms/DocumentPreviewer";
@@ -7,7 +7,7 @@ import { useFormState } from "@/lib/formContext";
 
 export default function TemplateCustomization() {
   const [formState] = useFormState();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   
   // Check if we have a selected template
   if (!formState.selectedTemplate) {

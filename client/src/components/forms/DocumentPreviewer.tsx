@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useFormState } from "@/lib/formContext";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 
@@ -15,7 +15,7 @@ interface DocumentPreviewerProps {
 
 export default function DocumentPreviewer({ onComplete }: DocumentPreviewerProps) {
   const [formState, setFormState] = useFormState();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [previewContent, setPreviewContent] = useState<string>("");
   

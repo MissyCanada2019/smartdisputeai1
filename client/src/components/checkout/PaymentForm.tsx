@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { apiRequest } from '@/lib/queryClient';
 import { useFormState } from '@/lib/formContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { pricingTiers } from '@shared/schema';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -26,7 +26,7 @@ const CheckoutForm = () => {
   const elements = useElements();
   const [formState] = useFormState();
   const { toast } = useToast();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "wouter";
+import { useLocation } from "wouter";
 import ProgressTracker from "@/components/common/ProgressTracker";
 import TemplateSidebar from "@/components/forms/TemplateSidebar";
 import { useFormState } from "@/lib/formContext";
@@ -12,7 +12,7 @@ import { FileText, Download, Loader2, Check } from "lucide-react";
 
 export default function DocumentReview() {
   const [formState, setFormState] = useFormState();
-  const [_, navigate] = useNavigate();
+  const [_, navigate] = useLocation();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPdfReady, setIsPdfReady] = useState(false);

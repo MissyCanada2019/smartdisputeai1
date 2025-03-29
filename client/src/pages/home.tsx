@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { Separator } from "@/components/ui/separator";
 import { 
   CheckCircle, 
-  Scales, 
+  Gavel, 
   FileText, 
   DollarSign, 
   Shield 
@@ -56,7 +56,7 @@ export default function Home() {
           
           <div className="text-center">
             <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Scales className="h-8 w-8 text-primary" />
+              <Gavel className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Fill in Your Details</h3>
             <p className="text-gray-600">
@@ -242,7 +242,7 @@ export default function Home() {
             <p className="text-sm text-gray-500">Income-Based Pricing</p>
           </div>
           <div className="text-center">
-            <Scales className="h-8 w-8 mx-auto mb-2 text-gray-500" />
+            <Gavel className="h-8 w-8 mx-auto mb-2 text-gray-500" />
             <p className="text-sm text-gray-500">Province-Specific</p>
           </div>
         </div>
