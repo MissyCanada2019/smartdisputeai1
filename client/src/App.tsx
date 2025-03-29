@@ -14,6 +14,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import UserInfo from "@/pages/user-info";
 import DocumentSelection from "@/pages/document-selection";
+import DocumentSelectionHierarchical from "@/pages/document-selection-hierarchical";
 import TemplateCustomization from "@/pages/template-customization";
 import DocumentReview from "@/pages/document-review";
 import DocumentManagement from "@/pages/document-management";
@@ -23,6 +24,7 @@ import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
 import Chat from "@/pages/chat";
 import Resources from "@/pages/resources";
+import FAQ from "@/pages/faq";
 
 function Router() {
   return (
@@ -30,6 +32,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/user-info" component={UserInfo} />
       <Route path="/document-selection" component={DocumentSelection} />
+      <Route path="/document-selection-hierarchical" component={DocumentSelectionHierarchical} />
       <Route path="/template-customization" component={TemplateCustomization} />
       <Route path="/document-review" component={DocumentReview} />
       <Route path="/document-review/:id" component={DocumentReview} />
@@ -40,6 +43,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/chat" component={Chat} />
       <Route path="/resources" component={Resources} />
+      <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>
   );

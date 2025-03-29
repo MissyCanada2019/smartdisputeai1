@@ -19,12 +19,15 @@ export default function Header() {
           <span className="text-xl font-semibold text-primary">SmartDispute.ai Canada</span>
         </Link>
         
-        <nav className="hidden md:flex space-x-6">
+        <nav className="hidden md:flex space-x-4">
           <Link href="/" className={`text-gray-600 hover:text-primary font-medium ${location === '/' ? 'text-primary' : ''}`}>
             Home
           </Link>
-          <Link href="/document-selection" className={`text-gray-600 hover:text-primary font-medium ${location.includes('/document') ? 'text-primary' : ''}`}>
+          <Link href="/document-selection-hierarchical" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-selection-hierarchical' ? 'text-primary' : ''}`}>
             Services
+          </Link>
+          <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
+            My Documents
           </Link>
           <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
             AI Assistant
@@ -34,6 +37,9 @@ export default function Header() {
           </Link>
           <Link href="/resources" className={`text-gray-600 hover:text-primary font-medium ${location === '/resources' ? 'text-primary' : ''}`}>
             Resources
+          </Link>
+          <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
+            FAQ
           </Link>
           <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
             About
