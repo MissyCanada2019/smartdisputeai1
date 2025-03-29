@@ -36,19 +36,22 @@ export default function About() {
               </div>
               <div className="space-y-4 text-gray-700 md:w-2/3">
                 <p>
-                  I'm Teresa—an advocate, a fighter, and a builder of solutions. Life has tested me in ways most people wouldn't believe, but I refuse to be silenced or defeated. I've battled housing injustices, legal roadblocks, and systemic neglect, all while standing strong for my family and fighting for what's right. Every struggle has shaped me, but none have broken me.
+                  I'm Teresa—an advocate, a fighter, and a determined challenger of a system that's stacked against ordinary citizens. Life has tested me in ways most people wouldn't believe, but I refuse to be silenced or defeated. I've battled housing injustices, legal roadblocks, and systemic neglect, all while witnessing firsthand how our judicial system favors those with deep pockets over those with legitimate claims.
                 </p>
                 <p>
-                  I know what it's like to be ignored, dismissed, and told to accept less than I deserve. I've seen how the system is built to keep people like me struggling. But instead of giving up, I fought back. I learned the laws, gathered evidence, and made my voice impossible to ignore.
+                  Through my own painful experiences, I've seen how our so-called "justice" system is fundamentally broken and biased. When you can't afford expensive legal representation, you're treated as a second-class citizen. The system isn't impartial—it's designed to protect the privileged and powerful while making it nearly impossible for regular Canadians to stand up for their rights.
                 </p>
                 <p>
-                  That's why I created SmartDisputesAICanada—a legal tool designed to help Canadians fight unfair credit reports, landlord disputes, and more without needing a lawyer. I took my own battles and turned them into solutions that empower others.
+                  I'm advocating for a complete revamp of this crooked and biased judicial system. Justice shouldn't depend on your income or asset bracket. The scales need to be leveled—not just adjusted slightly, but fundamentally rebalanced to create true fairness. Everyone deserves an equal shot at justice, regardless of their financial status or connections.
+                </p>
+                <p>
+                  That's why I created SmartDisputesAICanada—to fight back against this imbalance by giving everyday Canadians the tools they need to challenge unfair credit reports, landlord disputes, government agencies, and more without needing expensive lawyers. I took my own battles and transformed them into solutions that empower others facing similar injustices.
                 </p>
                 <p className="font-medium">
-                  I stand for truth, resilience, and real change. My journey isn't just about struggle—it's about overcoming. It's about building something better. And if you're here, that means you're ready to take control of your own story too.
+                  I stand for genuine equality under the law, not just the illusion of it. My journey isn't just about my personal struggle—it's about creating systemic change. It's about building a world where fairness isn't determined by the size of your wallet. And if you're here, that means you're ready to join this fight for true justice.
                 </p>
                 <p className="font-bold">
-                  Let's make it happen—together.
+                  Let's make real justice happen—together.
                 </p>
               </div>
             </div>
@@ -65,7 +68,7 @@ export default function About() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">
-                To democratize access to legal tools and empower marginalized and low-income Canadians to effectively advocate for themselves against government agencies and large organizations.
+                To challenge and reform Canada's biased judicial system by arming everyday citizens with powerful legal tools that level the playing field, regardless of their income or asset bracket. We're fighting to dismantle a system that prioritizes wealth over justice.
               </p>
             </CardContent>
           </Card>
@@ -76,7 +79,7 @@ export default function About() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700">
-                A Canada where everyone, regardless of income or background, has the ability to stand up for their rights and receive fair treatment under the law.
+                A transformed Canada where true justice prevails - where the outcome of legal disputes isn't determined by who has the most money but by who has the strongest case. A system that's genuinely fair, not merely claiming to be while perpetuating inequalities.
               </p>
             </CardContent>
           </Card>
@@ -128,30 +131,30 @@ export default function About() {
           <h2 className="text-2xl font-bold mb-6 text-center">Our Core Values</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="border rounded-lg p-5">
-              <h3 className="font-bold text-lg mb-2 text-red-700">Accessibility</h3>
+              <h3 className="font-bold text-lg mb-2 text-red-700">True Justice</h3>
               <p className="text-gray-700">
-                We believe legal help should be available to everyone, regardless of their financial situation or background.
+                We believe in a legal system that works equally for everyone, not just for those who can afford to buy favorable outcomes. Justice shouldn't have a price tag.
               </p>
             </div>
             
             <div className="border rounded-lg p-5">
               <h3 className="font-bold text-lg mb-2 text-red-700">Empowerment</h3>
               <p className="text-gray-700">
-                We don't just solve problems for people — we give them the tools and knowledge to advocate for themselves.
+                We don't just solve problems for people — we equip everyday Canadians with the legal tools previously reserved for the privileged and wealthy.
               </p>
             </div>
             
             <div className="border rounded-lg p-5">
-              <h3 className="font-bold text-lg mb-2 text-red-700">Transparency</h3>
+              <h3 className="font-bold text-lg mb-2 text-red-700">Systemic Change</h3>
               <p className="text-gray-700">
-                We're straightforward about what we can and cannot do, with clear pricing and no hidden fees or agendas.
+                We're working toward a complete revamp of a broken system, challenging the institutional bias that favors wealth over merit in our courts and government agencies.
               </p>
             </div>
             
             <div className="border rounded-lg p-5">
               <h3 className="font-bold text-lg mb-2 text-red-700">Resilience</h3>
               <p className="text-gray-700">
-                We celebrate the power of standing up after being knocked down, and support our users through every step of their journey.
+                We stand with those who've been knocked down by a biased system, providing both the tools and solidarity needed to rise up and demand the fair treatment they deserve.
               </p>
             </div>
           </div>
