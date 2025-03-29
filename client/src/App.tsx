@@ -16,6 +16,7 @@ import UserInfo from "@/pages/user-info";
 import DocumentSelection from "@/pages/document-selection";
 import TemplateCustomization from "@/pages/template-customization";
 import DocumentReview from "@/pages/document-review";
+import DocumentManagement from "@/pages/document-management";
 import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
@@ -31,6 +32,8 @@ function Router() {
       <Route path="/document-selection" component={DocumentSelection} />
       <Route path="/template-customization" component={TemplateCustomization} />
       <Route path="/document-review" component={DocumentReview} />
+      <Route path="/document-review/:id" component={DocumentReview} />
+      <Route path="/document-management" component={DocumentManagement} />
       <Route path="/payment" component={Payment} />
       <Route path="/success" component={Success} />
       <Route path="/subscribe" component={Subscribe} />

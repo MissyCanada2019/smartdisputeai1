@@ -196,7 +196,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid user ID format" });
       }
       
-      const documents = await storage.getUserDocuments(userId);
+      const searchTerm = req.query.search as string | undefined;
+      
+      let documents;
+      if (searchTerm) {
+        documents = await storage.searchUserDocuments(userId, searchTerm);
+      } else {
+        documents = await storage.getUserDocuments(userId);
+      }
+      
       res.json(documents);
     } catch (error: any) {
       res.status(500).json({ message: `Error fetching user documents: ${error.message}` });
@@ -536,6 +544,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(verification);
     } catch (error: any) {
       res.status(500).json({ message: `Error creating verification request: ${error.message}` });
+    }
+  });
+  
+  // Document folder management endpoints
+  app.get("/api/document-folders/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const folders = await storage.getDocumentFolders(userId);
+      res.json(folders);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching document folders: ${error.message}` });
+    }
+  });
+  
+  app.post("/api/document-folders", async (req: Request, res: Response) => {
+    try {
+      const folderData = req.body;
+      const folder = await storage.createDocumentFolder(folderData);
+      res.status(201).json(folder);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating document folder: ${error.message}` });
+    }
+  });
+  
+  app.patch("/api/document-folders/:id", async (req: Request, res: Response) => {
+    try {
+      const folderId = parseInt(req.params.id);
+      if (isNaN(folderId)) {
+        return res.status(400).json({ message: "Invalid folder ID format" });
+      }
+      
+      const folderData = req.body;
+      const updatedFolder = await storage.updateDocumentFolder(folderId, folderData);
+      
+      if (!updatedFolder) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+      
+      res.json(updatedFolder);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error updating document folder: ${error.message}` });
+    }
+  });
+  
+  app.delete("/api/document-folders/:id", async (req: Request, res: Response) => {
+    try {
+      const folderId = parseInt(req.params.id);
+      if (isNaN(folderId)) {
+        return res.status(400).json({ message: "Invalid folder ID format" });
+      }
+      
+      const success = await storage.deleteDocumentFolder(folderId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Folder not found or cannot be deleted" });
+      }
+      
+      res.status(204).send();
+    } catch (error: any) {
+      res.status(500).json({ message: `Error deleting document folder: ${error.message}` });
+    }
+  });
+  
+  app.get("/api/document-folders/:folderId/documents", async (req: Request, res: Response) => {
+    try {
+      const folderId = parseInt(req.params.folderId);
+      if (isNaN(folderId)) {
+        return res.status(400).json({ message: "Invalid folder ID format" });
+      }
+      
+      const documents = await storage.getFolderDocuments(folderId);
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching folder documents: ${error.message}` });
+    }
+  });
+  
+  app.post("/api/document-folder-assignments", async (req: Request, res: Response) => {
+    try {
+      const assignmentData = req.body;
+      const assignment = await storage.createDocumentFolderAssignment(assignmentData);
+      res.status(201).json(assignment);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating folder assignment: ${error.message}` });
+    }
+  });
+  
+  app.post("/api/documents/:documentId/move-to-folder/:folderId", async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.documentId);
+      const folderId = parseInt(req.params.folderId);
+      
+      if (isNaN(documentId) || isNaN(folderId)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const assignment = await storage.moveDocumentToFolder(documentId, folderId);
+      res.json(assignment);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error moving document to folder: ${error.message}` });
     }
   });
   

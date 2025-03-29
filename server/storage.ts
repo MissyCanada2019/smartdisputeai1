@@ -2,6 +2,8 @@ import {
   users, type User, type InsertUser, 
   documentTemplates, type DocumentTemplate, type InsertDocumentTemplate,
   userDocuments, type UserDocument, type InsertUserDocument,
+  documentFolders, type DocumentFolder, type InsertDocumentFolder,
+  documentFolderAssignments, type DocumentFolderAssignment, type InsertDocumentFolderAssignment,
   incomeVerifications, type IncomeVerification, type InsertIncomeVerification
 } from "@shared/schema";
 
@@ -13,6 +15,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User>;
+  updateUserStripeInfo(userId: number, stripeInfo: { customerId: string, subscriptionId: string }): Promise<User>;
   
   // Document template operations
   getDocumentTemplates(): Promise<DocumentTemplate[]>;
@@ -26,6 +30,21 @@ export interface IStorage {
   getUserDocument(id: number): Promise<UserDocument | undefined>;
   createUserDocument(document: InsertUserDocument): Promise<UserDocument>;
   updateUserDocument(id: number, document: Partial<UserDocument>): Promise<UserDocument | undefined>;
+  searchUserDocuments(userId: number, searchTerm: string): Promise<UserDocument[]>;
+  
+  // Document folder operations
+  getDocumentFolders(userId: number): Promise<DocumentFolder[]>;
+  getDocumentFolder(id: number): Promise<DocumentFolder | undefined>;
+  createDocumentFolder(folder: InsertDocumentFolder): Promise<DocumentFolder>;
+  updateDocumentFolder(id: number, folder: Partial<DocumentFolder>): Promise<DocumentFolder | undefined>;
+  deleteDocumentFolder(id: number): Promise<boolean>;
+  
+  // Document folder assignment operations
+  getDocumentFolderAssignments(documentId: number): Promise<DocumentFolderAssignment[]>;
+  getFolderDocuments(folderId: number): Promise<UserDocument[]>;
+  createDocumentFolderAssignment(assignment: InsertDocumentFolderAssignment): Promise<DocumentFolderAssignment>;
+  deleteDocumentFolderAssignment(id: number): Promise<boolean>;
+  moveDocumentToFolder(documentId: number, folderId: number): Promise<DocumentFolderAssignment>;
   
   // Income verification operations
   getIncomeVerifications(userId: number): Promise<IncomeVerification[]>;
@@ -40,22 +59,30 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private documentTemplates: Map<number, DocumentTemplate>;
   private userDocuments: Map<number, UserDocument>;
+  private documentFolders: Map<number, DocumentFolder>;
+  private documentFolderAssignments: Map<number, DocumentFolderAssignment>;
   private incomeVerifications: Map<number, IncomeVerification>;
   
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
+  private currentDocumentFolderId: number;
+  private currentDocumentFolderAssignmentId: number;
   private currentIncomeVerificationId: number;
 
   constructor() {
     this.users = new Map();
     this.documentTemplates = new Map();
     this.userDocuments = new Map();
+    this.documentFolders = new Map();
+    this.documentFolderAssignments = new Map();
     this.incomeVerifications = new Map();
     
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
     this.currentUserDocumentId = 1;
+    this.currentDocumentFolderId = 1;
+    this.currentDocumentFolderAssignmentId = 1;
     this.currentIncomeVerificationId = 1;
     
     // Seed document templates
@@ -157,6 +184,25 @@ export class MemStorage implements IStorage {
     this.userDocuments.set(id, updatedDocument);
     return updatedDocument;
   }
+  
+  async searchUserDocuments(userId: number, searchTerm: string): Promise<UserDocument[]> {
+    const userDocs = await this.getUserDocuments(userId);
+    if (!searchTerm) return userDocs;
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    
+    return userDocs.filter((doc) => {
+      // Get the document template name
+      const template = this.documentTemplates.get(doc.templateId);
+      const templateName = template?.name || '';
+      
+      // Check if search term appears in document data or template name
+      return (
+        templateName.toLowerCase().includes(lowerSearchTerm) ||
+        JSON.stringify(doc.documentData).toLowerCase().includes(lowerSearchTerm)
+      );
+    });
+  }
 
   // Income verification methods
   async getIncomeVerifications(userId: number): Promise<IncomeVerification[]> {
@@ -191,6 +237,181 @@ export class MemStorage implements IStorage {
     };
     this.incomeVerifications.set(id, updatedVerification);
     return updatedVerification;
+  }
+  
+  // Document folder operations
+  async getDocumentFolders(userId: number): Promise<DocumentFolder[]> {
+    return Array.from(this.documentFolders.values()).filter(
+      (folder) => folder.userId === userId
+    );
+  }
+  
+  async getDocumentFolder(id: number): Promise<DocumentFolder | undefined> {
+    return this.documentFolders.get(id);
+  }
+  
+  async createDocumentFolder(folder: InsertDocumentFolder): Promise<DocumentFolder> {
+    const id = this.currentDocumentFolderId++;
+    const now = new Date().toISOString();
+    const newFolder: DocumentFolder = {
+      ...folder,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.documentFolders.set(id, newFolder);
+    
+    // If this is the first folder for the user or it's marked as default, 
+    // create a default folder if one doesn't exist
+    if (folder.isDefault) {
+      // Make sure any other default folders for this user are no longer default
+      const userFolders = await this.getDocumentFolders(folder.userId);
+      for (const existingFolder of userFolders) {
+        if (existingFolder.id !== id && existingFolder.isDefault) {
+          existingFolder.isDefault = false;
+          this.documentFolders.set(existingFolder.id, existingFolder);
+        }
+      }
+    }
+    
+    return newFolder;
+  }
+  
+  async updateDocumentFolder(id: number, folderData: Partial<DocumentFolder>): Promise<DocumentFolder | undefined> {
+    const existingFolder = this.documentFolders.get(id);
+    if (!existingFolder) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedFolder = {
+      ...existingFolder,
+      ...folderData,
+      updatedAt: now
+    };
+    this.documentFolders.set(id, updatedFolder);
+    
+    // If this folder is being set as default, update any other default folders
+    if (folderData.isDefault) {
+      const userFolders = await this.getDocumentFolders(existingFolder.userId);
+      for (const folder of userFolders) {
+        if (folder.id !== id && folder.isDefault) {
+          folder.isDefault = false;
+          this.documentFolders.set(folder.id, folder);
+        }
+      }
+    }
+    
+    return updatedFolder;
+  }
+  
+  async deleteDocumentFolder(id: number): Promise<boolean> {
+    const folder = this.documentFolders.get(id);
+    if (!folder) return false;
+    
+    // First, check if there are any documents in this folder
+    const folderAssignments = Array.from(this.documentFolderAssignments.values()).filter(
+      (assignment) => assignment.folderId === id
+    );
+    
+    // If default folder, don't allow deletion
+    if (folder.isDefault) {
+      return false;
+    }
+    
+    // Delete all folder assignments for this folder
+    for (const assignment of folderAssignments) {
+      this.documentFolderAssignments.delete(assignment.id);
+    }
+    
+    // Delete the folder
+    this.documentFolders.delete(id);
+    return true;
+  }
+  
+  // Document folder assignment operations
+  async getDocumentFolderAssignments(documentId: number): Promise<DocumentFolderAssignment[]> {
+    return Array.from(this.documentFolderAssignments.values()).filter(
+      (assignment) => assignment.documentId === documentId
+    );
+  }
+  
+  async getFolderDocuments(folderId: number): Promise<UserDocument[]> {
+    const assignments = Array.from(this.documentFolderAssignments.values()).filter(
+      (assignment) => assignment.folderId === folderId
+    );
+    
+    const documents: UserDocument[] = [];
+    for (const assignment of assignments) {
+      const document = this.userDocuments.get(assignment.documentId);
+      if (document) {
+        documents.push(document);
+      }
+    }
+    
+    return documents;
+  }
+  
+  async createDocumentFolderAssignment(assignment: InsertDocumentFolderAssignment): Promise<DocumentFolderAssignment> {
+    const id = this.currentDocumentFolderAssignmentId++;
+    const now = new Date().toISOString();
+    const newAssignment: DocumentFolderAssignment = {
+      ...assignment,
+      id,
+      createdAt: now
+    };
+    this.documentFolderAssignments.set(id, newAssignment);
+    return newAssignment;
+  }
+  
+  async deleteDocumentFolderAssignment(id: number): Promise<boolean> {
+    const exists = this.documentFolderAssignments.has(id);
+    if (!exists) return false;
+    
+    this.documentFolderAssignments.delete(id);
+    return true;
+  }
+  
+  async moveDocumentToFolder(documentId: number, folderId: number): Promise<DocumentFolderAssignment> {
+    // First, delete any existing assignments for this document
+    const existingAssignments = await this.getDocumentFolderAssignments(documentId);
+    for (const assignment of existingAssignments) {
+      this.documentFolderAssignments.delete(assignment.id);
+    }
+    
+    // Then create a new assignment
+    return this.createDocumentFolderAssignment({
+      documentId,
+      folderId
+    });
+  }
+  
+  // Stripe-related methods
+  async updateStripeCustomerId(userId: number, stripeCustomerId: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const updatedUser = {
+      ...user,
+      stripeCustomerId
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserStripeInfo(userId: number, stripeInfo: { customerId: string, subscriptionId: string }): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const updatedUser = {
+      ...user,
+      stripeCustomerId: stripeInfo.customerId,
+      stripeSubscriptionId: stripeInfo.subscriptionId
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
   
   // Payment updates

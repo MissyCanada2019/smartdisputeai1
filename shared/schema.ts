@@ -18,6 +18,8 @@ export const users = pgTable("users", {
   postalCode: text("postal_code"),
   incomeRange: text("income_range"),
   requestIncomeBased: boolean("request_income_based").default(false),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -81,6 +83,37 @@ export const insertUserDocumentSchema = createInsertSchema(userDocuments).pick({
   finalPrice: true,
 });
 
+// Document folders for organizing user documents
+export const documentFolders = pgTable("document_folders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertDocumentFolderSchema = createInsertSchema(documentFolders).pick({
+  userId: true,
+  name: true,
+  description: true,
+  isDefault: true
+});
+
+// Document folder assignments
+export const documentFolderAssignments = pgTable("document_folder_assignments", {
+  id: serial("id").primaryKey(),
+  documentId: integer("document_id").notNull().references(() => userDocuments.id),
+  folderId: integer("folder_id").notNull().references(() => documentFolders.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDocumentFolderAssignmentSchema = createInsertSchema(documentFolderAssignments).pick({
+  documentId: true,
+  folderId: true,
+});
+
 // Income verification requests
 export const incomeVerifications = pgTable("income_verifications", {
   id: serial("id").primaryKey(),
@@ -107,6 +140,12 @@ export type DocumentTemplate = typeof documentTemplates.$inferSelect;
 
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
+
+export type InsertDocumentFolder = z.infer<typeof insertDocumentFolderSchema>;
+export type DocumentFolder = typeof documentFolders.$inferSelect;
+
+export type InsertDocumentFolderAssignment = z.infer<typeof insertDocumentFolderAssignmentSchema>;
+export type DocumentFolderAssignment = typeof documentFolderAssignments.$inferSelect;
 
 export type InsertIncomeVerification = z.infer<typeof insertIncomeVerificationSchema>;
 export type IncomeVerification = typeof incomeVerifications.$inferSelect;
