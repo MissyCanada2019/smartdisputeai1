@@ -1,4 +1,11 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Request as ExpressRequest, Response, NextFunction } from "express";
+import { User } from "@shared/schema";
+
+// Extend the Express Request type to include authentication and user info
+interface Request extends ExpressRequest {
+  isAuthenticated(): boolean;
+  user: User;
+}
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -1102,6 +1109,416 @@ If you're not sure which template is most appropriate, ask clarifying questions.
   app.locals.broadcastMessage = (message: any, filters?: { userId?: number }) => {
     broadcastMessage(clients, message, filters);
   };
+  
+  // Community API endpoints
+  
+  // Get all community categories
+  app.get("/api/community/categories", async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getCommunityCategories();
+      res.json(categories);
+    } catch (error: any) {
+      console.error("Error fetching community categories:", error);
+      res.status(500).json({ message: "Error fetching community categories" });
+    }
+  });
+  
+  // Get a specific community category
+  app.get("/api/community/categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const category = await storage.getCommunityCategory(id);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error: any) {
+      console.error("Error fetching community category:", error);
+      res.status(500).json({ message: "Error fetching community category" });
+    }
+  });
+  
+  // Create a new community category (admin only)
+  app.post("/api/community/categories", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
+      const category = req.body;
+      const newCategory = await storage.createCommunityCategory(category);
+      
+      res.status(201).json(newCategory);
+    } catch (error: any) {
+      console.error("Error creating community category:", error);
+      res.status(500).json({ message: "Error creating community category" });
+    }
+  });
+  
+  // Update a community category (admin only)
+  app.put("/api/community/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const categoryData = req.body;
+      const updatedCategory = await storage.updateCommunityCategory(id, categoryData);
+      
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error: any) {
+      console.error("Error updating community category:", error);
+      res.status(500).json({ message: "Error updating community category" });
+    }
+  });
+  
+  // Delete a community category (admin only)
+  app.delete("/api/community/categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Check if user is an admin
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin privileges required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID" });
+      }
+      
+      const result = await storage.deleteCommunityCategory(id);
+      
+      if (!result) {
+        return res.status(400).json({ message: "Category could not be deleted, it may have associated posts" });
+      }
+      
+      res.json({ message: "Category deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting community category:", error);
+      res.status(500).json({ message: "Error deleting community category" });
+    }
+  });
+  
+  // Get community posts (optionally filtered by category)
+  app.get("/api/community/posts", async (req: Request, res: Response) => {
+    try {
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      
+      const posts = await storage.getCommunityPosts(categoryId);
+      res.json(posts);
+    } catch (error: any) {
+      console.error("Error fetching community posts:", error);
+      res.status(500).json({ message: "Error fetching community posts" });
+    }
+  });
+  
+  // Search community posts
+  app.get("/api/community/posts/search", async (req: Request, res: Response) => {
+    try {
+      const searchTerm = req.query.query as string || "";
+      
+      const posts = await storage.searchCommunityPosts(searchTerm);
+      res.json(posts);
+    } catch (error: any) {
+      console.error("Error searching community posts:", error);
+      res.status(500).json({ message: "Error searching community posts" });
+    }
+  });
+  
+  // Get a specific community post
+  app.get("/api/community/posts/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      const post = await storage.getCommunityPost(id);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      res.json(post);
+    } catch (error: any) {
+      console.error("Error fetching community post:", error);
+      res.status(500).json({ message: "Error fetching community post" });
+    }
+  });
+  
+  // Create a new community post
+  app.post("/api/community/posts", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const postData = {
+        ...req.body,
+        userId: req.user.id
+      };
+      
+      const newPost = await storage.createCommunityPost(postData);
+      
+      // Broadcast to WebSocket clients
+      app.locals.broadcastMessage({
+        type: 'new_post',
+        postId: newPost.id,
+        categoryId: newPost.categoryId,
+        title: newPost.title,
+        timestamp: new Date()
+      });
+      
+      res.status(201).json(newPost);
+    } catch (error: any) {
+      console.error("Error creating community post:", error);
+      res.status(500).json({ message: "Error creating community post" });
+    }
+  });
+  
+  // Update a community post
+  app.put("/api/community/posts/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      // Get existing post
+      const existingPost = await storage.getCommunityPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user is the author or an admin
+      const userRole = await storage.getUserRole(req.user.id);
+      if (existingPost.userId !== req.user.id && (!userRole || userRole.role !== 'admin')) {
+        return res.status(403).json({ message: "You don't have permission to update this post" });
+      }
+      
+      const postData = req.body;
+      const updatedPost = await storage.updateCommunityPost(id, postData);
+      
+      res.json(updatedPost);
+    } catch (error: any) {
+      console.error("Error updating community post:", error);
+      res.status(500).json({ message: "Error updating community post" });
+    }
+  });
+  
+  // Delete a community post
+  app.delete("/api/community/posts/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      // Get existing post
+      const existingPost = await storage.getCommunityPost(id);
+      if (!existingPost) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      // Check if user is the author or an admin
+      const userRole = await storage.getUserRole(req.user.id);
+      if (existingPost.userId !== req.user.id && (!userRole || userRole.role !== 'admin')) {
+        return res.status(403).json({ message: "You don't have permission to delete this post" });
+      }
+      
+      const result = await storage.deleteCommunityPost(id);
+      
+      if (!result) {
+        return res.status(500).json({ message: "Failed to delete post" });
+      }
+      
+      res.json({ message: "Post deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting community post:", error);
+      res.status(500).json({ message: "Error deleting community post" });
+    }
+  });
+  
+  // Get comments for a post
+  app.get("/api/community/posts/:postId/comments", async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      const comments = await storage.getCommunityComments(postId);
+      res.json(comments);
+    } catch (error: any) {
+      console.error("Error fetching comments:", error);
+      res.status(500).json({ message: "Error fetching comments" });
+    }
+  });
+  
+  // Add a comment to a post
+  app.post("/api/community/posts/:postId/comments", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getCommunityPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const commentData = {
+        ...req.body,
+        postId,
+        userId: req.user.id
+      };
+      
+      const newComment = await storage.createCommunityComment(commentData);
+      
+      // Broadcast to WebSocket clients
+      app.locals.broadcastMessage({
+        type: 'new_comment',
+        postId,
+        commentId: newComment.id,
+        userId: req.user.id,
+        timestamp: new Date()
+      });
+      
+      res.status(201).json(newComment);
+    } catch (error: any) {
+      console.error("Error creating comment:", error);
+      res.status(500).json({ message: "Error creating comment" });
+    }
+  });
+  
+  // Toggle like on a post
+  app.post("/api/community/posts/:postId/like", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getCommunityPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const result = await storage.togglePostLike(postId, req.user.id);
+      const updatedPost = await storage.getCommunityPost(postId);
+      
+      res.json({ 
+        liked: result,
+        likeCount: updatedPost?.likeCount || 0
+      });
+    } catch (error: any) {
+      console.error("Error toggling post like:", error);
+      res.status(500).json({ message: "Error toggling post like" });
+    }
+  });
+  
+  // Toggle bookmark on a post
+  app.post("/api/community/posts/:postId/bookmark", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const postId = parseInt(req.params.postId);
+      if (isNaN(postId)) {
+        return res.status(400).json({ message: "Invalid post ID" });
+      }
+      
+      // Check if post exists
+      const post = await storage.getCommunityPost(postId);
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      
+      const result = await storage.toggleBookmark(postId, req.user.id);
+      
+      res.json({ bookmarked: result });
+    } catch (error: any) {
+      console.error("Error toggling bookmark:", error);
+      res.status(500).json({ message: "Error toggling bookmark" });
+    }
+  });
+  
+  // Get user's bookmarked posts
+  app.get("/api/community/bookmarks", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const bookmarks = await storage.getUserBookmarks(req.user.id);
+      
+      // Get full post details
+      const bookmarkedPosts = [];
+      for (const bookmark of bookmarks) {
+        const post = await storage.getCommunityPost(bookmark.postId);
+        if (post) {
+          bookmarkedPosts.push({
+            ...post,
+            bookmarkedAt: bookmark.createdAt
+          });
+        }
+      }
+      
+      res.json(bookmarkedPosts);
+    } catch (error: any) {
+      console.error("Error fetching bookmarks:", error);
+      res.status(500).json({ message: "Error fetching bookmarks" });
+    }
+  });
   
   return httpServer;
 }

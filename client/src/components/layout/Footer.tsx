@@ -34,6 +34,7 @@ export default function Footer() {
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/document-selection-hierarchical" className="hover:text-white">Document Library</Link></li>
+              <li><Link href="/community" className="hover:text-white">Community</Link></li>
               <li><Link href="/resources" className="hover:text-white">Legal Guides</Link></li>
               <li><Link href="/resources" className="hover:text-white">Government Resources</Link></li>
               <li><Link href="/faq" className="hover:text-white">FAQs</Link></li>

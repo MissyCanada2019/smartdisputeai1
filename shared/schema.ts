@@ -131,6 +131,124 @@ export const insertIncomeVerificationSchema = createInsertSchema(incomeVerificat
   notes: true,
 });
 
+// Community categories
+export const communityCategories = pgTable("community_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description").notNull(),
+  icon: text("icon"),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommunityCategorySchema = createInsertSchema(communityCategories).pick({
+  name: true,
+  description: true,
+  icon: true,
+  sortOrder: true,
+  isActive: true,
+});
+
+// Community posts
+export const communityPosts = pgTable("community_posts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").notNull().references(() => communityCategories.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(false),
+  isStory: boolean("is_story").default(false),
+  isAdvice: boolean("is_advice").default(false),
+  isPinnedByModerator: boolean("is_pinned_by_moderator").default(false),
+  likeCount: integer("like_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCommunityPostSchema = createInsertSchema(communityPosts).pick({
+  userId: true,
+  categoryId: true,
+  title: true,
+  content: true,
+  isAnonymous: true,
+  isStory: true,
+  isAdvice: true,
+});
+
+// Community comments
+export const communityComments = pgTable("community_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => communityPosts.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").default(false),
+  parentCommentId: integer("parent_comment_id"), // Will be manually related to communityComments.id
+  likeCount: integer("like_count").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCommunityCommentSchema = createInsertSchema(communityComments).pick({
+  postId: true,
+  userId: true,
+  content: true,
+  isAnonymous: true,
+  parentCommentId: true,
+});
+
+// Community post likes
+export const communityPostLikes = pgTable("community_post_likes", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull().references(() => communityPosts.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommunityPostLikeSchema = createInsertSchema(communityPostLikes).pick({
+  postId: true,
+  userId: true,
+});
+
+// Community comment likes
+export const communityCommentLikes = pgTable("community_comment_likes", {
+  id: serial("id").primaryKey(),
+  commentId: integer("comment_id").notNull().references(() => communityComments.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommunityCommentLikeSchema = createInsertSchema(communityCommentLikes).pick({
+  commentId: true,
+  userId: true,
+});
+
+// Community bookmarks
+export const communityBookmarks = pgTable("community_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  postId: integer("post_id").notNull().references(() => communityPosts.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertCommunityBookmarkSchema = createInsertSchema(communityBookmarks).pick({
+  userId: true,
+  postId: true,
+});
+
+// User roles for community moderation
+export const userRoles = pgTable("user_roles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role").notNull(), // 'user', 'moderator', 'admin'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).pick({
+  userId: true,
+  role: true,
+});
+
 // Export all types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -149,6 +267,28 @@ export type DocumentFolderAssignment = typeof documentFolderAssignments.$inferSe
 
 export type InsertIncomeVerification = z.infer<typeof insertIncomeVerificationSchema>;
 export type IncomeVerification = typeof incomeVerifications.$inferSelect;
+
+// Community types
+export type InsertCommunityCategory = z.infer<typeof insertCommunityCategorySchema>;
+export type CommunityCategory = typeof communityCategories.$inferSelect;
+
+export type InsertCommunityPost = z.infer<typeof insertCommunityPostSchema>;
+export type CommunityPost = typeof communityPosts.$inferSelect;
+
+export type InsertCommunityComment = z.infer<typeof insertCommunityCommentSchema>;
+export type CommunityComment = typeof communityComments.$inferSelect;
+
+export type InsertCommunityPostLike = z.infer<typeof insertCommunityPostLikeSchema>;
+export type CommunityPostLike = typeof communityPostLikes.$inferSelect;
+
+export type InsertCommunityCommentLike = z.infer<typeof insertCommunityCommentLikeSchema>;
+export type CommunityCommentLike = typeof communityCommentLikes.$inferSelect;
+
+export type InsertCommunityBookmark = z.infer<typeof insertCommunityBookmarkSchema>;
+export type CommunityBookmark = typeof communityBookmarks.$inferSelect;
+
+export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type UserRole = typeof userRoles.$inferSelect;
 
 // Form schemas for validation
 export const userInfoFormSchema = z.object({

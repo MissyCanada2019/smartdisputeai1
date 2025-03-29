@@ -4,7 +4,14 @@ import {
   userDocuments, type UserDocument, type InsertUserDocument,
   documentFolders, type DocumentFolder, type InsertDocumentFolder,
   documentFolderAssignments, type DocumentFolderAssignment, type InsertDocumentFolderAssignment,
-  incomeVerifications, type IncomeVerification, type InsertIncomeVerification
+  incomeVerifications, type IncomeVerification, type InsertIncomeVerification,
+  communityCategories, type CommunityCategory, type InsertCommunityCategory,
+  communityPosts, type CommunityPost, type InsertCommunityPost,
+  communityComments, type CommunityComment, type InsertCommunityComment,
+  communityPostLikes, type CommunityPostLike, type InsertCommunityPostLike,
+  communityCommentLikes, type CommunityCommentLike, type InsertCommunityCommentLike,
+  communityBookmarks, type CommunityBookmark, type InsertCommunityBookmark,
+  userRoles, type UserRole, type InsertUserRole
 } from "@shared/schema";
 
 // Storage interface
@@ -53,6 +60,44 @@ export interface IStorage {
   
   // Payment updates
   updatePaymentStatus(documentId: number, status: string, paymentIntentId?: string): Promise<UserDocument | undefined>;
+  
+  // Community category operations
+  getCommunityCategories(): Promise<CommunityCategory[]>;
+  getCommunityCategory(id: number): Promise<CommunityCategory | undefined>;
+  createCommunityCategory(category: InsertCommunityCategory): Promise<CommunityCategory>;
+  updateCommunityCategory(id: number, category: Partial<CommunityCategory>): Promise<CommunityCategory | undefined>;
+  deleteCommunityCategory(id: number): Promise<boolean>;
+  
+  // Community post operations
+  getCommunityPosts(categoryId?: number): Promise<CommunityPost[]>;
+  getCommunityPost(id: number): Promise<CommunityPost | undefined>;
+  createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost>;
+  updateCommunityPost(id: number, post: Partial<CommunityPost>): Promise<CommunityPost | undefined>;
+  deleteCommunityPost(id: number): Promise<boolean>;
+  getUserCommunityPosts(userId: number): Promise<CommunityPost[]>;
+  searchCommunityPosts(searchTerm: string): Promise<CommunityPost[]>;
+  
+  // Community comment operations
+  getCommunityComments(postId: number): Promise<CommunityComment[]>;
+  getCommunityComment(id: number): Promise<CommunityComment | undefined>;
+  createCommunityComment(comment: InsertCommunityComment): Promise<CommunityComment>;
+  updateCommunityComment(id: number, comment: Partial<CommunityComment>): Promise<CommunityComment | undefined>;
+  deleteCommunityComment(id: number): Promise<boolean>;
+  
+  // Community like operations
+  togglePostLike(postId: number, userId: number): Promise<boolean>;
+  toggleCommentLike(commentId: number, userId: number): Promise<boolean>;
+  getPostLikes(postId: number): Promise<CommunityPostLike[]>;
+  getCommentLikes(commentId: number): Promise<CommunityCommentLike[]>;
+  
+  // Community bookmark operations
+  toggleBookmark(postId: number, userId: number): Promise<boolean>;
+  getUserBookmarks(userId: number): Promise<CommunityBookmark[]>;
+  
+  // User role operations
+  getUserRole(userId: number): Promise<UserRole | undefined>;
+  assignUserRole(role: InsertUserRole): Promise<UserRole>;
+  updateUserRole(userId: number, role: string): Promise<UserRole | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -63,14 +108,33 @@ export class MemStorage implements IStorage {
   private documentFolderAssignments: Map<number, DocumentFolderAssignment>;
   private incomeVerifications: Map<number, IncomeVerification>;
   
+  // Community related data maps
+  private communityCategories: Map<number, CommunityCategory>;
+  private communityPosts: Map<number, CommunityPost>;
+  private communityComments: Map<number, CommunityComment>;
+  private communityPostLikes: Map<number, CommunityPostLike>;
+  private communityCommentLikes: Map<number, CommunityCommentLike>;
+  private communityBookmarks: Map<number, CommunityBookmark>;
+  private userRoles: Map<number, UserRole>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
   private currentDocumentFolderId: number;
   private currentDocumentFolderAssignmentId: number;
   private currentIncomeVerificationId: number;
+  
+  // Community related counters
+  private currentCommunityCategoryId: number;
+  private currentCommunityPostId: number;
+  private currentCommunityCommentId: number;
+  private currentCommunityPostLikeId: number;
+  private currentCommunityCommentLikeId: number;
+  private currentCommunityBookmarkId: number;
+  private currentUserRoleId: number;
 
   constructor() {
+    // Initialize main collections
     this.users = new Map();
     this.documentTemplates = new Map();
     this.userDocuments = new Map();
@@ -78,6 +142,16 @@ export class MemStorage implements IStorage {
     this.documentFolderAssignments = new Map();
     this.incomeVerifications = new Map();
     
+    // Initialize community collections
+    this.communityCategories = new Map();
+    this.communityPosts = new Map();
+    this.communityComments = new Map();
+    this.communityPostLikes = new Map();
+    this.communityCommentLikes = new Map();
+    this.communityBookmarks = new Map();
+    this.userRoles = new Map();
+    
+    // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
     this.currentUserDocumentId = 1;
@@ -85,8 +159,110 @@ export class MemStorage implements IStorage {
     this.currentDocumentFolderAssignmentId = 1;
     this.currentIncomeVerificationId = 1;
     
-    // Seed document templates
+    // Initialize community IDs
+    this.currentCommunityCategoryId = 1;
+    this.currentCommunityPostId = 1;
+    this.currentCommunityCommentId = 1;
+    this.currentCommunityPostLikeId = 1;
+    this.currentCommunityCommentLikeId = 1;
+    this.currentCommunityBookmarkId = 1;
+    this.currentUserRoleId = 1;
+    
+    // Seed data
     this.seedDocumentTemplates();
+    this.seedCommunityCategories();
+    
+    // Add some example community posts
+    const demoUser = {
+      id: 999,
+      username: "demouser",
+      password: "password",
+      firstName: "Demo",
+      lastName: "User",
+      email: "demo@example.com",
+      phone: null,
+      dob: null,
+      address: null,
+      province: null,
+      postalCode: null,
+      incomeBased: null,
+      stripeCustomerId: null,
+      stripeSubscriptionId: null
+    };
+    
+    // Save demo user
+    this.users.set(demoUser.id, demoUser);
+    
+    // Example posts for the community
+    const examplePosts = [
+      {
+        title: "My experience with the Children's Aid Society",
+        content: "I recently had to deal with the Children's Aid Society and wanted to share my experience. The process was intimidating at first, but I used the templates from this site to help me communicate effectively.\n\nThe key things that helped me were preparing all my documentation in advance and keeping a detailed timeline of all interactions. I also made sure to respond promptly to all communications.\n\nIt was a difficult journey, but I'm glad to say that the situation has improved significantly. I'm grateful for the support from this community!",
+        categoryId: 1, // Stories
+        userId: demoUser.id,
+        isStory: true,
+        isAdvice: false,
+        isAnonymous: false
+      },
+      {
+        title: "Advice for dealing with an unfair eviction notice",
+        content: "After receiving an eviction notice that I believed was unfair, I took the following steps that might help others in similar situations:\n\n1. Immediately documented everything about my rental situation\n2. Used the Landlord-Tenant dispute templates from this site\n3. Contacted my local tenant rights organization for support\n4. Kept all communication in writing whenever possible\n\nRemember that landlords often count on tenants not knowing their rights. Stay calm, be professional, and know that you have legal protections.",
+        categoryId: 2, // Advice & Support
+        userId: demoUser.id,
+        isStory: false,
+        isAdvice: true,
+        isAnonymous: false
+      },
+      {
+        title: "Helpful resources for correcting credit report errors",
+        content: "I've compiled a list of resources that helped me successfully dispute errors on my Equifax credit report:\n\n- The Credit Bureau dispute letter templates from this site were incredibly helpful\n- The Financial Consumer Agency of Canada website has excellent guides: https://www.canada.ca/en/financial-consumer-agency.html\n- Credit Counselling Canada offers free consultations: https://creditcounsellingcanada.ca/\n\nRemember to keep copies of all communication and follow up regularly. Be persistent - it may take several attempts, but it's worth it to have an accurate credit report.",
+        categoryId: 3, // Resources
+        userId: demoUser.id,
+        isStory: false,
+        isAdvice: true,
+        isAnonymous: false
+      },
+      {
+        title: "Success story: Resolved my housing issues after months of struggle",
+        content: "After nearly six months of dealing with unsafe housing conditions, I'm happy to report that I finally got resolution! Using the templates from this site, I was able to properly document the issues and communicate effectively with my landlord and the local housing authority.\n\nIt wasn't easy and took a lot of persistence, but I now have a safe place to live with all the issues addressed. Remember that you have rights as a tenant and don't give up on advocating for yourself.",
+        categoryId: 4, // Success Stories
+        userId: demoUser.id,
+        isStory: true,
+        isAdvice: false,
+        isAnonymous: false
+      },
+      {
+        title: "Coping with the stress of legal disputes",
+        content: "I wanted to share some strategies that have helped me cope with the incredible stress of ongoing legal disputes:\n\n1. Establish a self-care routine - even 15 minutes a day makes a difference\n2. Set boundaries around when you work on your case - don't let it consume every moment\n3. Find a supportive community (like this one) where you can share experiences\n4. Consider low-cost mental health resources like BounceBack Canada or Wellness Together Canada\n\nRemember that taking care of your mental health is crucial during these challenging times. You can't effectively advocate for yourself if you're completely burned out.",
+        categoryId: 5, // Mental Health
+        userId: demoUser.id,
+        isStory: false,
+        isAdvice: true,
+        isAnonymous: true
+      }
+    ];
+    
+    // Add the example posts
+    const now = new Date().toISOString();
+    examplePosts.forEach(post => {
+      const id = this.currentCommunityPostId++;
+      this.communityPosts.set(id, {
+        ...post,
+        id,
+        isPinnedByModerator: false,
+        likeCount: Math.floor(Math.random() * 10),
+        createdAt: now,
+        updatedAt: now
+      });
+    });
+    
+    // Add admin role to demo user
+    this.userRoles.set(1, {
+      id: 1,
+      userId: demoUser.id,
+      role: "admin",
+      createdAt: now
+    });
   }
 
   // User methods
@@ -428,6 +604,162 @@ export class MemStorage implements IStorage {
     return updatedDocument;
   }
   
+  // Community category operations
+  async getCommunityCategories(): Promise<CommunityCategory[]> {
+    return Array.from(this.communityCategories.values());
+  }
+  
+  async getCommunityCategory(id: number): Promise<CommunityCategory | undefined> {
+    return this.communityCategories.get(id);
+  }
+  
+  async createCommunityCategory(category: InsertCommunityCategory): Promise<CommunityCategory> {
+    const id = this.currentCommunityCategoryId++;
+    const now = new Date().toISOString();
+    const newCategory: CommunityCategory = {
+      ...category,
+      id,
+      createdAt: now
+    };
+    this.communityCategories.set(id, newCategory);
+    return newCategory;
+  }
+  
+  async updateCommunityCategory(id: number, categoryData: Partial<CommunityCategory>): Promise<CommunityCategory | undefined> {
+    const existingCategory = this.communityCategories.get(id);
+    if (!existingCategory) return undefined;
+    
+    const updatedCategory = {
+      ...existingCategory,
+      ...categoryData
+    };
+    this.communityCategories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+  
+  async deleteCommunityCategory(id: number): Promise<boolean> {
+    // Check if there are any posts in this category
+    const postsInCategory = Array.from(this.communityPosts.values()).filter(
+      post => post.categoryId === id
+    );
+    
+    // Don't allow deletion if there are posts
+    if (postsInCategory.length > 0) {
+      return false;
+    }
+    
+    const exists = this.communityCategories.has(id);
+    if (!exists) return false;
+    
+    this.communityCategories.delete(id);
+    return true;
+  }
+  
+  // Community post operations
+  async getCommunityPosts(categoryId?: number): Promise<CommunityPost[]> {
+    let posts = Array.from(this.communityPosts.values());
+    
+    if (categoryId !== undefined) {
+      posts = posts.filter(post => post.categoryId === categoryId);
+    }
+    
+    // Sort by created date (newest first)
+    return posts.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+  
+  async getCommunityPost(id: number): Promise<CommunityPost | undefined> {
+    return this.communityPosts.get(id);
+  }
+  
+  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
+    const id = this.currentCommunityPostId++;
+    const now = new Date().toISOString();
+    const newPost: CommunityPost = {
+      ...post,
+      id,
+      likeCount: 0,
+      isPinnedByModerator: false,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.communityPosts.set(id, newPost);
+    return newPost;
+  }
+  
+  async updateCommunityPost(id: number, postData: Partial<CommunityPost>): Promise<CommunityPost | undefined> {
+    const existingPost = this.communityPosts.get(id);
+    if (!existingPost) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedPost = {
+      ...existingPost,
+      ...postData,
+      updatedAt: now
+    };
+    this.communityPosts.set(id, updatedPost);
+    return updatedPost;
+  }
+  
+  async deleteCommunityPost(id: number): Promise<boolean> {
+    const existingPost = this.communityPosts.get(id);
+    if (!existingPost) return false;
+    
+    // Delete all comments for this post
+    const commentsToDelete = Array.from(this.communityComments.values())
+      .filter(comment => comment.postId === id);
+      
+    for (const comment of commentsToDelete) {
+      this.communityComments.delete(comment.id);
+    }
+    
+    // Delete all likes for this post
+    const likesToDelete = Array.from(this.communityPostLikes.values())
+      .filter(like => like.postId === id);
+      
+    for (const like of likesToDelete) {
+      this.communityPostLikes.delete(like.id);
+    }
+    
+    // Delete all bookmarks for this post
+    const bookmarksToDelete = Array.from(this.communityBookmarks.values())
+      .filter(bookmark => bookmark.postId === id);
+      
+    for (const bookmark of bookmarksToDelete) {
+      this.communityBookmarks.delete(bookmark.id);
+    }
+    
+    // Delete the post
+    this.communityPosts.delete(id);
+    return true;
+  }
+  
+  async getUserCommunityPosts(userId: number): Promise<CommunityPost[]> {
+    return Array.from(this.communityPosts.values())
+      .filter(post => post.userId === userId)
+      .sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }
+  
+  async searchCommunityPosts(searchTerm: string): Promise<CommunityPost[]> {
+    if (!searchTerm) return this.getCommunityPosts();
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    
+    return Array.from(this.communityPosts.values())
+      .filter(post => {
+        return (
+          post.title.toLowerCase().includes(lowerSearchTerm) ||
+          post.content.toLowerCase().includes(lowerSearchTerm)
+        );
+      })
+      .sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+  }
+  
   // Seed initial document templates
   private seedDocumentTemplates() {
     const templates: InsertDocumentTemplate[] = [
@@ -626,6 +958,309 @@ export class MemStorage implements IStorage {
       const id = this.currentDocumentTemplateId++;
       this.documentTemplates.set(id, { ...template, id });
     });
+  }
+  // Seed community categories
+  private seedCommunityCategories() {
+    const categories: InsertCommunityCategory[] = [
+      {
+        name: "Stories",
+        description: "Share your personal experiences and journeys",
+        icon: "bookOpen",
+        sortOrder: 1,
+        isActive: true
+      },
+      {
+        name: "Advice & Support",
+        description: "Seek guidance or provide support to others in similar situations",
+        icon: "helping-hand",
+        sortOrder: 2,
+        isActive: true
+      },
+      {
+        name: "Resources",
+        description: "Share helpful resources, links, and information",
+        icon: "library",
+        sortOrder: 3,
+        isActive: true
+      },
+      {
+        name: "Success Stories",
+        description: "Celebrate victories, big and small, in your self-advocacy journey",
+        icon: "trophy",
+        sortOrder: 4,
+        isActive: true
+      },
+      {
+        name: "Mental Health",
+        description: "A safe space to discuss mental health challenges and coping strategies",
+        icon: "heart",
+        sortOrder: 5,
+        isActive: true
+      }
+    ];
+    
+    categories.forEach(category => {
+      const id = this.currentCommunityCategoryId++;
+      const now = new Date().toISOString();
+      this.communityCategories.set(id, { ...category, id, createdAt: now });
+    });
+  }
+  
+  // Community comment operations
+  async getCommunityComments(postId: number): Promise<CommunityComment[]> {
+    return Array.from(this.communityComments.values())
+      .filter(comment => comment.postId === postId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+  
+  async getCommunityComment(id: number): Promise<CommunityComment | undefined> {
+    return this.communityComments.get(id);
+  }
+  
+  async createCommunityComment(comment: InsertCommunityComment): Promise<CommunityComment> {
+    const id = this.currentCommunityCommentId++;
+    const now = new Date().toISOString();
+    const newComment: CommunityComment = {
+      ...comment,
+      id,
+      likeCount: 0,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.communityComments.set(id, newComment);
+    return newComment;
+  }
+  
+  async updateCommunityComment(id: number, commentData: Partial<CommunityComment>): Promise<CommunityComment | undefined> {
+    const existingComment = this.communityComments.get(id);
+    if (!existingComment) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedComment = {
+      ...existingComment,
+      ...commentData,
+      updatedAt: now
+    };
+    this.communityComments.set(id, updatedComment);
+    return updatedComment;
+  }
+  
+  async deleteCommunityComment(id: number): Promise<boolean> {
+    // Check if the comment exists
+    const existingComment = this.communityComments.get(id);
+    if (!existingComment) return false;
+    
+    // Delete all likes for this comment
+    const likesToDelete = Array.from(this.communityCommentLikes.values())
+      .filter(like => like.commentId === id);
+      
+    for (const like of likesToDelete) {
+      this.communityCommentLikes.delete(like.id);
+    }
+    
+    // Delete all child comments (replies)
+    const repliesDeleted = this.deleteCommentReplies(id);
+    
+    // Delete the comment itself
+    this.communityComments.delete(id);
+    return true;
+  }
+  
+  private deleteCommentReplies(parentCommentId: number): boolean {
+    const replies = Array.from(this.communityComments.values())
+      .filter(comment => comment.parentCommentId === parentCommentId);
+      
+    for (const reply of replies) {
+      // Recursive delete for nested replies
+      this.deleteCommentReplies(reply.id);
+      
+      // Delete likes for this reply
+      const likesToDelete = Array.from(this.communityCommentLikes.values())
+        .filter(like => like.commentId === reply.id);
+        
+      for (const like of likesToDelete) {
+        this.communityCommentLikes.delete(like.id);
+      }
+      
+      // Delete the reply
+      this.communityComments.delete(reply.id);
+    }
+    
+    return true;
+  }
+  
+  // Community like operations
+  async togglePostLike(postId: number, userId: number): Promise<boolean> {
+    // Check if user already liked this post
+    const existingLike = Array.from(this.communityPostLikes.values())
+      .find(like => like.postId === postId && like.userId === userId);
+      
+    if (existingLike) {
+      // Unlike: remove the like
+      this.communityPostLikes.delete(existingLike.id);
+      
+      // Update post like count
+      const post = this.communityPosts.get(postId);
+      if (post) {
+        const updatedPost = {
+          ...post,
+          likeCount: Math.max(0, (post.likeCount || 0) - 1)
+        };
+        this.communityPosts.set(postId, updatedPost);
+      }
+      
+      return false; // Indicates unliked
+    } else {
+      // Like: add new like
+      const id = this.currentCommunityPostLikeId++;
+      const now = new Date().toISOString();
+      const newLike: CommunityPostLike = {
+        id,
+        postId,
+        userId,
+        createdAt: now
+      };
+      this.communityPostLikes.set(id, newLike);
+      
+      // Update post like count
+      const post = this.communityPosts.get(postId);
+      if (post) {
+        const updatedPost = {
+          ...post,
+          likeCount: (post.likeCount || 0) + 1
+        };
+        this.communityPosts.set(postId, updatedPost);
+      }
+      
+      return true; // Indicates liked
+    }
+  }
+  
+  async toggleCommentLike(commentId: number, userId: number): Promise<boolean> {
+    // Check if user already liked this comment
+    const existingLike = Array.from(this.communityCommentLikes.values())
+      .find(like => like.commentId === commentId && like.userId === userId);
+      
+    if (existingLike) {
+      // Unlike: remove the like
+      this.communityCommentLikes.delete(existingLike.id);
+      
+      // Update comment like count
+      const comment = this.communityComments.get(commentId);
+      if (comment) {
+        const updatedComment = {
+          ...comment,
+          likeCount: Math.max(0, (comment.likeCount || 0) - 1)
+        };
+        this.communityComments.set(commentId, updatedComment);
+      }
+      
+      return false; // Indicates unliked
+    } else {
+      // Like: add new like
+      const id = this.currentCommunityCommentLikeId++;
+      const now = new Date().toISOString();
+      const newLike: CommunityCommentLike = {
+        id,
+        commentId,
+        userId,
+        createdAt: now
+      };
+      this.communityCommentLikes.set(id, newLike);
+      
+      // Update comment like count
+      const comment = this.communityComments.get(commentId);
+      if (comment) {
+        const updatedComment = {
+          ...comment,
+          likeCount: (comment.likeCount || 0) + 1
+        };
+        this.communityComments.set(commentId, updatedComment);
+      }
+      
+      return true; // Indicates liked
+    }
+  }
+  
+  async getPostLikes(postId: number): Promise<CommunityPostLike[]> {
+    return Array.from(this.communityPostLikes.values())
+      .filter(like => like.postId === postId);
+  }
+  
+  async getCommentLikes(commentId: number): Promise<CommunityCommentLike[]> {
+    return Array.from(this.communityCommentLikes.values())
+      .filter(like => like.commentId === commentId);
+  }
+  
+  // Community bookmark operations
+  async toggleBookmark(postId: number, userId: number): Promise<boolean> {
+    // Check if user already bookmarked this post
+    const existingBookmark = Array.from(this.communityBookmarks.values())
+      .find(bookmark => bookmark.postId === postId && bookmark.userId === userId);
+      
+    if (existingBookmark) {
+      // Remove bookmark
+      this.communityBookmarks.delete(existingBookmark.id);
+      return false; // Indicates removed
+    } else {
+      // Add bookmark
+      const id = this.currentCommunityBookmarkId++;
+      const now = new Date().toISOString();
+      const newBookmark: CommunityBookmark = {
+        id,
+        postId,
+        userId,
+        createdAt: now
+      };
+      this.communityBookmarks.set(id, newBookmark);
+      return true; // Indicates added
+    }
+  }
+  
+  async getUserBookmarks(userId: number): Promise<CommunityBookmark[]> {
+    return Array.from(this.communityBookmarks.values())
+      .filter(bookmark => bookmark.userId === userId);
+  }
+  
+  // User role operations
+  async getUserRole(userId: number): Promise<UserRole | undefined> {
+    return Array.from(this.userRoles.values())
+      .find(role => role.userId === userId);
+  }
+  
+  async assignUserRole(role: InsertUserRole): Promise<UserRole> {
+    // Remove any existing role for this user
+    const existingRoles = Array.from(this.userRoles.values())
+      .filter(r => r.userId === role.userId);
+      
+    for (const existingRole of existingRoles) {
+      this.userRoles.delete(existingRole.id);
+    }
+    
+    // Add new role
+    const id = this.currentUserRoleId++;
+    const now = new Date().toISOString();
+    const newRole: UserRole = {
+      ...role,
+      id,
+      createdAt: now
+    };
+    this.userRoles.set(id, newRole);
+    return newRole;
+  }
+  
+  async updateUserRole(userId: number, role: string): Promise<UserRole | undefined> {
+    const existingRole = Array.from(this.userRoles.values())
+      .find(r => r.userId === userId);
+      
+    if (!existingRole) return undefined;
+    
+    const updatedRole = {
+      ...existingRole,
+      role
+    };
+    this.userRoles.set(existingRole.id, updatedRole);
+    return updatedRole;
   }
 }
 

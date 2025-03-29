@@ -25,6 +25,10 @@ import About from "@/pages/about";
 import Chat from "@/pages/chat";
 import Resources from "@/pages/resources";
 import FAQ from "@/pages/faq";
+import Community from "@/pages/community";
+import NewPost from "@/pages/new-post";
+import PostDetail from "@/pages/post-detail";
+import CommunitySearch from "@/pages/community-search";
 
 function Router() {
   return (
@@ -44,6 +48,13 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/resources" component={Resources} />
       <Route path="/faq" component={FAQ} />
+      
+      {/* Community Routes */}
+      <Route path="/community" component={Community} />
+      <Route path="/community/new-post" component={NewPost} />
+      <Route path="/community/post/:id" component={PostDetail} />
+      <Route path="/community/search" component={CommunitySearch} />
+      
       <Route component={NotFound} />
     </Switch>
   );
