@@ -71,6 +71,7 @@ export const userDocuments = pgTable("user_documents", {
   paymentStatus: text("payment_status").notNull().default("pending"),
   documentPath: text("document_path"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  supportingDocuments: text("supporting_documents"),
 });
 
 export const insertUserDocumentSchema = createInsertSchema(userDocuments).pick({

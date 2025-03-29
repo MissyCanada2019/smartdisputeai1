@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -9,6 +9,7 @@ import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import multer from "multer";
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -43,6 +44,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   if (!fs.existsSync(documentsDir)) {
     fs.mkdirSync(documentsDir, { recursive: true });
   }
+  
+  // Set up upload directory for supporting documents
+  const uploadsDir = path.join(__dirname, "../uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  
+  // Configure multer for file uploads
+  const fileStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, uploadsDir);
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+    }
+  });
+  
+  const upload = multer({ 
+    storage: fileStorage,
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: function (req, file, cb) {
+      const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+      const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+      const mimetype = filetypes.test(file.mimetype);
+      
+      if (mimetype && extname) {
+        return cb(null, true);
+      } else {
+        cb(new Error("Invalid file type. Only JPEG, PNG, GIF, PDF, DOC, and DOCX are allowed."));
+      }
+    }
+  });
 
   // Get all document templates
   app.get("/api/document-templates", async (_req: Request, res: Response) => {
@@ -579,9 +616,18 @@ Available document categories include:
 - Transition services disputes
 
 Based on the user's situation, recommend the most appropriate document template from this list:
-${templates.map(t => `- ${t.name}: ${t.description}`).join('\n')}
+${templates.map(t => `- ${t.name}: ${t.description} (Category: ${t.category})`).join('\n')}
 
-You should provide helpful, compassionate advice and guide the user to the most relevant document template. If you're not sure which template is most appropriate, ask clarifying questions. Remember that users are likely facing difficult circumstances and need support.`;
+Focus on SELF-ADVOCACY: The core mission of SmartDisputesAICanada is to empower users to advocate for themselves when facing systemic challenges. Emphasize that they have the right to dispute decisions and challenge unjust treatment by government agencies.
+
+When responding:
+1. Acknowledge the user's situation with empathy
+2. Emphasize their RIGHT to dispute decisions and advocate for themselves
+3. Recommend the appropriate document template
+4. Explain how the document will help them in their self-advocacy journey
+5. Use simple, non-legal language that's accessible to everyone
+
+If you're not sure which template is most appropriate, ask clarifying questions. Remember that users are likely facing difficult circumstances and need support that focuses on empowerment and self-advocacy.`;
 
       // Get the completion from OpenAI
       const completion = await openai.chat.completions.create({
@@ -604,6 +650,86 @@ You should provide helpful, compassionate advice and guide the user to the most 
       });
     } catch (error: any) {
       res.status(500).json({ message: `Chatbot error: ${error.message}` });
+    }
+  });
+
+  // File upload endpoint for supporting documents
+  app.post("/api/upload-documents", upload.array('documents', 5), async (req: Request, res: Response) => {
+    try {
+      // Check if files were uploaded
+      if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+      
+      const files = Array.isArray(req.files) ? req.files : [req.files];
+      const { documentId, userId } = req.body;
+      
+      if (!documentId && !userId) {
+        return res.status(400).json({ message: "Either documentId or userId is required" });
+      }
+      
+      // Create response with file information
+      const uploadedFiles = files.map(file => ({
+        filename: file.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+        path: file.path
+      }));
+      
+      // If document ID is provided, update the document with the file attachments
+      if (documentId) {
+        const docId = parseInt(documentId);
+        if (!isNaN(docId)) {
+          const document = await storage.getUserDocument(docId);
+          if (document) {
+            // Update document with file attachments
+            await storage.updateUserDocument(docId, {
+              supportingDocuments: JSON.stringify(uploadedFiles)
+            });
+          }
+        }
+      }
+      
+      // If userId is provided (for income verification), update the income verification record
+      if (userId) {
+        const uId = parseInt(userId);
+        if (!isNaN(uId)) {
+          // Get the most recent income verification request for this user
+          const verifications = await storage.getIncomeVerifications(uId);
+          if (verifications.length > 0) {
+            const mostRecent = verifications[0]; // Assuming sorted by date descending
+            // Update income verification with file attachments
+            await storage.updateIncomeVerification(mostRecent.id, {
+              verificationDocumentPath: uploadedFiles[0].path // Using first file
+            });
+          }
+        }
+      }
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Files uploaded successfully", 
+        files: uploadedFiles 
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: `File upload error: ${error.message}` });
+    }
+  });
+  
+  // Get uploaded file
+  app.get("/api/uploads/:filename", (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(uploadsDir, filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      res.download(filePath);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error downloading file: ${error.message}` });
     }
   });
 
