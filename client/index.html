@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LegalAssist - Affordable legal document generation platform for low-income and marginalized Canadians">
+  <title>LegalAssist - Smart Dispute Resolution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    // Check for saved theme preference or set default
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.classList.toggle('dark', currentTheme === 'dark');
+  </script>
+</head>
+<body>
+  <div id="root" class="min-h-screen"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <!-- A non-intrusive skip to prevent flash of unstyled content -->
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      background-color: #f9fafb;
+    }
+    .preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f9fafb;
+      z-index: 9999;
+      transition: opacity 0.3s;
+    }
+    .preloader.loaded {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+  <div id="preloader" class="preloader">
+    <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#0056b3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6l9 6 9-6M3 12l9 6 9-6M3 18l9 6 9-6"></path>
+    </svg>
+  </div>
+  <script>
+    window.addEventListener('load', function() {
+      // Hide preloader when page is fully loaded
+      document.getElementById('preloader').classList.add('loaded');
+      // Remove preloader from DOM after animation
+      setTimeout(() => {
+        const preloader = document.getElementById('preloader');
+        if (preloader && preloader.parentNode) {
+          preloader.parentNode.removeChild(preloader);
+        }
+      }, 300);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { z } from "zod";
+import { userInfoFormSchema, insertUserSchema, insertUserDocumentSchema } from "@shared/schema";
+import Stripe from "stripe";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Get current directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+import { dirname } from "path";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn('Missing STRIPE_SECRET_KEY. Payment processing will not work properly.');
+}
+
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  : undefined;
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Output directory for generated PDFs
+  const documentsDir = path.join(__dirname, "../docs");
+  if (!fs.existsSync(documentsDir)) {
+    fs.mkdirSync(documentsDir, { recursive: true });
+  }
+
+  // Get all document templates
+  app.get("/api/document-templates", async (_req: Request, res: Response) => {
+    try {
+      const templates = await storage.getDocumentTemplates();
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching document templates: ${error.message}` });
+    }
+  });
+
+  // Get document templates by province
+  app.get("/api/document-templates/province/:province", async (req: Request, res: Response) => {
+    try {
+      const { province } = req.params;
+      const templates = await storage.getDocumentTemplatesByProvince(province);
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching templates by province: ${error.message}` });
+    }
+  });
+
+  // Get single document template
+  app.get("/api/document-templates/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const template = await storage.getDocumentTemplate(id);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      res.json(template);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching template: ${error.message}` });
+    }
+  });
+
+  // Create user document
+  app.post("/api/user-documents", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = insertUserDocumentSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid document data", errors: validationResult.error.format() });
+      }
+      
+      const userDocumentData = validationResult.data;
+      
+      // Create user document
+      const newDocument = await storage.createUserDocument(userDocumentData);
+      res.status(201).json(newDocument);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating user document: ${error.message}` });
+    }
+  });
+
+  // Get user documents
+  app.get("/api/user-documents/user/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const documents = await storage.getUserDocuments(userId);
+      res.json(documents);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching user documents: ${error.message}` });
+    }
+  });
+
+  // Get single user document
+  app.get("/api/user-documents/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const document = await storage.getUserDocument(id);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      res.json(document);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching document: ${error.message}` });
+    }
+  });
+  
+  // Generate PDF document
+  app.post("/api/generate-pdf/:documentId", async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.documentId);
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID format" });
+      }
+      
+      // Get the user document
+      const userDocument = await storage.getUserDocument(documentId);
+      if (!userDocument) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Get the document template
+      const template = await storage.getDocumentTemplate(userDocument.templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Create PDF document
+      const pdfFilename = `document_${documentId}_${Date.now()}.pdf`;
+      const pdfPath = path.join(documentsDir, pdfFilename);
+      
+      const doc = new PDFDocument();
+      const writeStream = fs.createWriteStream(pdfPath);
+      doc.pipe(writeStream);
+      
+      // Add content to PDF
+      doc.fontSize(16).text(template.name, { align: 'center' });
+      doc.moveDown();
+      
+      // Replace placeholders in template with actual data
+      let content = template.templateContent;
+      Object.entries(userDocument.documentData).forEach(([key, value]) => {
+        content = content.replace(new RegExp(`\\[${key}\\]`, 'g'), value as string);
+      });
+      
+      // Add the content to the PDF
+      doc.fontSize(12).text(content);
+      
+      // Finalize PDF
+      doc.end();
+      
+      // Update the document with the path
+      const updatedDocument = await storage.updateUserDocument(documentId, {
+        documentPath: pdfFilename
+      });
+      
+      writeStream.on('finish', () => {
+        res.json({ 
+          success: true, 
+          filePath: pdfFilename,
+          document: updatedDocument
+        });
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error generating PDF: ${error.message}` });
+    }
+  });
+  
+  // Download PDF document
+  app.get("/api/download-pdf/:filename", (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(documentsDir, filename);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+      
+      res.download(filePath);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error downloading file: ${error.message}` });
+    }
+  });
+
+  // Create payment intent
+  app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const { amount, documentId } = req.body;
+      
+      if (!amount || typeof amount !== 'number') {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "cad",
+        metadata: {
+          documentId: documentId?.toString() || ''
+        }
+      });
+      
+      // If documentId is provided, update the document with the payment intent ID
+      if (documentId) {
+        await storage.updateUserDocument(documentId, {
+          stripePaymentIntentId: paymentIntent.id
+        });
+      }
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating payment intent: ${error.message}` });
+    }
+  });
+  
+  // Webhook for Stripe events
+  app.post("/api/webhook", async (req: Request, res: Response) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const payload = req.body;
+      const event = payload;
+      
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          const paymentIntent = event.data.object;
+          const documentId = paymentIntent.metadata.documentId;
+          
+          if (documentId) {
+            await storage.updatePaymentStatus(parseInt(documentId), "paid", paymentIntent.id);
+          }
+          break;
+          
+        case 'payment_intent.payment_failed':
+          const failedPaymentIntent = event.data.object;
+          const failedDocumentId = failedPaymentIntent.metadata.documentId;
+          
+          if (failedDocumentId) {
+            await storage.updatePaymentStatus(parseInt(failedDocumentId), "failed", failedPaymentIntent.id);
+          }
+          break;
+      }
+      
+      res.json({ received: true });
+    } catch (error: any) {
+      res.status(500).json({ message: `Webhook error: ${error.message}` });
+    }
+  });
+  
+  // Create a user (simplified for demo)
+  app.post("/api/users", async (req: Request, res: Response) => {
+    try {
+      const userSchema = insertUserSchema.extend({
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        email: z.string().email("Invalid email format")
+      });
+      
+      // Validate request body
+      const validationResult = userSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid user data", errors: validationResult.error.format() });
+      }
+      
+      const userData = validationResult.data;
+      
+      // Check if user with email already exists
+      const existingUser = await storage.getUserByEmail(userData.email!);
+      if (existingUser) {
+        return res.status(409).json({ message: "User with this email already exists" });
+      }
+      
+      // Create user
+      const newUser = await storage.createUser(userData);
+      res.status(201).json(newUser);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating user: ${error.message}` });
+    }
+  });
+  
+  // Update user info
+  app.patch("/api/users/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Validate request body
+      const validationResult = userInfoFormSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid user data", errors: validationResult.error.format() });
+      }
+      
+      const userData = validationResult.data;
+      
+      // Update user
+      const updatedUser = await storage.updateUser(id, userData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error updating user: ${error.message}` });
+    }
+  });
+  
+  // Create income verification request
+  app.post("/api/income-verification", async (req: Request, res: Response) => {
+    try {
+      const { userId, notes } = req.body;
+      
+      if (!userId || typeof userId !== 'number') {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Create verification request
+      const verification = await storage.createIncomeVerification({
+        userId,
+        verificationDocumentPath: undefined,
+        notes: notes || undefined
+      });
+      
+      res.status(201).json(verification);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating verification request: ${error.message}` });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
