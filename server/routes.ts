@@ -65,6 +65,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get document templates by category
+  app.get("/api/document-templates/category/:category", async (req: Request, res: Response) => {
+    try {
+      const { category } = req.params;
+      const templates = await storage.getDocumentTemplatesByCategory(category);
+      res.json(templates);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching templates by category: ${error.message}` });
+    }
+  });
+
   // Get single document template
   app.get("/api/document-templates/:id", async (req: Request, res: Response) => {
     try {

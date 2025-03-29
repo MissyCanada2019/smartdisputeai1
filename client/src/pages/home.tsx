@@ -76,12 +76,80 @@ export default function Home() {
         </div>
       </div>
       
-      {/* Document Types Preview */}
+      {/* Document Categories */}
       <div className="py-16">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Available Document Types</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Choose Your Battle</h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Our library includes a variety of templates tailored to common government agency disputes in Canada.
+            Select from our specialized categories of legal documents tailored to help you with specific agency disputes.
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+            <Link href="/document-selection?category=Children's Aid Society">
+              <div className="bg-gray-100 p-4 flex justify-center">
+                <FileText className="h-24 w-24 text-primary" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="font-medium text-lg text-gray-800 mb-1">Children's Aid Society</h3>
+                <p className="text-sm text-gray-600">Dispute letters and appeals for CAS decisions</p>
+              </CardContent>
+            </Link>
+          </Card>
+          
+          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+            <Link href="/document-selection?category=Landlord-Tenant">
+              <div className="bg-gray-100 p-4 flex justify-center">
+                <Shield className="h-24 w-24 text-primary" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="font-medium text-lg text-gray-800 mb-1">Landlord-Tenant</h3>
+                <p className="text-sm text-gray-600">Maintenance requests and dispute resolutions</p>
+              </CardContent>
+            </Link>
+          </Card>
+          
+          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+            <Link href="/document-selection?category=Credit Disputes">
+              <div className="bg-gray-100 p-4 flex justify-center">
+                <DollarSign className="h-24 w-24 text-primary" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="font-medium text-lg text-gray-800 mb-1">Equifax Disputes</h3>
+                <p className="text-sm text-gray-600">Challenge incorrect credit report information</p>
+              </CardContent>
+            </Link>
+          </Card>
+          
+          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer">
+            <Link href="/document-selection?category=Appeals">
+              <div className="bg-gray-100 p-4 flex justify-center">
+                <Gavel className="h-24 w-24 text-primary" />
+              </div>
+              <CardContent className="p-4 text-center">
+                <h3 className="font-medium text-lg text-gray-800 mb-1">Transition Services</h3>
+                <p className="text-sm text-gray-600">Administrative tribunal appeals and FOI requests</p>
+              </CardContent>
+            </Link>
+          </Card>
+        </div>
+        
+        <div className="mt-8 text-center">
+          <Link href="/document-selection">
+            <Button variant="outline">
+              View All Document Types
+            </Button>
+          </Link>
+        </div>
+      </div>
+      
+      {/* Featured Document Types */}
+      <div className="py-16 bg-gray-50 rounded-lg">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Popular Document Templates</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Our most frequently requested document templates to address common disputes.
           </p>
         </div>
         
@@ -131,22 +199,14 @@ export default function Home() {
               />
             </div>
             <CardContent className="p-4">
-              <h3 className="font-medium text-gray-800 mb-1">Tax Assessment Dispute</h3>
-              <p className="text-sm text-gray-600 mb-2">Challenge tax assessments from the CRA or provincial tax authorities.</p>
+              <h3 className="font-medium text-gray-800 mb-1">Equifax Dispute Letter</h3>
+              <p className="text-sm text-gray-600 mb-2">Challenge incorrect information on your Equifax credit report.</p>
               <div className="flex items-center text-xs text-gray-500">
                 <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 mr-2">All Provinces</span>
-                <span>$49.99</span>
+                <span>$5.99</span>
               </div>
             </CardContent>
           </Card>
-        </div>
-        
-        <div className="mt-8 text-center">
-          <Link href="/document-selection">
-            <Button variant="outline">
-              View All Document Types
-            </Button>
-          </Link>
         </div>
       </div>
       

@@ -18,6 +18,7 @@ export interface IStorage {
   getDocumentTemplates(): Promise<DocumentTemplate[]>;
   getDocumentTemplate(id: number): Promise<DocumentTemplate | undefined>;
   getDocumentTemplatesByProvince(province: string): Promise<DocumentTemplate[]>;
+  getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]>;
   createDocumentTemplate(template: InsertDocumentTemplate): Promise<DocumentTemplate>;
   
   // User document operations
@@ -106,6 +107,12 @@ export class MemStorage implements IStorage {
   async getDocumentTemplatesByProvince(province: string): Promise<DocumentTemplate[]> {
     return Array.from(this.documentTemplates.values()).filter(
       (template) => template.applicableProvinces.includes(province)
+    );
+  }
+
+  async getDocumentTemplatesByCategory(category: string): Promise<DocumentTemplate[]> {
+    return Array.from(this.documentTemplates.values()).filter(
+      (template) => template.category === category
     );
   }
   

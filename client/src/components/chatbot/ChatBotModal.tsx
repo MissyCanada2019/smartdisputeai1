@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { MessageSquare } from 'lucide-react';
 import ChatBot from './ChatBot';
@@ -23,6 +24,7 @@ export default function ChatBotModal() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
+        <DialogTitle className="sr-only">Chat with AI Assistant</DialogTitle>
         <ChatBot isModal onClose={() => setIsOpen(false)} />
       </DialogContent>
     </Dialog>

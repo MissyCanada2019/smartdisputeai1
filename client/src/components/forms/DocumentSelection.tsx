@@ -3,22 +3,37 @@ import { DocumentTemplate } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/lib/formContext";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import DocumentCard from "@/components/documents/DocumentCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 export default function DocumentSelectionForm() {
   const [formState, setFormState] = useFormState();
   const [_, navigate] = useLocation();
   
+  // Get URL search params to check for category filter
+  const searchParams = new URLSearchParams(useSearch());
+  const categoryFilter = searchParams.get('category');
+  
   // If there's a province in userInfo, filter templates by province
   const province = formState.userInfo?.province;
   
-  // Fetch all document templates or filter by province if available
+  // Determine which API endpoint to use based on filters
+  let queryKey: string[] = ['/api/document-templates'];
+  let queryEndpoint: string = '/api/document-templates';
+  
+  if (categoryFilter) {
+    queryKey = [`/api/document-templates/category/${encodeURIComponent(categoryFilter)}`];
+    queryEndpoint = `/api/document-templates/category/${encodeURIComponent(categoryFilter)}`;
+  } else if (province) {
+    queryKey = [`/api/document-templates/province/${province}`];
+    queryEndpoint = `/api/document-templates/province/${province}`;
+  }
+  
+  // Fetch document templates based on filters
   const { data: templates, isLoading } = useQuery<DocumentTemplate[]>({
-    queryKey: province 
-      ? [`/api/document-templates/province/${province}`] 
-      : ['/api/document-templates'],
+    queryKey,
     retry: 1,
   });
   
