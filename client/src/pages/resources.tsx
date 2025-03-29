@@ -85,7 +85,34 @@ export default function Resources() {
                             <li>You can file a complaint if your privacy rights are violated</li>
                           </ul>
                           
-                          <p className="mt-4">Provincial laws provide specific protections, which is why consulting location-specific resources is critical. Document everything in writing and know that tenant boards exist to help mediate disputes.</p>
+                          <h4 className="text-lg font-semibold mt-4 mb-2">Filing LTB Applications (Ontario)</h4>
+                          <ul>
+                            <li><strong>T2 Application:</strong> Use when your landlord has harassed you, substantially interfered with your reasonable enjoyment, or unreasonably interfered with your rights</li>
+                            <li><strong>T6 Application:</strong> Use when your landlord hasn't done required maintenance or repairs, or provided essential services</li>
+                            <li>Both applications can request rent abatement, compensation, and orders for repairs/services</li>
+                            <li>File applications within one year of the alleged conduct or breach</li>
+                            <li>Gather evidence: photos, videos, written requests for repairs, witness statements</li>
+                          </ul>
+                          
+                          <h4 className="text-lg font-semibold mt-4 mb-2">When to File a T6 Application</h4>
+                          <ul>
+                            <li>No heat, electricity, water or other essential services</li>
+                            <li>Unrepaired damage affecting livability (leaking roof, mold, broken appliances)</li>
+                            <li>Pest infestations that the landlord hasn't adequately addressed</li>
+                            <li>Safety hazards (broken locks, malfunctioning smoke detectors)</li>
+                            <li>After providing written repair requests with reasonable time to complete</li>
+                          </ul>
+                          
+                          <h4 className="text-lg font-semibold mt-4 mb-2">When to File a T2 Application</h4>
+                          <ul>
+                            <li>Harassment, threats, or intimidation from your landlord</li>
+                            <li>Landlord entering without proper notice repeatedly</li>
+                            <li>Disconnection or interference with vital services</li>
+                            <li>Discrimination based on protected grounds</li>
+                            <li>Unreasonable rules that substantially interfere with your enjoyment</li>
+                          </ul>
+                          
+                          <p className="mt-4">Provincial laws provide specific protections, which is why consulting location-specific resources is critical. Document everything in writing and know that tenant boards exist to help mediate disputes. Similar applications exist in other provinces but may have different names and processes.</p>
                         </>
                       )}
 

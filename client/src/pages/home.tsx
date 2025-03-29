@@ -34,6 +34,81 @@ export default function Home() {
         </div>
       </div>
       
+      {/* Smart Question Section */}
+      <div className="py-8 max-w-4xl mx-auto px-4 mb-6">
+        <div className="bg-white rounded-lg border shadow-sm p-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Find The Right Forms & Resources</h2>
+          <p className="text-gray-600 mb-6">Tell us what you're looking for, and we'll guide you to the appropriate forms, templates, and resources.</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="dispute-question" className="block text-sm font-medium text-gray-700 mb-1">
+                What issue are you facing? (Be as specific as possible)
+              </label>
+              <textarea 
+                id="dispute-question" 
+                rows={3} 
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                placeholder="Example: My landlord hasn't fixed my leaking roof for 3 months despite multiple requests"
+              ></textarea>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="dispute-agency" className="block text-sm font-medium text-gray-700 mb-1">
+                  Which agency or organization are you dealing with? (Optional)
+                </label>
+                <select 
+                  id="dispute-agency" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Select an agency (optional)</option>
+                  <option value="landlord">Landlord or Property Management</option>
+                  <option value="ltb">Landlord and Tenant Board</option>
+                  <option value="cas">Children's Aid Society</option>
+                  <option value="equifax">Equifax or Credit Bureau</option>
+                  <option value="shelter">Shelter or Housing Service</option>
+                  <option value="other">Other (please specify in your question)</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="dispute-province" className="block text-sm font-medium text-gray-700 mb-1">
+                  Your Province or Territory (Optional)
+                </label>
+                <select 
+                  id="dispute-province" 
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Select your location (optional)</option>
+                  <option value="AB">Alberta</option>
+                  <option value="BC">British Columbia</option>
+                  <option value="MB">Manitoba</option>
+                  <option value="NB">New Brunswick</option>
+                  <option value="NL">Newfoundland and Labrador</option>
+                  <option value="NS">Nova Scotia</option>
+                  <option value="NT">Northwest Territories</option>
+                  <option value="NU">Nunavut</option>
+                  <option value="ON">Ontario</option>
+                  <option value="PE">Prince Edward Island</option>
+                  <option value="QC">Quebec</option>
+                  <option value="SK">Saskatchewan</option>
+                  <option value="YT">Yukon</option>
+                </select>
+              </div>
+            </div>
+            
+            <Link href="/chat">
+              <Button 
+                className="w-full md:w-auto px-6 py-3 text-lg"
+              >
+                Get Personalized Help
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+      
       {/* Features */}
       <div className="py-16 bg-white rounded-lg shadow-sm">
         <div className="text-center mb-12">
