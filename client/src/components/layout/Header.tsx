@@ -16,7 +16,7 @@ export default function Header() {
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l9 6 9-6M3 12l9 6 9-6M3 18l9 6 9-6" />
           </svg>
-          <span className="text-xl font-semibold text-primary">LegalAssist</span>
+          <span className="text-xl font-semibold text-primary">SmartDisputesAICanada</span>
         </Link>
         
         <nav className="hidden md:flex space-x-6">
@@ -26,9 +26,12 @@ export default function Header() {
           <Link href="/document-selection" className={`text-gray-600 hover:text-primary font-medium ${location.includes('/document') ? 'text-primary' : ''}`}>
             Services
           </Link>
-          <a href="#" className="text-gray-600 hover:text-primary font-medium">Templates</a>
-          <a href="#" className="text-gray-600 hover:text-primary font-medium">About</a>
-          <a href="#" className="text-gray-600 hover:text-primary font-medium">Contact</a>
+          <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
+            AI Assistant
+          </Link>
+          <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
+            About
+          </Link>
         </nav>
         
         <div className="flex items-center space-x-4">

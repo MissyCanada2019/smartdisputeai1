@@ -14,6 +14,8 @@ import TemplateCustomization from "@/pages/template-customization";
 import DocumentReview from "@/pages/document-review";
 import Payment from "@/pages/payment";
 import Success from "@/pages/success";
+import Subscribe from "@/pages/subscribe";
+import About from "@/pages/about";
 
 function Router() {
   return (
@@ -25,6 +27,8 @@ function Router() {
       <Route path="/document-review" component={DocumentReview} />
       <Route path="/payment" component={Payment} />
       <Route path="/success" component={Success} />
+      <Route path="/subscribe" component={Subscribe} />
+      <Route path="/about" component={About} />
       <Route component={NotFound} />
     </Switch>
   );

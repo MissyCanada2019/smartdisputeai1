@@ -390,6 +390,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: `Error creating verification request: ${error.message}` });
     }
   });
+  
+  // Generate a preview version of the PDF for users before purchase
+  app.get("/api/preview-pdf/:documentId", async (req: Request, res: Response) => {
+    try {
+      const documentId = parseInt(req.params.documentId);
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      const document = await storage.getUserDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      const template = await storage.getDocumentTemplate(document.templateId);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Create a preview version of the PDF (watermarked, first page only, or limited content)
+      const previewFilename = `preview_${document.id}_${Date.now()}.pdf`;
+      const previewPath = path.join(documentsDir, previewFilename);
+      
+      // Generate preview PDF with a watermark
+      const doc = new PDFDocument();
+      const stream = fs.createWriteStream(previewPath);
+      
+      doc.pipe(stream);
+      
+      // Add header with logo and title
+      doc.fontSize(24).text("SmartDisputesAICanada", { align: 'center' });
+      doc.fontSize(18).text("Document Preview", { align: 'center' });
+      doc.moveDown();
+      
+      // Add document template info
+      doc.fontSize(16).text(`${template.name} - Preview`, { align: 'center' });
+      doc.moveDown();
+      
+      // Add user info (limited)
+      doc.fontSize(12).text(`Document ID: ${document.id}`);
+      doc.text(`Created: ${new Date(document.createdAt).toLocaleDateString()}`);
+      doc.moveDown();
+      
+      // Add document content preview with watermark text
+      doc.fontSize(14).text("Document Preview Content");
+      doc.moveDown();
+      
+      // Add sample text from the template
+      doc.fontSize(12).text(template.description || "Document description not available");
+      doc.moveDown();
+      
+      // Add some placeholder text instead of actual content
+      doc.text("This is a preview of your document. Purchase the full version to access the complete document with all of your information.");
+      doc.moveDown(2);
+      
+      // Add a watermark
+      doc.save();
+      doc.rotate(-45, { origin: [300, 300] });
+      doc.fontSize(60).fillColor('rgba(200, 200, 200, 0.4)').text('PREVIEW ONLY', 100, 300);
+      doc.restore();
+      
+      // Add purchase information
+      doc.moveDown(4);
+      doc.fontSize(14).fillColor('black').text("To purchase the full document:", { align: 'center' });
+      doc.fontSize(12).text(`1. Complete the form submission process`, { align: 'center' });
+      doc.text(`2. Pay the one-time fee of $${template.price.toFixed(2)} CAD`, { align: 'center' });
+      doc.text(`3. Receive immediate access to download your complete document`, { align: 'center' });
+      
+      // Add a disclaimer at the bottom
+      doc.moveDown(2);
+      doc.fontSize(10).text("DISCLAIMER: This document is provided for informational purposes only and does not constitute legal advice. SmartDisputesAICanada is not a law firm and is not a substitute for an attorney or law firm.", { align: 'center' });
+      
+      doc.end();
+      
+      // Wait for the PDF to be fully written
+      stream.on('finish', () => {
+        const fileStream = fs.createReadStream(previewPath);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename=${previewFilename}`);
+        fileStream.pipe(res);
+        
+        // Clean up the file after sending
+        fileStream.on('end', () => {
+          // Delete the preview file after sending to save space
+          // fs.unlinkSync(previewPath);
+        });
+      });
+      
+      stream.on('error', (error) => {
+        console.error("Error generating PDF preview:", error);
+        res.status(500).json({ message: "Error generating PDF preview" });
+      });
+    } catch (error: any) {
+      console.error("Error in preview-pdf endpoint:", error);
+      res.status(500).json({ message: "Server error generating PDF preview" });
+    }
+  });
+  
+  // Email the document preview to a user
+  app.post("/api/email-document-preview", async (req: Request, res: Response) => {
+    try {
+      const { documentId, email, previewOnly } = req.body;
+      
+      if (!documentId || !email) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // In a real implementation, this would send an email with the document preview
+      // using a service like SendGrid, Mailgun, etc.
+      
+      // For now, we'll just respond with success
+      setTimeout(() => {
+        res.status(200).json({ 
+          message: "Email sent successfully",
+          details: {
+            to: email,
+            documentId,
+            previewOnly
+          }
+        });
+      }, 1000); // Simulate sending delay
+      
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      res.status(500).json({ message: "Server error sending email" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

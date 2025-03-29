@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocumentTemplate } from "@shared/schema";
-import { AlertCircle, Download, Eye, LockIcon, Mail } from "lucide-react";
-import { useNavigate } from "wouter";
+import { AlertCircle, Download, Eye, Lock as LockIcon, Mail } from "lucide-react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ interface PDFPreviewProps {
 }
 
 export default function PDFPreview({ documentId, templateData, isPreview = true }: PDFPreviewProps) {
-  const [, navigate] = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -147,7 +147,7 @@ export default function PDFPreview({ documentId, templateData, isPreview = true 
                     This is a preview of your document. Purchase to unlock the full document with all your information.
                   </p>
                   <Button onClick={handleDownload} className="w-full">
-                    Purchase Full Document - ${templateData.price.toFixed(2)} CAD
+                    Purchase Full Document - ${templateData.basePrice.toFixed(2)} CAD
                   </Button>
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function PDFPreview({ documentId, templateData, isPreview = true 
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => navigate(-1)}>
+        <Button variant="outline" onClick={() => window.history.back()}>
           Back
         </Button>
         <Button onClick={handleDownload} className="flex items-center gap-2">
