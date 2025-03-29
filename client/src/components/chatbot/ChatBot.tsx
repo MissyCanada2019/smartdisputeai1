@@ -41,17 +41,36 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
   const [, navigate] = useLocation();
   const [userId, setUserId] = useState<number | undefined>(undefined);
   
-  // Set up user ID (in a real app, this would come from authentication)
+  // Set up user ID and WebSocket connection
   useEffect(() => {
     // For demo purposes, we'll use a fake user ID of 1
     const demoUserId = 1;
     setUserId(demoUserId);
     
-    // Identify with the WebSocket service
-    webSocketService.connect();
-    if (demoUserId) {
-      webSocketService.identify(demoUserId);
-    }
+    // Disconnect any existing connections first
+    webSocketService.disconnect();
+    
+    // Connect to WebSocket with a small delay to ensure clean connection
+    setTimeout(() => {
+      // Connect to the WebSocket server
+      webSocketService.connect();
+      
+      // Wait a bit before identifying to make sure connection is established
+      setTimeout(() => {
+        if (demoUserId) {
+          try {
+            webSocketService.identify(demoUserId);
+          } catch (error) {
+            console.error("Error identifying with WebSocket:", error);
+          }
+        }
+      }, 1000);
+    }, 500);
+    
+    // Clean up function to disconnect when component unmounts
+    return () => {
+      webSocketService.disconnect();
+    };
   }, []);
 
   // Function to scroll to the bottom of messages
