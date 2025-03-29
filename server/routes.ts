@@ -200,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create payment intent
+  // Create payment intent for one-time document purchase
   app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
     try {
       if (!stripe) {
@@ -213,11 +213,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid amount" });
       }
       
+      // If the price is very low (less than a dollar), set a minimum of 5.99
+      const finalAmount = amount < 1 ? 5.99 : amount;
+      
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
+        amount: Math.round(finalAmount * 100), // Convert to cents
         currency: "cad",
         metadata: {
-          documentId: documentId?.toString() || ''
+          documentId: documentId?.toString() || '',
+          type: 'one-time'
         }
       });
       
@@ -231,6 +235,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       res.status(500).json({ message: `Error creating payment intent: ${error.message}` });
+    }
+  });
+  
+  // Create subscription payment intent
+  app.post("/api/create-subscription", async (req: Request, res: Response) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+      
+      const { plan, amount } = req.body;
+      
+      if (!plan || !amount) {
+        return res.status(400).json({ message: "Invalid subscription data" });
+      }
+      
+      // Set the subscription price based on the plan
+      // Monthly = $30, Weekly = $10, or the provided amount
+      let finalAmount = amount;
+      if (plan === 'monthly') {
+        finalAmount = 30;
+      } else if (plan === 'weekly') {
+        finalAmount = 10;
+      }
+      
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(finalAmount * 100), // Convert to cents
+        currency: "cad",
+        metadata: {
+          plan,
+          type: 'subscription'
+        }
+      });
+      
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating subscription: ${error.message}` });
     }
   });
   
