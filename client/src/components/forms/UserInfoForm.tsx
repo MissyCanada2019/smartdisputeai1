@@ -9,11 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/lib/formContext";
 import { useLocation } from "wouter";
+import { useState } from "react";
 
 export default function UserInfoForm() {
   const [formState, setFormState] = useFormState();
   const { toast } = useToast();
   const [_, navigate] = useLocation();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<UserInfoFormValues>({
     resolver: zodResolver(userInfoFormSchema),
@@ -33,23 +35,39 @@ export default function UserInfoForm() {
   });
   
   const onSubmit = (data: UserInfoFormValues) => {
-    setFormState({
-      ...formState,
-      userInfo: data,
-      currentStep: 2
-    });
-    
-    toast({
-      title: "Personal information saved",
-      description: "Moving to document selection."
-    });
-    
-    navigate("/document-selection");
+    try {
+      setErrorMessage(null);
+      setFormState({
+        ...formState,
+        userInfo: data,
+        currentStep: 2
+      });
+      
+      toast({
+        title: "Personal information saved",
+        description: "Moving to document selection."
+      });
+      
+      navigate("/document-selection");
+    } catch (error) {
+      console.error("Form submission error:", error);
+      setErrorMessage("An error occurred while saving your information. Please try again.");
+      toast({
+        title: "Error",
+        description: "There was a problem saving your information.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {errorMessage && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4 mb-4">
+            <p>{errorMessage}</p>
+          </div>
+        )}
         {/* Personal Details Section */}
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-4 pb-2 border-b border-gray-200">Personal Details</h3>

@@ -17,7 +17,7 @@ export default function DocumentSelectionForm() {
   // Fetch all document templates or filter by province if available
   const { data: templates, isLoading } = useQuery<DocumentTemplate[]>({
     queryKey: province 
-      ? ['/api/document-templates/province', province] 
+      ? [`/api/document-templates/province/${province}`] 
       : ['/api/document-templates'],
     retry: 1,
   });
