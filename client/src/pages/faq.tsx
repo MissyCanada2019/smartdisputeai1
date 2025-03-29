@@ -387,16 +387,17 @@ export default function FAQ() {
           </Tabs>
           
           <div className="mt-12 text-center">
-            <p className="mb-4 text-gray-600">
-              Still have questions? We're here to help.
+            <h2 className="text-2xl font-bold mb-4">Need More Help?</h2>
+            <p className="mb-6 text-gray-600">
+              Can't find what you're looking for? Our support team is here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild>
-                <Link to="/chat">Chat with AI Assistant</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/contact">Contact Support</Link>
-              </Button>
+              <Link href="/chat">
+                <Button className="px-6">Chat with AI Assistant</Button>
+              </Link>
+              <Link href="/resources">
+                <Button variant="outline" className="px-6">Browse Resources</Button>
+              </Link>
             </div>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { Link } from "wouter";
+
 export default function Footer() {
   return (
     <footer className="bg-gray-800 text-white mt-12">
@@ -31,18 +33,18 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-semibold mb-4">Resources</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">Document Library</a></li>
-              <li><a href="#" className="hover:text-white">Legal Guides</a></li>
-              <li><a href="#" className="hover:text-white">Government Resources</a></li>
-              <li><a href="#" className="hover:text-white">FAQs</a></li>
+              <li><Link href="/document-selection-hierarchical" className="hover:text-white">Document Library</Link></li>
+              <li><Link href="/resources" className="hover:text-white">Legal Guides</Link></li>
+              <li><Link href="/resources" className="hover:text-white">Government Resources</Link></li>
+              <li><Link href="/faq" className="hover:text-white">FAQs</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">About Us</a></li>
-              <li><a href="#" className="hover:text-white">Our Team</a></li>
+              <li><Link href="/about" className="hover:text-white">About Us</Link></li>
+              <li><Link href="/about" className="hover:text-white">Our Team</Link></li>
               <li><a href="#" className="hover:text-white">Careers</a></li>
               <li><a href="#" className="hover:text-white">Contact</a></li>
             </ul>
@@ -60,8 +62,8 @@ export default function Footer() {
         </div>
         
         <div className="pt-8 border-t border-gray-700 text-sm text-gray-400 flex flex-col md:flex-row justify-between items-center">
-          <p>© {new Date().getFullYear()} LegalAssist. All rights reserved.</p>
-          <p className="mt-2 md:mt-0">LegalAssist is not a law firm and does not provide legal advice.</p>
+          <p>© {new Date().getFullYear()} SmartDispute.ai Canada. All rights reserved.</p>
+          <p className="mt-2 md:mt-0">SmartDispute.ai is not a law firm and does not provide legal advice.</p>
         </div>
       </div>
     </footer>
