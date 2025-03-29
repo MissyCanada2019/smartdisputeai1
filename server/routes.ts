@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { userInfoFormSchema, insertUserSchema, insertUserDocumentSchema } from "@shared/schema";
 import Stripe from "stripe";
+import OpenAI from "openai";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
@@ -22,6 +23,17 @@ if (!process.env.STRIPE_SECRET_KEY) {
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2023-10-16" as any, // Specify the API version
+    })
+  : undefined;
+  
+// Initialize OpenAI
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly.');
+}
+
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
     })
   : undefined;
 
@@ -527,6 +539,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error sending email:", error);
       res.status(500).json({ message: "Server error sending email" });
+    }
+  });
+  
+  // Chatbot API endpoint
+  app.post("/api/chatbot", async (req: Request, res: Response) => {
+    try {
+      if (!openai) {
+        return res.status(500).json({ message: "OpenAI is not configured" });
+      }
+      
+      const { message, context } = req.body;
+      
+      if (!message) {
+        return res.status(400).json({ message: "Missing message content" });
+      }
+      
+      // Fetch all document templates for reference
+      const templates = await storage.getDocumentTemplates();
+      
+      // Format the prompt with context about available document types
+      const systemPrompt = `You are an AI assistant for SmartDisputesAICanada, a platform that helps low-income and marginalized Canadians with legal documents for disputes against government agencies and organizations.
+      
+Available document categories include:
+- Children's Aid Societies disputes
+- Landlord-Tenant disputes
+- Equifax disputes
+- Transition services disputes
+
+Based on the user's situation, recommend the most appropriate document template from this list:
+${templates.map(t => `- ${t.name}: ${t.description}`).join('\n')}
+
+You should provide helpful, compassionate advice and guide the user to the most relevant document template. If you're not sure which template is most appropriate, ask clarifying questions. Remember that users are likely facing difficult circumstances and need support.`;
+
+      // Get the completion from OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...(context && Array.isArray(context) ? context : []),
+          { role: "user", content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 500
+      });
+      
+      const response = completion.choices[0].message.content;
+      
+      // Return the chatbot response
+      res.json({ 
+        response,
+        templates: templates.map(t => ({ id: t.id, name: t.name }))
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: `Chatbot error: ${error.message}` });
     }
   });
 

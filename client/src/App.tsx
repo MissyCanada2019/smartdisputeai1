@@ -1,10 +1,11 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { FormProvider } from "@/lib/formContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ChatBotModal from "@/components/chatbot/ChatBotModal";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -16,6 +17,7 @@ import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
+import Chat from "@/pages/chat";
 
 function Router() {
   return (
@@ -29,6 +31,7 @@ function Router() {
       <Route path="/success" component={Success} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/about" component={About} />
+      <Route path="/chat" component={Chat} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -44,6 +47,7 @@ function App() {
             <Router />
           </main>
           <Footer />
+          <ChatBotModal />
         </div>
         <Toaster />
       </FormProvider>
