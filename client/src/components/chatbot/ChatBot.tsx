@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Send, X } from "lucide-react";
+import { webSocketService, MessageType, WebSocketMessage } from "@/lib/webSocketService";
 
 interface Message {
   content: string;
@@ -38,6 +39,20 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const [userId, setUserId] = useState<number | undefined>(undefined);
+  
+  // Set up user ID (in a real app, this would come from authentication)
+  useEffect(() => {
+    // For demo purposes, we'll use a fake user ID of 1
+    const demoUserId = 1;
+    setUserId(demoUserId);
+    
+    // Identify with the WebSocket service
+    webSocketService.connect();
+    if (demoUserId) {
+      webSocketService.identify(demoUserId);
+    }
+  }, []);
 
   // Function to scroll to the bottom of messages
   const scrollToBottom = () => {
@@ -81,10 +96,26 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
       }
 
       const data = await response.json();
+      let botResponse = data.response;
+      
+      // Extract template IDs from the response if they exist
+      const templateIdMatch = botResponse.match(/\[TEMPLATE_IDS:\s*([\d,\s]+)\]/);
+      let recommendedTemplateIds: number[] = [];
+      
+      if (templateIdMatch && templateIdMatch[1]) {
+        // Extract and clean up the template IDs
+        recommendedTemplateIds = templateIdMatch[1]
+          .split(',')
+          .map((id: string) => parseInt(id.trim()))
+          .filter((id: number) => !isNaN(id));
+          
+        // Remove the template IDs from the visible response
+        botResponse = botResponse.replace(/\[TEMPLATE_IDS:\s*[\d,\s]+\]/, '').trim();
+      }
 
       // Add bot response to chat
       const botMessage: Message = {
-        content: data.response,
+        content: botResponse,
         sender: "bot",
         timestamp: new Date(),
       };
@@ -93,7 +124,15 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
 
       // Update available templates if they were returned
       if (data.templates && Array.isArray(data.templates)) {
-        setTemplates(data.templates);
+        if (recommendedTemplateIds.length > 0) {
+          // Filter to show only the recommended templates
+          const filteredTemplates = data.templates.filter(
+            (template: Template) => recommendedTemplateIds.includes(template.id)
+          );
+          setTemplates(filteredTemplates.length > 0 ? filteredTemplates : data.templates);
+        } else {
+          setTemplates(data.templates);
+        }
       }
     } catch (error) {
       console.error("ChatBot error:", error);

@@ -10,11 +10,34 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
+import { WebSocketServer, WebSocket } from 'ws';
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { dirname } from "path";
+
+// WebSocket client tracking
+interface WebSocketClient {
+  ws: WebSocket;
+  userId?: number;
+  connectionTime: Date;
+}
+
+// Function to broadcast messages to connected WebSocket clients
+const broadcastMessage = (clients: Map<string, WebSocketClient>, message: any, filters?: { userId?: number }) => {
+  const payload = JSON.stringify(message);
+  
+  clients.forEach((client) => {
+    // Only send to clients that match the filters (if any)
+    if (
+      (!filters || !filters.userId || client.userId === filters.userId) && 
+      client.ws.readyState === WebSocket.OPEN
+    ) {
+      client.ws.send(payload);
+    }
+  });
+};
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -242,6 +265,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       writeStream.on('finish', () => {
+        // Notify user through WebSocket if they're connected
+        if (app.locals.broadcastMessage && userDocument.userId) {
+          app.locals.broadcastMessage({
+            type: 'document_generated',
+            documentId: documentId,
+            fileName: pdfFilename,
+            templateName: template.name,
+            timestamp: new Date()
+          }, { userId: userDocument.userId });
+        }
+        
         res.json({ 
           success: true, 
           filePath: pdfFilename,
@@ -360,7 +394,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const documentId = paymentIntent.metadata.documentId;
           
           if (documentId) {
-            await storage.updatePaymentStatus(parseInt(documentId), "paid", paymentIntent.id);
+            const docId = parseInt(documentId);
+            const updatedDoc = await storage.updatePaymentStatus(docId, "paid", paymentIntent.id);
+            
+            // Notify user via WebSocket if possible
+            if (app.locals.broadcastMessage && updatedDoc && updatedDoc.userId) {
+              app.locals.broadcastMessage({
+                type: 'payment_success',
+                documentId: docId,
+                message: "Your payment has been successfully processed. You can now access your complete document.",
+                timestamp: new Date()
+              }, { userId: updatedDoc.userId });
+            }
           }
           break;
           
@@ -369,7 +414,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const failedDocumentId = failedPaymentIntent.metadata.documentId;
           
           if (failedDocumentId) {
-            await storage.updatePaymentStatus(parseInt(failedDocumentId), "failed", failedPaymentIntent.id);
+            const docId = parseInt(failedDocumentId);
+            const updatedDoc = await storage.updatePaymentStatus(docId, "failed", failedPaymentIntent.id);
+            
+            // Notify user via WebSocket if possible
+            if (app.locals.broadcastMessage && updatedDoc && updatedDoc.userId) {
+              app.locals.broadcastMessage({
+                type: 'payment_failed',
+                documentId: docId,
+                message: "Your payment could not be processed. Please try again or use a different payment method.",
+                timestamp: new Date()
+              }, { userId: updatedDoc.userId });
+            }
           }
           break;
       }
@@ -615,17 +671,32 @@ Available document categories include:
 - Equifax disputes
 - Transition services disputes
 
+For Children's Aid Society scenarios:
+- If they mention CAS visiting a child's school, recommend the "CAS School Visit Response Guide"
+- For cases where a child has been apprehended, recommend the "Post-Apprehension Child Return Request"
+- For court proceedings, recommend the "CAS Court Hearing Preparation Guide"
+- For disputing CAS decisions or records, recommend the relevant dispute letter or record correction templates
+
+For Landlord-Tenant disputes:
+- Recommend province-specific templates where available (Ontario, BC, Alberta, Quebec)
+- For maintenance issues, recommend the "Maintenance/Repair Demand Letter"
+- For illegal rent increases, recommend the "Illegal Rent Increase Dispute" template
+- For ending tenancy in Ontario, recommend the "Ontario N9 Notice to End Tenancy"
+
 Based on the user's situation, recommend the most appropriate document template from this list:
-${templates.map(t => `- ${t.name}: ${t.description} (Category: ${t.category})`).join('\n')}
+${templates.map(t => `- ${t.name}: ${t.description} (Category: ${t.category}, Provinces: ${t.applicableProvinces.join(', ')})`).join('\n')}
 
 Focus on SELF-ADVOCACY: The core mission of SmartDisputesAICanada is to empower users to advocate for themselves when facing systemic challenges. Emphasize that they have the right to dispute decisions and challenge unjust treatment by government agencies.
 
 When responding:
 1. Acknowledge the user's situation with empathy
 2. Emphasize their RIGHT to dispute decisions and advocate for themselves
-3. Recommend the appropriate document template
+3. Recommend the appropriate document template or templates (up to 3 most relevant ones)
 4. Explain how the document will help them in their self-advocacy journey
-5. Use simple, non-legal language that's accessible to everyone
+5. Mention relevant provincial resources or advocacy groups if applicable
+6. Use simple, non-legal language that's accessible to everyone
+
+After you make your recommendation, also include the IDs of the most relevant templates in your reasoning (but don't show this to the user). Format like this at the end of your response: [TEMPLATE_IDS: 1, 5, 10] where the numbers are the template IDs that best match their scenario.
 
 If you're not sure which template is most appropriate, ask clarifying questions. Remember that users are likely facing difficult circumstances and need support that focuses on empowerment and self-advocacy.`;
 
@@ -643,10 +714,38 @@ If you're not sure which template is most appropriate, ask clarifying questions.
       
       const response = completion.choices[0].message.content;
       
+      // Extract any template IDs from the response
+      const templateIdMatch = response.match(/\[TEMPLATE_IDS:\s*([\d,\s]+)\]/);
+      let recommendedTemplateIds: number[] = [];
+      let cleanResponse = response;
+      
+      if (templateIdMatch && templateIdMatch[1]) {
+        // Extract and clean up the template IDs
+        recommendedTemplateIds = templateIdMatch[1]
+          .split(',')
+          .map((id: string) => parseInt(id.trim()))
+          .filter((id: number) => !isNaN(id));
+          
+        // Remove the template IDs from the visible response
+        cleanResponse = response.replace(/\[TEMPLATE_IDS:\s*[\d,\s]+\]/, '').trim();
+      }
+      
+      // If a userId was provided, send a WebSocket notification
+      const userId = req.body.userId;
+      if (app.locals.broadcastMessage && userId) {
+        app.locals.broadcastMessage({
+          type: 'chatbot_response',
+          message: cleanResponse,
+          recommendedTemplateIds,
+          timestamp: new Date()
+        }, { userId });
+      }
+      
       // Return the chatbot response
       res.json({ 
-        response,
-        templates: templates.map(t => ({ id: t.id, name: t.name }))
+        response: cleanResponse,
+        templates: templates.map(t => ({ id: t.id, name: t.name })),
+        recommendedTemplateIds: recommendedTemplateIds
       });
     } catch (error: any) {
       res.status(500).json({ message: `Chatbot error: ${error.message}` });
@@ -734,5 +833,69 @@ If you're not sure which template is most appropriate, ask clarifying questions.
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  
+  // Store connected clients
+  const clients = new Map<string, WebSocketClient>();
+  
+  wss.on('connection', (ws) => {
+    // Generate a unique client ID
+    const clientId = Date.now().toString();
+    
+    // Store the client
+    clients.set(clientId, {
+      ws,
+      connectionTime: new Date()
+    });
+    
+    console.log(`WebSocket client connected. Total clients: ${clients.size}`);
+    
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'connection',
+      message: 'Connected to SmartDisputesAICanada WebSocket server',
+      timestamp: new Date()
+    }));
+    
+    // Handle messages from client
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Associate user ID with this connection if provided
+        if (data.type === 'identify' && data.userId) {
+          const client = clients.get(clientId);
+          if (client) {
+            client.userId = data.userId;
+            clients.set(clientId, client);
+            
+            // Confirm identity association
+            ws.send(JSON.stringify({
+              type: 'identify',
+              success: true,
+              message: 'User ID associated with this connection',
+              timestamp: new Date()
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
+    });
+    
+    // Handle disconnection
+    ws.on('close', () => {
+      clients.delete(clientId);
+      console.log(`WebSocket client disconnected. Remaining clients: ${clients.size}`);
+    });
+  });
+  
+  // Expose broadcast function for use in other API endpoints
+  app.locals.broadcastMessage = (message: any, filters?: { userId?: number }) => {
+    broadcastMessage(clients, message, filters);
+  };
+  
   return httpServer;
 }

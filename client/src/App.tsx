@@ -6,6 +6,9 @@ import { FormProvider } from "@/lib/formContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ChatBotModal from "@/components/chatbot/ChatBotModal";
+import { useEffect } from "react";
+import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
+import { useToast } from "@/hooks/use-toast";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -38,6 +41,52 @@ function Router() {
 }
 
 function App() {
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    // Initialize WebSocket connection
+    webSocketService.connect();
+    
+    // Clean up on unmount
+    return () => {
+      webSocketService.disconnect();
+    };
+  }, []);
+  
+  useEffect(() => {
+    // Set up notification handlers
+    const notificationHandler = useWebSocketNotifications(toast);
+    
+    // Subscribe to various notification types
+    const documentSub = webSocketService.subscribe(
+      MessageType.DOCUMENT_GENERATED, 
+      notificationHandler
+    );
+    
+    const paymentSuccessSub = webSocketService.subscribe(
+      MessageType.PAYMENT_SUCCESS, 
+      notificationHandler
+    );
+    
+    const paymentFailedSub = webSocketService.subscribe(
+      MessageType.PAYMENT_FAILED, 
+      notificationHandler
+    );
+    
+    const systemNotificationSub = webSocketService.subscribe(
+      MessageType.SYSTEM_NOTIFICATION, 
+      notificationHandler
+    );
+    
+    // Clean up subscriptions on unmount
+    return () => {
+      documentSub();
+      paymentSuccessSub();
+      paymentFailedSub();
+      systemNotificationSub();
+    };
+  }, [toast]);
+  
   return (
     <QueryClientProvider client={queryClient}>
       <FormProvider>

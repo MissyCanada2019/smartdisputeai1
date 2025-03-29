@@ -10,7 +10,7 @@ export default function About() {
         {/* Hero section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-600 to-red-800 inline-block text-transparent bg-clip-text">
-            About SmartDisputesAICanada
+            About SmartDispute.ai Canada
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Empowering Canadians to fight unfair treatment without the high cost of legal representation.
@@ -20,38 +20,44 @@ export default function About() {
         {/* Founder story */}
         <Card className="border-none shadow-lg overflow-hidden">
           <CardHeader className="pb-4">
-            <CardTitle className="text-2xl font-bold text-red-700">Meet Teresa — The Founder</CardTitle>
-            <CardDescription>
-              From personal struggle to empowering others
-            </CardDescription>
+            <CardTitle className="text-2xl font-bold text-red-700">Founder's Story: Why I Built SmartDispute.ai Canada</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="md:flex gap-8 items-start">
               <div className="mb-6 md:mb-0 md:w-1/3 flex-shrink-0">
                 <img 
                   src={teresaPhoto} 
-                  alt="Teresa, Founder of SmartDisputesAICanada" 
+                  alt="Teresa, Founder of SmartDispute.ai Canada" 
                   className="rounded-lg shadow-lg w-full h-auto object-cover aspect-square"
                 />
               </div>
               <div className="space-y-4 text-gray-700 md:w-2/3">
-                <p>
-                  I'm Teresa—an advocate, a fighter, and a determined challenger of a system that's stacked against ordinary citizens. Life has tested me in ways most people wouldn't believe, but I refuse to be silenced or defeated. I've battled housing injustices, legal roadblocks, and systemic neglect, all while witnessing firsthand how our judicial system favors those with deep pockets over those with legitimate claims.
+                <p className="font-medium italic">
+                  I didn't build this platform because I wanted to.
+                  I built it because I had no choice.
                 </p>
                 <p>
-                  Through my own painful experiences, I've seen how our so-called "justice" system is fundamentally broken and biased. When you can't afford expensive legal representation, you're treated as a second-class citizen. The system isn't impartial—it's designed to protect the privileged and powerful while making it nearly impossible for regular Canadians to stand up for their rights.
+                  My name is Teresa. I'm a Métis mother, self-represented advocate, and survivor of a broken system. Over the past two years, I've fought tooth and nail to protect my kids from unsafe housing, health threats, and systemic neglect. My two-year-old son was hospitalized with respiratory illness because of untreated mold. I was served eviction notices while begging for repairs. I watched agencies like By-law and CAS weaponize their power instead of offering help. And I did it all without a lawyer, because I couldn't afford one—and most Canadians can't.
                 </p>
                 <p>
-                  I'm advocating for a complete revamp of this crooked and biased judicial system. Justice shouldn't depend on your income or asset bracket. The scales need to be leveled—not just adjusted slightly, but fundamentally rebalanced to create true fairness. Everyone deserves an equal shot at justice, regardless of their financial status or connections.
+                  I learned to draft legal documents on my own.
+                  I filed T2 and T6 applications.
+                  I documented everything.
+                  And I won battles I was never supposed to win.
                 </p>
                 <p>
-                  That's why I created SmartDisputesAICanada—to fight back against this imbalance by giving everyday Canadians the tools they need to challenge unfair credit reports, landlord disputes, government agencies, and more without needing expensive lawyers. I took my own battles and transformed them into solutions that empower others facing similar injustices.
+                  Through that fight, I realized something: it's not that people don't want to fight back—it's that they don't know how. The system is designed to confuse and exhaust you. Legal help is a luxury. But your rights? Your rights are not.
                 </p>
-                <p className="font-medium">
-                  I stand for genuine equality under the law, not just the illusion of it. My journey isn't just about my personal struggle—it's about creating systemic change. It's about building a world where fairness isn't determined by the size of your wallet. And if you're here, that means you're ready to join this fight for true justice.
+                <p>
+                  That's why I created SmartDispute.ai Canada—an AI-powered legal assistant that helps everyday people fight back, one letter at a time. It starts with credit disputes and housing complaints, and it's growing into a full-blown toolkit for self-represented warriors. No legalese. No $300/hour bills. Just help, when you need it most.
                 </p>
                 <p className="font-bold">
-                  Let's make real justice happen—together.
+                  This isn't just an app.<br/>
+                  It's my resistance.<br/>
+                  It's my answer to the question: "What now?"
+                </p>
+                <p className="font-medium">
+                  And if it helps you protect your home, fix your credit, or keep your family together—then it's already working.
                 </p>
               </div>
             </div>
@@ -89,7 +95,7 @@ export default function About() {
         <div className="bg-gradient-to-r from-red-600 to-red-800 text-white rounded-lg p-8 shadow-xl">
           <h2 className="text-2xl font-bold mb-6">The Journey Is Just Beginning</h2>
           <p className="mb-6">
-            SmartDisputesAICanada is only the first step in a much larger vision. We're building a comprehensive ecosystem that will revolutionize how everyday Canadians interact with the legal system.
+            SmartDispute.ai Canada is only the first step in a much larger vision. We're building a comprehensive ecosystem that will revolutionize how everyday Canadians interact with the legal system.
           </p>
           
           <div className="grid md:grid-cols-3 gap-6 mb-8">
