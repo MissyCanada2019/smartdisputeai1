@@ -20,7 +20,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" })
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : undefined;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -458,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       doc.moveDown(4);
       doc.fontSize(14).fillColor('black').text("To purchase the full document:", { align: 'center' });
       doc.fontSize(12).text(`1. Complete the form submission process`, { align: 'center' });
-      doc.text(`2. Pay the one-time fee of $${template.price.toFixed(2)} CAD`, { align: 'center' });
+      doc.text(`2. Pay the one-time fee of $${template.basePrice.toFixed(2)} CAD`, { align: 'center' });
       doc.text(`3. Receive immediate access to download your complete document`, { align: 'center' });
       
       // Add a disclaimer at the bottom
