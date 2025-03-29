@@ -726,7 +726,7 @@ If you're not sure which template is most appropriate, ask clarifying questions.
         max_tokens: 500
       });
       
-      const response = completion.choices[0].message.content;
+      const response = completion.choices[0].message.content || '';
       
       // Extract any template IDs from the response
       const templateIdMatch = response.match(/\[TEMPLATE_IDS:\s*([\d,\s]+)\]/);
@@ -814,7 +814,7 @@ If you're not sure which template is most appropriate, ask clarifying questions.
             const mostRecent = verifications[0]; // Assuming sorted by date descending
             // Update income verification with file attachments
             await storage.updateIncomeVerification(mostRecent.id, {
-              verificationDocumentPath: uploadedFiles[0].path // Using first file
+              verificationDocumentPath: uploadedFiles[0].filename // Using first file's filename
             });
           }
         }

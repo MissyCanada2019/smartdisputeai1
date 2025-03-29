@@ -15,22 +15,45 @@ export default function Home() {
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
       <div className="py-12 md:py-20 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-          Affordable Legal Documents for
-          <span className="block text-primary mt-2">Government Agency Disputes</span>
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-gray-900 leading-tight">
+          <span className="text-primary">Fighting Back Starts Here</span>
+          <span className="block mt-2">AI-Powered Legal Help for Canadians Who've Had Enough.</span>
         </h1>
-        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+        <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
           Simple, accessible legal solutions designed specifically for low-income and marginalized Canadians.
         </p>
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-6 mb-12">
           <Link href="/user-info">
-            <Button size="lg" className="text-lg px-8">
-              Get Started
+            <Button size="lg" className="text-lg px-10 py-6 font-semibold">
+              Start Your Dispute
             </Button>
           </Link>
-          <Button variant="outline" size="lg" className="text-lg px-8">
-            Learn More
-          </Button>
+          <Link href="/about">
+            <Button variant="outline" size="lg" className="text-lg px-10 py-6 font-semibold">
+              Read Our Story
+            </Button>
+          </Link>
+        </div>
+        
+        {/* Fast blurbs */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mt-4">
+          <div className="bg-white p-6 rounded-lg shadow-sm border text-center flex flex-col items-center">
+            <DollarSign className="h-12 w-12 text-primary mb-4" />
+            <p className="text-lg font-bold">Fix Credit Reports</p>
+            <p className="text-gray-600 mt-2">Challenge incorrect Equifax information and repair your financial standing.</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm border text-center flex flex-col items-center">
+            <Shield className="h-12 w-12 text-primary mb-4" />
+            <p className="text-lg font-bold">Hold Landlords Accountable</p>
+            <p className="text-gray-600 mt-2">Assert your tenant rights with powerful LTB applications and dispute tools.</p>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow-sm border text-center flex flex-col items-center">
+            <Gavel className="h-12 w-12 text-primary mb-4" />
+            <p className="text-lg font-bold">Push Back Against CAS & Police Overreach</p>
+            <p className="text-gray-600 mt-2">Protect your family and rights with legal documents that demand respect.</p>
+          </div>
         </div>
       </div>
       
