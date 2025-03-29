@@ -771,7 +771,71 @@ If you're not sure which template is most appropriate, ask clarifying questions.
         recommendedTemplateIds: recommendedTemplateIds
       });
     } catch (error: any) {
-      res.status(500).json({ message: `Chatbot error: ${error.message}` });
+      console.error("Chatbot error:", error);
+      
+      // Check if this is a rate limit error (429)
+      const isRateLimit = error.status === 429 || (error.message && error.message.includes("429"));
+      
+      // Fetch all document templates for reference (even in error case)
+      const templates = await storage.getDocumentTemplates();
+      
+      // Create fallback response based on user's query
+      let fallbackResponse = "I'm sorry, I'm currently having trouble processing your request. ";
+      
+      if (isRateLimit) {
+        fallbackResponse += "Our service is experiencing high demand right now. ";
+      }
+      
+      fallbackResponse += "In the meantime, you can browse our document templates directly using the document selection page or try again in a few minutes.";
+      
+      // Try to intelligently recommend templates based on keywords in the user's message
+      const message = req.body.message || "";
+      const keywords: Record<string, number[]> = {
+        "children": [1, 2, 3],              // Children's Aid Societies
+        "child": [1, 2, 3],                 // Children's Aid Societies
+        "cas": [1, 2, 3],                   // Children's Aid Societies
+        "rent": [4, 5, 6],                  // Landlord-Tenant
+        "landlord": [4, 5, 6],              // Landlord-Tenant
+        "tenant": [4, 5, 6],                // Landlord-Tenant
+        "apartment": [4, 5, 6],             // Landlord-Tenant
+        "housing": [4, 5, 6],               // Landlord-Tenant
+        "credit": [7, 8, 9],                // Equifax
+        "equifax": [7, 8, 9],               // Equifax
+        "report": [7, 8, 9],                // Equifax
+        "score": [7, 8, 9],                 // Equifax
+        "transition": [10, 11, 12],         // Transition services
+        "service": [10, 11, 12],            // Transition services
+        "support": [10, 11, 12]             // Transition services
+      };
+      
+      let recommendedTemplateIds: number[] = [];
+      
+      // Simple keyword matching
+      const lowerMessage = message.toLowerCase();
+      Object.entries(keywords).forEach(([keyword, ids]) => {
+        if (lowerMessage.includes(keyword.toLowerCase())) {
+          // Add IDs without using Set for compatibility
+          ids.forEach(id => {
+            if (!recommendedTemplateIds.includes(id)) {
+              recommendedTemplateIds.push(id);
+            }
+          });
+        }
+      });
+      
+      // If no keywords matched, recommend a sampling of templates
+      if (recommendedTemplateIds.length === 0) {
+        recommendedTemplateIds = [1, 4, 7, 10]; // One from each category
+      }
+      
+      // Return a 200 status with fallback content rather than an error
+      // This allows the frontend to display a helpful message instead of just an error
+      res.status(200).json({
+        response: fallbackResponse,
+        templates: templates.map(t => ({ id: t.id, name: t.name })),
+        recommendedTemplateIds,
+        isError: true
+      });
     }
   });
 
@@ -822,9 +886,16 @@ If you're not sure which template is most appropriate, ask clarifying questions.
           if (verifications.length > 0) {
             const mostRecent = verifications[0]; // Assuming sorted by date descending
             // Update income verification with file attachments
-            await storage.updateIncomeVerification(mostRecent.id, {
-              verificationDocumentPath: uploadedFiles[0].filename // Using first file's filename
-            });
+            // Only use string type for verificationDocumentPath as per schema
+            if (uploadedFiles && uploadedFiles.length > 0) {
+              // Ensure we're dealing with our mapped object that has filename property
+              const firstFile = uploadedFiles[0];
+              if (firstFile && typeof firstFile === 'object' && 'filename' in firstFile) {
+                await storage.updateIncomeVerification(mostRecent.id, {
+                  verificationDocumentPath: firstFile.filename
+                });
+              }
+            }
           }
         }
       }

@@ -108,29 +108,39 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
       const response = await apiRequest("POST", "/api/chatbot", {
         message: input,
         context,
+        userId // Include userId to enable WebSocket notifications
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to get response from chatbot");
-      }
-
       const data = await response.json();
-      let botResponse = data.response;
       
-      // Extract template IDs from the response if they exist
-      const templateIdMatch = botResponse.match(/\[TEMPLATE_IDS:\s*([\d,\s]+)\]/);
-      let recommendedTemplateIds: number[] = [];
-      
-      if (templateIdMatch && templateIdMatch[1]) {
-        // Extract and clean up the template IDs
-        recommendedTemplateIds = templateIdMatch[1]
-          .split(',')
-          .map((id: string) => parseInt(id.trim()))
-          .filter((id: number) => !isNaN(id));
-          
-        // Remove the template IDs from the visible response
-        botResponse = botResponse.replace(/\[TEMPLATE_IDS:\s*[\d,\s]+\]/, '').trim();
+      // Check for error state - note that we process errors with 200 status codes now
+      if (!response.ok || data.isError) {
+        // Still show the response message, but mark it as an error
+        setMessages((prev) => [...prev, {
+          content: data.response || "Sorry, I'm having trouble connecting right now. Please try again in a few minutes.",
+          sender: "bot",
+          timestamp: new Date(),
+        }]);
+        
+        // If there are recommended templates, show them even in error state
+        if (data.templates && Array.isArray(data.templates)) {
+          setTemplates(data.templates);
+        }
+        
+        if (data.recommendedTemplateIds && Array.isArray(data.recommendedTemplateIds)) {
+          // Use the keywords-based recommendations
+          const filteredTemplates = data.templates.filter(
+            (template: Template) => data.recommendedTemplateIds.includes(template.id)
+          );
+          setTemplates(filteredTemplates.length > 0 ? filteredTemplates : data.templates);
+        }
+        
+        // End the function early since we've already set the messages
+        return;
       }
+      
+      let botResponse = data.response;
+      let recommendedTemplateIds = data.recommendedTemplateIds || [];
 
       // Add bot response to chat
       const botMessage: Message = {

@@ -25,8 +25,10 @@ type MessageCallback = (message: WebSocketMessage) => void;
 class WebSocketService {
   private socket: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectInterval = 3000; // 3 seconds
+  private maxReconnectAttempts = 10; // Increase max attempts
+  private reconnectInterval = 1000; // Start with 1 second
+  private failedConnectionAttempts = 0; // Track failed connection attempts separately
+  private maxConsecutiveFailures = 3; // Number of consecutive failures before showing warning
   private messageCallbacks: Map<string, Set<MessageCallback>> = new Map();
 
   constructor() {
@@ -38,9 +40,16 @@ class WebSocketService {
 
   // Connect to the WebSocket server
   connect() {
-    // First disconnect any existing connection to ensure a clean state
-    if (this.socket) {
-      this.disconnect();
+    // If we already have an open connection, don't create a new one
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      console.log("WebSocket already connected");
+      return;
+    }
+    
+    // If the socket exists but isn't open, disconnect it first
+    if (this.socket && (this.socket.readyState === WebSocket.CLOSING || this.socket.readyState === WebSocket.CLOSED)) {
+      // We want to keep the reconnection state when reconnecting
+      this.disconnect(true);
     }
 
     try {
@@ -60,18 +69,38 @@ class WebSocketService {
 
       console.log("WebSocket connecting to", wsUrl);
       
-      // Reset reconnect attempts on new connection
-      this.reconnectAttempts = 0;
+      // Don't reset reconnect attempts here (keep the counter)
+      // It gets reset in handleOpen when connection is successful
     } catch (error) {
       console.error("Error creating WebSocket connection:", error);
+      this.failedConnectionAttempts++;
       
       // Try to reconnect after a delay if there was an error
-      setTimeout(() => {
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-          this.reconnectAttempts++;
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Calculate backoff time using exponential strategy
+        const backoffTime = Math.min(30000, this.reconnectInterval * Math.pow(2, this.reconnectAttempts));
+        
+        console.log(`Connection failed. Retrying in ${backoffTime}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+        this.reconnectAttempts++;
+        
+        setTimeout(() => {
           this.connect();
+        }, backoffTime);
+      } else {
+        console.warn("Maximum reconnect attempts reached. WebSocket will not reconnect automatically.");
+        
+        // Notify about connection failure
+        const callbacks = this.messageCallbacks.get(MessageType.SYSTEM_NOTIFICATION);
+        if (callbacks) {
+          const message: WebSocketMessage = {
+            type: MessageType.SYSTEM_NOTIFICATION,
+            message: "Failed to establish a connection. Please refresh the page to try again.",
+            timestamp: new Date(),
+            status: "failed"
+          };
+          callbacks.forEach(callback => callback(message));
         }
-      }, this.reconnectInterval);
+      }
     }
   }
 
@@ -132,21 +161,52 @@ class WebSocketService {
   }
 
   // Disconnect from the WebSocket server
-  disconnect() {
+  disconnect(keepReconnectState = false) {
     if (this.socket) {
       // Clear event handlers first to prevent reconnection attempts
       this.socket.onclose = null;
+      this.socket.onerror = null;
       this.socket.close();
       this.socket = null;
-      this.reconnectAttempts = 0;
+      
+      // Conditionally reset reconnect attempts
+      if (!keepReconnectState) {
+        this.reconnectAttempts = 0;
+      }
+      
       console.log("WebSocket disconnected");
     }
+  }
+  
+  // Explicitly attempt to reconnect
+  forceReconnect() {
+    // First disconnect but keep the reconnect state
+    this.disconnect(true);
+    
+    // Then immediately try to connect again
+    setTimeout(() => {
+      this.connect();
+    }, 100);
   }
 
   // Handle WebSocket open event
   private handleOpen(event: Event) {
     console.log("WebSocket connected", event);
+    // Reset counters on successful connection
     this.reconnectAttempts = 0;
+    this.failedConnectionAttempts = 0;
+    
+    // Broadcast system status to any subscribed components
+    const callbacks = this.messageCallbacks.get(MessageType.SYSTEM_NOTIFICATION);
+    if (callbacks) {
+      const message: WebSocketMessage = {
+        type: MessageType.SYSTEM_NOTIFICATION,
+        message: "Real-time connection established",
+        timestamp: new Date(),
+        status: "connected"
+      };
+      callbacks.forEach(callback => callback(message));
+    }
   }
 
   // Handle WebSocket message event
@@ -174,22 +234,63 @@ class WebSocketService {
   private handleClose(event: CloseEvent) {
     console.log("WebSocket closed:", event.code, event.reason);
     
-    // Attempt to reconnect if the close wasn't intentional
+    // Broadcast disconnection status to any subscribed components
+    const callbacks = this.messageCallbacks.get(MessageType.SYSTEM_NOTIFICATION);
+    if (callbacks) {
+      const message: WebSocketMessage = {
+        type: MessageType.SYSTEM_NOTIFICATION,
+        message: "Real-time connection lost. Attempting to reconnect...",
+        timestamp: new Date(),
+        status: "disconnected"
+      };
+      callbacks.forEach(callback => callback(message));
+    }
+    
+    // Attempt to reconnect with exponential backoff if not at max attempts
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      console.log(`Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})...`);
+      // Calculate backoff time using exponential strategy (1s, 2s, 4s, 8s, etc.)
+      const backoffTime = Math.min(30000, this.reconnectInterval * Math.pow(2, this.reconnectAttempts));
+      
+      console.log(`Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts}) in ${backoffTime}ms...`);
       this.reconnectAttempts++;
       
       setTimeout(() => {
         this.connect();
-      }, this.reconnectInterval);
+      }, backoffTime);
     } else {
       console.warn("Maximum reconnect attempts reached. WebSocket will not reconnect automatically.");
+      
+      // Final notification about no more automatic reconnects
+      if (callbacks) {
+        const message: WebSocketMessage = {
+          type: MessageType.SYSTEM_NOTIFICATION,
+          message: "Unable to establish a connection. Please refresh the page to try again.",
+          timestamp: new Date(),
+          status: "failed"
+        };
+        callbacks.forEach(callback => callback(message));
+      }
     }
   }
 
   // Handle WebSocket error event
   private handleError(event: Event) {
     console.error("WebSocket error:", event);
+    this.failedConnectionAttempts++;
+    
+    // If we have multiple consecutive errors, notify the user
+    if (this.failedConnectionAttempts >= this.maxConsecutiveFailures) {
+      const callbacks = this.messageCallbacks.get(MessageType.SYSTEM_NOTIFICATION);
+      if (callbacks) {
+        const message: WebSocketMessage = {
+          type: MessageType.SYSTEM_NOTIFICATION,
+          message: "Having trouble maintaining a connection to the server. This may affect real-time updates.",
+          timestamp: new Date(),
+          status: "error"
+        };
+        callbacks.forEach(callback => callback(message));
+      }
+    }
   }
 }
 
@@ -201,6 +302,8 @@ export const useWebSocketNotifications = (toast: any) => {
   const handleNotification = (message: WebSocketMessage) => {
     let title = "Notification";
     let description = message.message || "You have a new notification";
+    let variant: "default" | "destructive" | null = null;
+    let duration = 5000;
     
     // Customize based on message type
     switch (message.type) {
@@ -217,19 +320,36 @@ export const useWebSocketNotifications = (toast: any) => {
       case MessageType.PAYMENT_FAILED:
         title = "Payment Failed";
         description = "Your payment could not be processed. Please try again.";
+        variant = "destructive";
         break;
         
       case MessageType.CHATBOT_RESPONSE:
         title = "New Message";
         description = "You have a new message from the legal assistant.";
         break;
+        
+      case MessageType.SYSTEM_NOTIFICATION:
+        // Handle system status notifications
+        if (message.status === "error" || message.status === "failed") {
+          title = "Connection Issue";
+          variant = "destructive";
+          duration = 10000; // Show errors for longer
+        } else if (message.status === "disconnected") {
+          title = "Connection Lost";
+          // Use default variant for disconnection
+        } else if (message.status === "connected") {
+          title = "Connected";
+          duration = 3000; // Show brief connection confirmation
+        }
+        break;
     }
     
-    // Show toast notification
+    // Show toast notification with appropriate variant
     toast({
       title,
       description,
-      duration: 5000,
+      duration,
+      variant: variant || "default",
     });
   };
   
