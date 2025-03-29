@@ -20,7 +20,9 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2023-10-16" as any, // Specify the API version
+    })
   : undefined;
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -157,9 +159,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Replace placeholders in template with actual data
       let content = template.templateContent;
-      Object.entries(userDocument.documentData).forEach(([key, value]) => {
-        content = content.replace(new RegExp(`\\[${key}\\]`, 'g'), value as string);
-      });
+      
+      // Handle document data - it's stored as JSON in the database
+      const documentData = userDocument.documentData as Record<string, any>;
+      if (documentData && typeof documentData === 'object') {
+        Object.entries(documentData).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            content = content.replace(new RegExp(`\\[${key}\\]`, 'g'), String(value));
+          }
+        });
+      }
       
       // Add the content to the PDF
       doc.fontSize(12).text(content);

@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   console.warn('Missing VITE_STRIPE_PUBLIC_KEY. Payment processing will not work properly.');
 }
+// Initialize Stripe with the publishable key
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY ? 
   loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : 
   null;
