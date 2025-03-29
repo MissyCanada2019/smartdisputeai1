@@ -11,6 +11,7 @@ import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 
 // Make sure to call `loadStripe` outside of a component's render to avoid
 // recreating the `Stripe` object on every render.
@@ -157,33 +158,85 @@ export default function Subscribe() {
             <div className="mb-6">
               <RadioGroup 
                 value={selectedPlan} 
-                onValueChange={(value) => handlePlanChange(value as "monthly" | "weekly")}
+                onValueChange={(value) => handlePlanChange(value as "monthly" | "weekly" | "basic_document")}
                 className="space-y-4"
               >
-                <div className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <RadioGroupItem value="monthly" id="monthly" />
-                  <Label htmlFor="monthly" className="flex-1 cursor-pointer">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-semibold">Monthly Unlimited</p>
-                        <p className="text-sm text-gray-500">Unlimited AI assistance for a full month</p>
+                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "monthly" ? "border-primary" : "border-gray-200"}`}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="monthly" id="monthly" />
+                    <Label htmlFor="monthly" className="flex-1 cursor-pointer">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-lg">Premium Unlimited</p>
+                          <div className="flex items-center">
+                            <p className="text-primary font-semibold mr-2">$30/month</p>
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Most Value</Badge>
+                          </div>
+                        </div>
                       </div>
-                      <div className="font-bold">$30</div>
+                    </Label>
+                  </div>
+                  
+                  {selectedPlan === "monthly" && (
+                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Unlimited access to AI legal assistant</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Premium document templates</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Priority support</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> In-depth document reviews</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> File unlimited disputes</div>
                     </div>
-                  </Label>
+                  )}
                 </div>
                 
-                <div className="flex items-center space-x-2 border p-4 rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <RadioGroupItem value="weekly" id="weekly" />
-                  <Label htmlFor="weekly" className="flex-1 cursor-pointer">
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-semibold">Weekly Access</p>
-                        <p className="text-sm text-gray-500">7 days of AI assistance</p>
+                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "weekly" ? "border-primary" : "border-gray-200"}`}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="weekly" id="weekly" />
+                    <Label htmlFor="weekly" className="flex-1 cursor-pointer">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-lg">Weekly Access</p>
+                          <p className="text-primary font-semibold">$10/week</p>
+                        </div>
                       </div>
-                      <div className="font-bold">$10</div>
+                    </Label>
+                  </div>
+                  
+                  {selectedPlan === "weekly" && (
+                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> 7 days of AI legal assistance</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Standard document templates</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Standard support</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Basic document reviews</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> File up to 3 disputes per week</div>
                     </div>
-                  </Label>
+                  )}
+                </div>
+                
+                <div className={`border-2 p-4 rounded-lg hover:bg-gray-50 cursor-pointer ${selectedPlan === "basic_document" ? "border-primary" : "border-gray-200"}`}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <RadioGroupItem value="basic_document" id="basic_document" />
+                    <Label htmlFor="basic_document" className="flex-1 cursor-pointer">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-bold text-lg">Single Document</p>
+                          <div className="flex items-center">
+                            <p className="text-primary font-semibold mr-2">$5.99 one-time</p>
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Basic</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </Label>
+                  </div>
+                  
+                  {selectedPlan === "basic_document" && (
+                    <div className="ml-6 mt-2 text-sm text-gray-600 space-y-1">
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Single document generation</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Basic templates only</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> No AI assistance</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Email support only</div>
+                      <div className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" /> Valid for 1 document only</div>
+                    </div>
+                  )}
                 </div>
               </RadioGroup>
               
