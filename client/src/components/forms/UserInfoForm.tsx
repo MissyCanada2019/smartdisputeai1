@@ -174,7 +174,7 @@ export default function UserInfoForm() {
                   <FormLabel>Province/Territory <span className="text-red-500">*</span></FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -227,7 +227,7 @@ export default function UserInfoForm() {
                   <FormLabel>Annual Income Range</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    defaultValue={field.value}
+                    value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
