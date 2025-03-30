@@ -70,6 +70,47 @@ export default function About() {
           </div>
         </div>
 
+        {/* Jada's story - dark themed section */}
+        <div className="bg-gray-900 text-white rounded-lg shadow-xl overflow-hidden">
+          <div className="max-w-5xl mx-auto px-6 py-12">
+            <h2 className="text-3xl font-bold text-red-500 mb-8">Jada's Story: A Journey of Resilience</h2>
+            
+            <div className="space-y-4">
+              <p className="text-lg leading-relaxed">
+                My name is <strong>Jada</strong>, and I've been through more by my twenties than most will in a lifetime. I am a survivor of childhood trauma, betrayal, addiction, loss, and heartbreak—but I am still standing.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                At 10 years old, I was already carrying more than a child ever should. Fear of disappointing my mom led to a decision that changed everything—setting a fire to hide a bad test. That moment set off a chain of events that exposed just how alone I really was. Kicked out at 15 and abandoned by those who were supposed to protect me, I found comfort and care in the kindness of someone else's mother, who became my true guardian angel.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                A tragic accident in shop class landed me in the ICU, fighting for my life. I flatlined during surgery and lost a finger, but the emotional scars ran deeper than the physical ones. My parents didn't come until the day before I was discharged. The woman who stood by my side the entire time—my friend's mom—gave up everything to be there for me. She literally saved my life, more than once. I owe her everything, and losing her recently shook me to my core.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                After the accident, I spiraled. I was bullied, broken, and addicted to the painkillers that were supposed to help me heal. I tried to take my own life, thinking it would finally quiet the pain. But life had other plans.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                I got engaged at 18, dreaming of stability and love. Instead, I walked into betrayal and lost everything again—my home, my college dreams, my job, and eventually, myself. My mother, instead of offering comfort, offered cocaine. That one line destroyed the progress I had fought for and began a long, painful chapter of my life marked by addiction and a criminal record.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                But in 2017, my son Landon was born. For the first time in forever, I had hope. He became my reason to fight, and I got clean. But addiction is a beast—and one wrong decision took everything away again. One night turned into another year behind bars. While waiting for bail, I was handed papers that said my son had been declared an orphan. That moment shattered me.
+              </p>
+              
+              <p className="text-lg leading-relaxed">
+                After my release, tension with my mom reached a breaking point. A violent altercation led to a decision I never imagined I'd make. I was scared. I was cornered. But somehow, from all of that pain, something changed. My mother and I rebuilt our relationship. She got clean. I got stronger. We're now closer than we've ever been.
+              </p>
+              
+              <p className="text-lg leading-relaxed font-medium">
+                This isn't just a story of survival—it's one of redemption, raw truth, and rising from the ashes. I'm Jada, and I'm not a victim of my past. I'm a warrior shaped by it.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <Separator />
 
         {/* Mission and Vision */}
