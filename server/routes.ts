@@ -2646,5 +2646,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // CHAT ROUTES
+  // ===========
+  
+  // Helper function to generate system responses based on user messages
+  const generateSystemResponse = async (userMessage: string, isPremiumSupport: boolean = false): Promise<string> => {
+    // This is a simplified response logic. In a real application, you'd integrate with 
+    // an actual AI service or use more sophisticated logic based on message content
+    const supportMessages = [
+      "I understand this is a difficult situation. Let me help you navigate through this.",
+      "You're doing the right thing by seeking help. Here's what you can do next...",
+      "Many people face similar challenges. Here's what has worked for others...",
+      "The legal system can be complex, but I'm here to help simplify it for you.",
+      "You have rights in this situation. Let me explain what they are...",
+      "It sounds like you're going through a tough time. Here are some resources that might help...",
+      "I'm here to support you through this process. Let's take it one step at a time.",
+      "Your situation is important, and there are options available to you."
+    ];
+    
+    // Premium users get more detailed and personalized responses
+    const premiumSupportMessages = [
+      "As a premium member, I can offer you more detailed guidance. Let's analyze your situation step-by-step...",
+      "Thank you for being a premium member. I've analyzed your situation and here's my personalized recommendation...",
+      "Your premium status allows me to provide you with priority assistance. Here's a comprehensive approach to your situation...",
+      "I've carefully considered your case details as a premium member. Here's my assessment and recommendation...",
+      "Based on the specifics of your situation and our premium resources, I suggest the following detailed approach..."
+    ];
+    
+    // Simulate response delay to make it feel more natural
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Choose a message based on whether this is premium support
+    const availableMessages = isPremiumSupport ? 
+      [...supportMessages, ...premiumSupportMessages] : 
+      supportMessages;
+    
+    const randomIndex = Math.floor(Math.random() * availableMessages.length);
+    let response = availableMessages[randomIndex];
+    
+    // Add a more specific response if certain keywords are detected
+    if (userMessage.toLowerCase().includes("eviction")) {
+      response += " For eviction matters, I recommend reviewing our T2 application templates and the Landlord-Tenant Board procedures specific to your province.";
+    } else if (userMessage.toLowerCase().includes("rent increase")) {
+      response += " For rent increase issues, check if the increase follows the provincial guidelines and consider using our T6 form templates.";
+    } else if (userMessage.toLowerCase().includes("children's aid")) {
+      response += " When dealing with Children's Aid matters, documentation is crucial. Consider organizing your evidence using our document management system.";
+    }
+    
+    return response;
+  };
+  
+  // Get all chat conversations for a user
+  app.get("/api/chat/conversations", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const conversations = await storage.getChatConversations(req.user.id);
+      res.json(conversations);
+    } catch (error: any) {
+      console.error("Error getting chat conversations:", error);
+      res.status(500).json({ message: `Error getting chat conversations: ${error.message}` });
+    }
+  });
+  
+  // Get a specific chat conversation
+  app.get("/api/chat/conversations/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid conversation ID" });
+      }
+      
+      const conversation = await storage.getChatConversation(id);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Verify user has access to this conversation
+      if (conversation.userId !== req.user.id) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own conversations" });
+        }
+      }
+      
+      res.json(conversation);
+    } catch (error: any) {
+      console.error("Error getting chat conversation:", error);
+      res.status(500).json({ message: `Error getting chat conversation: ${error.message}` });
+    }
+  });
+  
+  // Create a new chat conversation
+  app.post("/api/chat/conversations", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { title, isPremiumSupport = false } = req.body;
+      
+      if (!title) {
+        return res.status(400).json({ message: "Conversation title is required" });
+      }
+      
+      // For premium support, check if user has premium subscription
+      if (isPremiumSupport) {
+        const user = await storage.getUser(req.user.id);
+        if (!user || !user.stripeSubscriptionId) {
+          return res.status(403).json({ message: "Premium support requires a premium subscription" });
+        }
+      }
+      
+      const conversation = await storage.createChatConversation({
+        userId: req.user.id,
+        title,
+        isPremiumSupport
+      });
+      
+      res.status(201).json(conversation);
+    } catch (error: any) {
+      console.error("Error creating chat conversation:", error);
+      res.status(500).json({ message: `Error creating chat conversation: ${error.message}` });
+    }
+  });
+  
+  // Get messages for a conversation
+  app.get("/api/chat/conversations/:id/messages", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid conversation ID" });
+      }
+      
+      const conversation = await storage.getChatConversation(id);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Verify user has access to this conversation
+      if (conversation.userId !== req.user.id) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own conversations" });
+        }
+      }
+      
+      const messages = await storage.getChatMessages(id);
+      res.json(messages);
+    } catch (error: any) {
+      console.error("Error getting chat messages:", error);
+      res.status(500).json({ message: `Error getting chat messages: ${error.message}` });
+    }
+  });
+  
+  // Send a message in a conversation
+  app.post("/api/chat/conversations/:id/messages", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid conversation ID" });
+      }
+      
+      const conversation = await storage.getChatConversation(id);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      // Verify user has access to this conversation
+      if (conversation.userId !== req.user.id) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only send messages in your own conversations" });
+        }
+      }
+      
+      const { content } = req.body;
+      if (!content) {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+      
+      // Create the user message
+      const userMessage = await storage.createChatMessage({
+        conversationId: id,
+        senderId: req.user.id,
+        isUserMessage: true,
+        content
+      });
+      
+      // Generate and create a system response
+      const systemResponse = await generateSystemResponse(content, conversation.isPremiumSupport);
+      const systemMessage = await storage.createChatMessage({
+        conversationId: id,
+        senderId: 999, // System user ID (demo user)
+        isUserMessage: false,
+        content: systemResponse
+      });
+      
+      res.status(201).json({
+        userMessage,
+        systemMessage
+      });
+    } catch (error: any) {
+      console.error("Error sending chat message:", error);
+      res.status(500).json({ message: `Error sending chat message: ${error.message}` });
+    }
+  });
+  
   return httpServer;
 }
