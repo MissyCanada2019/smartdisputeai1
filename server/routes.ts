@@ -14,7 +14,11 @@ import {
   insertUserSchema, 
   insertUserDocumentSchema,
   insertEvidenceFileSchema,
-  insertCaseAnalysisSchema
+  insertCaseAnalysisSchema,
+  insertResourceCategorySchema,
+  insertResourceSubcategorySchema,
+  insertResourceSchema,
+  provinces
 } from "@shared/schema";
 import Stripe from "stripe";
 // OpenAI import removed
@@ -2867,5 +2871,383 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // ==================== Resource routes ====================
+  
+  // Get all resource categories
+  app.get("/api/resource-categories", async (req: Request, res: Response) => {
+    try {
+      const categories = await storage.getResourceCategories();
+      res.json(categories);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resource categories: ${error.message}` });
+    }
+  });
+  
+  // Get a single resource category
+  app.get("/api/resource-categories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID format" });
+      }
+      
+      const category = await storage.getResourceCategory(id);
+      if (!category) {
+        return res.status(404).json({ message: "Resource category not found" });
+      }
+      
+      res.json(category);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resource category: ${error.message}` });
+    }
+  });
+  
+  // Create a resource category (admin only)
+  app.post("/api/resource-categories", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      // For now, we'll just allow any authenticated user to create categories
+      
+      const validationResult = insertResourceCategorySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid category data", errors: validationResult.error.format() });
+      }
+      
+      const newCategory = await storage.createResourceCategory(validationResult.data);
+      res.status(201).json(newCategory);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating resource category: ${error.message}` });
+    }
+  });
+  
+  // Update a resource category (admin only)
+  app.put("/api/resource-categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID format" });
+      }
+      
+      const validationResult = insertResourceCategorySchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid category data", errors: validationResult.error.format() });
+      }
+      
+      const updatedCategory = await storage.updateResourceCategory(id, validationResult.data);
+      if (!updatedCategory) {
+        return res.status(404).json({ message: "Resource category not found" });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error updating resource category: ${error.message}` });
+    }
+  });
+  
+  // Delete a resource category (admin only)
+  app.delete("/api/resource-categories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid category ID format" });
+      }
+      
+      const result = await storage.deleteResourceCategory(id);
+      if (!result) {
+        return res.status(400).json({ message: "Cannot delete category that has subcategories or resources" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error deleting resource category: ${error.message}` });
+    }
+  });
+  
+  // Get all resource subcategories (optionally filtered by category)
+  app.get("/api/resource-subcategories", async (req: Request, res: Response) => {
+    try {
+      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string) : undefined;
+      
+      // If categoryId was provided but is not a valid number
+      if (req.query.categoryId && isNaN(categoryId as number)) {
+        return res.status(400).json({ message: "Invalid category ID format" });
+      }
+      
+      const subcategories = await storage.getResourceSubcategories(categoryId);
+      res.json(subcategories);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resource subcategories: ${error.message}` });
+    }
+  });
+  
+  // Get a single resource subcategory
+  app.get("/api/resource-subcategories/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid subcategory ID format" });
+      }
+      
+      const subcategory = await storage.getResourceSubcategory(id);
+      if (!subcategory) {
+        return res.status(404).json({ message: "Resource subcategory not found" });
+      }
+      
+      res.json(subcategory);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resource subcategory: ${error.message}` });
+    }
+  });
+  
+  // Create a resource subcategory (admin only)
+  app.post("/api/resource-subcategories", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const validationResult = insertResourceSubcategorySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid subcategory data", errors: validationResult.error.format() });
+      }
+      
+      const newSubcategory = await storage.createResourceSubcategory(validationResult.data);
+      res.status(201).json(newSubcategory);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating resource subcategory: ${error.message}` });
+    }
+  });
+  
+  // Update a resource subcategory (admin only)
+  app.put("/api/resource-subcategories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid subcategory ID format" });
+      }
+      
+      const validationResult = insertResourceSubcategorySchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid subcategory data", errors: validationResult.error.format() });
+      }
+      
+      const updatedSubcategory = await storage.updateResourceSubcategory(id, validationResult.data);
+      if (!updatedSubcategory) {
+        return res.status(404).json({ message: "Resource subcategory not found" });
+      }
+      
+      res.json(updatedSubcategory);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error updating resource subcategory: ${error.message}` });
+    }
+  });
+  
+  // Delete a resource subcategory (admin only)
+  app.delete("/api/resource-subcategories/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid subcategory ID format" });
+      }
+      
+      const result = await storage.deleteResourceSubcategory(id);
+      if (!result) {
+        return res.status(400).json({ message: "Cannot delete subcategory that has resources assigned to it" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error deleting resource subcategory: ${error.message}` });
+    }
+  });
+  
+  // Get resources with filtering
+  app.get("/api/resources", async (req: Request, res: Response) => {
+    try {
+      const options: { province?: string; categoryId?: number; subcategoryId?: number; isPremium?: boolean } = {};
+      
+      if (req.query.province) {
+        options.province = req.query.province as string;
+      }
+      
+      if (req.query.categoryId) {
+        const categoryId = parseInt(req.query.categoryId as string);
+        if (isNaN(categoryId)) {
+          return res.status(400).json({ message: "Invalid category ID format" });
+        }
+        options.categoryId = categoryId;
+      }
+      
+      if (req.query.subcategoryId) {
+        const subcategoryId = parseInt(req.query.subcategoryId as string);
+        if (isNaN(subcategoryId)) {
+          return res.status(400).json({ message: "Invalid subcategory ID format" });
+        }
+        options.subcategoryId = subcategoryId;
+      }
+      
+      if (req.query.isPremium !== undefined) {
+        options.isPremium = req.query.isPremium === 'true';
+      }
+      
+      // Handle search functionality
+      if (req.query.search) {
+        const searchTerm = req.query.search as string;
+        const resources = await storage.searchResources(searchTerm, options);
+        res.json(resources);
+      } else {
+        const resources = await storage.getResources(options);
+        res.json(resources);
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resources: ${error.message}` });
+    }
+  });
+  
+  // Get a single resource
+  app.get("/api/resources/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const resource = await storage.getResource(id);
+      if (!resource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      // Check if premium content should be visible to this user
+      if (resource.isPremium) {
+        if (!req.isAuthenticated()) {
+          // Hide sensitive fields for non-authenticated users
+          return res.json({
+            ...resource,
+            content: "This is premium content. Please sign in to view.",
+            contactInfo: null
+          });
+        }
+        
+        // TODO: Add subscription check here when subscription system is implemented
+        // For now, we'll show premium content to all authenticated users
+      }
+      
+      res.json(resource);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching resource: ${error.message}` });
+    }
+  });
+  
+  // Create a resource (admin only)
+  app.post("/api/resources", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const validationResult = insertResourceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid resource data", errors: validationResult.error.format() });
+      }
+      
+      const newResource = await storage.createResource(validationResult.data);
+      res.status(201).json(newResource);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating resource: ${error.message}` });
+    }
+  });
+  
+  // Update a resource (admin only)
+  app.put("/api/resources/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const validationResult = insertResourceSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid resource data", errors: validationResult.error.format() });
+      }
+      
+      const updatedResource = await storage.updateResource(id, validationResult.data);
+      if (!updatedResource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      res.json(updatedResource);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error updating resource: ${error.message}` });
+    }
+  });
+  
+  // Delete a resource (admin only)
+  app.delete("/api/resources/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // TODO: Add proper admin check here
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const result = await storage.deleteResource(id);
+      if (!result) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error deleting resource: ${error.message}` });
+    }
+  });
+  
+  // Get provinces list
+  app.get("/api/provinces", (req: Request, res: Response) => {
+    res.json(provinces);
+  });
+
   return httpServer;
 }

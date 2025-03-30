@@ -23,7 +23,7 @@ import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
 import Chat from "@/pages/chat";
-import Resources from "@/pages/resources";
+import Resources from "@/pages/resources-new";
 import FAQ from "@/pages/faq";
 import Community from "@/pages/community";
 import NewPost from "@/pages/new-post";

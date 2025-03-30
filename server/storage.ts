@@ -15,7 +15,12 @@ import {
   marketingFunnelEvents, type MarketingFunnelEvent, type InsertMarketingFunnelEvent,
   marketingLeads, type MarketingLead, type InsertMarketingLead,
   evidenceFiles, type EvidenceFile, type InsertEvidenceFile,
-  caseAnalyses, type CaseAnalysis, type InsertCaseAnalysis
+  caseAnalyses, type CaseAnalysis, type InsertCaseAnalysis,
+  chatConversations, type ChatConversation, type InsertChatConversation,
+  chatMessages, type ChatMessage, type InsertChatMessage,
+  resourceCategories, type ResourceCategory, type InsertResourceCategory,
+  resourceSubcategories, type ResourceSubcategory, type InsertResourceSubcategory,
+  resources, type Resource, type InsertResource
 } from "@shared/schema";
 
 // Storage interface
@@ -137,6 +142,27 @@ export interface IStorage {
   updateChatConversation(id: number, conversation: Partial<ChatConversation>): Promise<ChatConversation | undefined>;
   getChatMessages(conversationId: number): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+  
+  // Resource category operations
+  getResourceCategories(): Promise<ResourceCategory[]>;
+  getResourceCategory(id: number): Promise<ResourceCategory | undefined>;
+  createResourceCategory(category: InsertResourceCategory): Promise<ResourceCategory>;
+  updateResourceCategory(id: number, category: Partial<ResourceCategory>): Promise<ResourceCategory | undefined>;
+  deleteResourceCategory(id: number): Promise<boolean>;
+  
+  // Resource subcategory operations
+  getResourceSubcategories(categoryId?: number): Promise<ResourceSubcategory[]>;
+  getResourceSubcategory(id: number): Promise<ResourceSubcategory | undefined>;
+  createResourceSubcategory(subcategory: InsertResourceSubcategory): Promise<ResourceSubcategory>;
+  updateResourceSubcategory(id: number, subcategory: Partial<ResourceSubcategory>): Promise<ResourceSubcategory | undefined>;
+  deleteResourceSubcategory(id: number): Promise<boolean>;
+  
+  // Resource operations
+  getResources(filters?: { province?: string, categoryId?: number, subcategoryId?: number, isPremium?: boolean }): Promise<Resource[]>;
+  getResource(id: number): Promise<Resource | undefined>;
+  createResource(resource: InsertResource): Promise<Resource>;
+  updateResource(id: number, resource: Partial<Resource>): Promise<Resource | undefined>;
+  deleteResource(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -168,6 +194,11 @@ export class MemStorage implements IStorage {
   private chatConversations: Map<number, ChatConversation>;
   private chatMessages: Map<number, ChatMessage>;
   
+  // Resource related data maps
+  private resourceCategories: Map<number, ResourceCategory>;
+  private resourceSubcategories: Map<number, ResourceSubcategory>;
+  private resources: Map<number, Resource>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
@@ -195,6 +226,11 @@ export class MemStorage implements IStorage {
   // Chat related counters
   private currentChatConversationId: number;
   private currentChatMessageId: number;
+  
+  // Resource related counters
+  private currentResourceCategoryId: number;
+  private currentResourceSubcategoryId: number;
+  private currentResourceId: number;
 
   constructor() {
     // Initialize main collections
@@ -226,6 +262,11 @@ export class MemStorage implements IStorage {
     this.chatConversations = new Map();
     this.chatMessages = new Map();
     
+    // Initialize resource collections
+    this.resourceCategories = new Map();
+    this.resourceSubcategories = new Map();
+    this.resources = new Map();
+    
     // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
@@ -254,6 +295,11 @@ export class MemStorage implements IStorage {
     // Initialize chat IDs
     this.currentChatConversationId = 1;
     this.currentChatMessageId = 1;
+    
+    // Initialize resource IDs
+    this.currentResourceCategoryId = 1;
+    this.currentResourceSubcategoryId = 1;
+    this.currentResourceId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -1648,6 +1694,253 @@ export class MemStorage implements IStorage {
     }
     
     return newMessage;
+  }
+
+  // Resource category methods
+  async getResourceCategories(): Promise<ResourceCategory[]> {
+    return Array.from(this.resourceCategories.values())
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  }
+  
+  async getResourceCategory(id: number): Promise<ResourceCategory | undefined> {
+    return this.resourceCategories.get(id);
+  }
+  
+  async createResourceCategory(category: InsertResourceCategory): Promise<ResourceCategory> {
+    const id = this.currentResourceCategoryId++;
+    const now = new Date().toISOString();
+    const newCategory: ResourceCategory = {
+      ...category,
+      id,
+      sortOrder: category.sortOrder || 0,
+      createdAt: now
+    };
+    this.resourceCategories.set(id, newCategory);
+    return newCategory;
+  }
+  
+  async updateResourceCategory(id: number, categoryData: Partial<ResourceCategory>): Promise<ResourceCategory | undefined> {
+    const existingCategory = this.resourceCategories.get(id);
+    if (!existingCategory) return undefined;
+    
+    const updatedCategory = {
+      ...existingCategory,
+      ...categoryData
+    };
+    this.resourceCategories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+  
+  async deleteResourceCategory(id: number): Promise<boolean> {
+    // Check if there are any subcategories associated with this category
+    const hasSubcategories = Array.from(this.resourceSubcategories.values())
+      .some(subcategory => subcategory.categoryId === id);
+      
+    // Check if there are any resources associated with this category
+    const hasResources = Array.from(this.resources.values())
+      .some(resource => resource.categoryId === id);
+    
+    // If there are associated subcategories or resources, don't allow deletion
+    if (hasSubcategories || hasResources) {
+      return false;
+    }
+    
+    const deleted = this.resourceCategories.delete(id);
+    return deleted;
+  }
+  
+  // Resource subcategory methods
+  async getResourceSubcategories(categoryId?: number): Promise<ResourceSubcategory[]> {
+    let subcategories = Array.from(this.resourceSubcategories.values());
+    
+    if (categoryId !== undefined) {
+      subcategories = subcategories.filter(subcategory => subcategory.categoryId === categoryId);
+    }
+    
+    return subcategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+  }
+  
+  async getResourceSubcategory(id: number): Promise<ResourceSubcategory | undefined> {
+    return this.resourceSubcategories.get(id);
+  }
+  
+  async createResourceSubcategory(subcategory: InsertResourceSubcategory): Promise<ResourceSubcategory> {
+    // Verify the category exists
+    const categoryExists = this.resourceCategories.has(subcategory.categoryId);
+    if (!categoryExists) {
+      throw new Error(`Category with ID ${subcategory.categoryId} does not exist`);
+    }
+    
+    const id = this.currentResourceSubcategoryId++;
+    const now = new Date().toISOString();
+    const newSubcategory: ResourceSubcategory = {
+      ...subcategory,
+      id,
+      sortOrder: subcategory.sortOrder || 0,
+      createdAt: now
+    };
+    this.resourceSubcategories.set(id, newSubcategory);
+    return newSubcategory;
+  }
+  
+  async updateResourceSubcategory(id: number, subcategoryData: Partial<ResourceSubcategory>): Promise<ResourceSubcategory | undefined> {
+    const existingSubcategory = this.resourceSubcategories.get(id);
+    if (!existingSubcategory) return undefined;
+    
+    // If trying to change the category ID, verify the new category exists
+    if (subcategoryData.categoryId && subcategoryData.categoryId !== existingSubcategory.categoryId) {
+      const newCategoryExists = this.resourceCategories.has(subcategoryData.categoryId);
+      if (!newCategoryExists) {
+        throw new Error(`Category with ID ${subcategoryData.categoryId} does not exist`);
+      }
+    }
+    
+    const updatedSubcategory = {
+      ...existingSubcategory,
+      ...subcategoryData
+    };
+    this.resourceSubcategories.set(id, updatedSubcategory);
+    return updatedSubcategory;
+  }
+  
+  async deleteResourceSubcategory(id: number): Promise<boolean> {
+    // Check if there are any resources associated with this subcategory
+    const hasResources = Array.from(this.resources.values())
+      .some(resource => resource.subcategoryId === id);
+    
+    // If there are associated resources, don't allow deletion
+    if (hasResources) {
+      return false;
+    }
+    
+    const deleted = this.resourceSubcategories.delete(id);
+    return deleted;
+  }
+  
+  // Resource methods
+  async getResources(options?: { province?: string, categoryId?: number, subcategoryId?: number, isPremium?: boolean }): Promise<Resource[]> {
+    let resources = Array.from(this.resources.values());
+    
+    if (options) {
+      // Filter by province if specified
+      if (options.province) {
+        resources = resources.filter(resource => resource.province === options.province);
+      }
+      
+      // Filter by category if specified
+      if (options.categoryId !== undefined) {
+        resources = resources.filter(resource => resource.categoryId === options.categoryId);
+      }
+      
+      // Filter by subcategory if specified
+      if (options.subcategoryId !== undefined) {
+        resources = resources.filter(resource => resource.subcategoryId === options.subcategoryId);
+      }
+      
+      // Filter by premium status if specified
+      if (options.isPremium !== undefined) {
+        resources = resources.filter(resource => resource.isPremium === options.isPremium);
+      }
+    }
+    
+    // Sort by created date, newest first
+    return resources.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+  
+  async getResource(id: number): Promise<Resource | undefined> {
+    return this.resources.get(id);
+  }
+  
+  async createResource(resource: InsertResource): Promise<Resource> {
+    // Verify the category exists
+    const categoryExists = this.resourceCategories.has(resource.categoryId);
+    if (!categoryExists) {
+      throw new Error(`Category with ID ${resource.categoryId} does not exist`);
+    }
+    
+    // If subcategory is provided, verify it exists and belongs to the specified category
+    if (resource.subcategoryId) {
+      const subcategory = this.resourceSubcategories.get(resource.subcategoryId);
+      if (!subcategory) {
+        throw new Error(`Subcategory with ID ${resource.subcategoryId} does not exist`);
+      }
+      if (subcategory.categoryId !== resource.categoryId) {
+        throw new Error(`Subcategory with ID ${resource.subcategoryId} does not belong to category with ID ${resource.categoryId}`);
+      }
+    }
+    
+    const id = this.currentResourceId++;
+    const now = new Date().toISOString();
+    const newResource: Resource = {
+      ...resource,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      tags: resource.tags || [],
+      isPremium: resource.isPremium || false
+    };
+    this.resources.set(id, newResource);
+    return newResource;
+  }
+  
+  async updateResource(id: number, resourceData: Partial<Resource>): Promise<Resource | undefined> {
+    const existingResource = this.resources.get(id);
+    if (!existingResource) return undefined;
+    
+    // If trying to change the category ID, verify the new category exists
+    if (resourceData.categoryId && resourceData.categoryId !== existingResource.categoryId) {
+      const newCategoryExists = this.resourceCategories.has(resourceData.categoryId);
+      if (!newCategoryExists) {
+        throw new Error(`Category with ID ${resourceData.categoryId} does not exist`);
+      }
+    }
+    
+    // If trying to change the subcategory ID, verify it exists and belongs to the correct category
+    if (resourceData.subcategoryId && resourceData.subcategoryId !== existingResource.subcategoryId) {
+      const subcategory = this.resourceSubcategories.get(resourceData.subcategoryId);
+      if (!subcategory) {
+        throw new Error(`Subcategory with ID ${resourceData.subcategoryId} does not exist`);
+      }
+      
+      // Use the updated category ID if it's being changed, otherwise use the existing one
+      const categoryId = resourceData.categoryId || existingResource.categoryId;
+      if (subcategory.categoryId !== categoryId) {
+        throw new Error(`Subcategory with ID ${resourceData.subcategoryId} does not belong to category with ID ${categoryId}`);
+      }
+    }
+    
+    const now = new Date().toISOString();
+    const updatedResource = {
+      ...existingResource,
+      ...resourceData,
+      updatedAt: now
+    };
+    this.resources.set(id, updatedResource);
+    return updatedResource;
+  }
+  
+  async deleteResource(id: number): Promise<boolean> {
+    const deleted = this.resources.delete(id);
+    return deleted;
+  }
+  
+  async searchResources(searchTerm: string, options?: { province?: string, categoryId?: number, subcategoryId?: number, isPremium?: boolean }): Promise<Resource[]> {
+    // First, get resources based on the filter options
+    const resources = await this.getResources(options);
+    
+    if (!searchTerm) return resources;
+    
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    
+    // Filter resources based on the search term
+    return resources.filter(resource => {
+      return (
+        resource.title.toLowerCase().includes(lowerSearchTerm) ||
+        resource.description.toLowerCase().includes(lowerSearchTerm) ||
+        resource.content.toLowerCase().includes(lowerSearchTerm) ||
+        (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm)))
+      );
+    });
   }
 }
 

@@ -419,6 +419,16 @@ export type MarketingFunnelEvent = typeof marketingFunnelEvents.$inferSelect;
 export type InsertMarketingLead = z.infer<typeof insertMarketingLeadSchema>;
 export type MarketingLead = typeof marketingLeads.$inferSelect;
 
+// Resource types
+export type InsertResourceCategory = z.infer<typeof insertResourceCategorySchema>;
+export type ResourceCategory = typeof resourceCategories.$inferSelect;
+
+export type InsertResourceSubcategory = z.infer<typeof insertResourceSubcategorySchema>;
+export type ResourceSubcategory = typeof resourceSubcategories.$inferSelect;
+
+export type InsertResource = z.infer<typeof insertResourceSchema>;
+export type Resource = typeof resources.$inferSelect;
+
 // Form schemas for validation
 export const userInfoFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -485,6 +495,72 @@ export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
   senderId: true,
   isUserMessage: true,
   content: true,
+});
+
+// Resource category table
+export const resourceCategories = pgTable("resource_categories", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertResourceCategorySchema = createInsertSchema(resourceCategories).pick({
+  name: true,
+  description: true,
+  icon: true,
+  sortOrder: true,
+});
+
+// Resource subcategory table
+export const resourceSubcategories = pgTable("resource_subcategories", {
+  id: serial("id").primaryKey(),
+  categoryId: integer("category_id").notNull().references(() => resourceCategories.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertResourceSubcategorySchema = createInsertSchema(resourceSubcategories).pick({
+  categoryId: true,
+  name: true,
+  description: true,
+  icon: true,
+  sortOrder: true,
+});
+
+// Resource table
+export const resources = pgTable("resources", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  content: text("content").notNull(),
+  province: text("province").notNull(),
+  categoryId: integer("category_id").notNull().references(() => resourceCategories.id),
+  subcategoryId: integer("subcategory_id").references(() => resourceSubcategories.id),
+  url: text("url"),
+  contactInfo: text("contact_info"),
+  tags: text("tags").array(),
+  isPremium: boolean("is_premium").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertResourceSchema = createInsertSchema(resources).pick({
+  title: true,
+  description: true,
+  content: true,
+  province: true,
+  categoryId: true,
+  subcategoryId: true,
+  url: true,
+  contactInfo: true,
+  tags: true,
+  isPremium: true,
 });
 
 // Canadian provinces
