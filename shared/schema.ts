@@ -302,6 +302,58 @@ export const insertMarketingLeadSchema = createInsertSchema(marketingLeads).pick
   message: true,
 });
 
+// Evidence table for storing uploaded evidence
+export const evidenceFiles = pgTable("evidence_files", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  description: text("description"),
+  tags: text("tags").array(),
+  analyzedContent: text("analyzed_content"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEvidenceFileSchema = createInsertSchema(evidenceFiles).pick({
+  userId: true,
+  fileName: true,
+  originalName: true,
+  filePath: true,
+  fileType: true,
+  fileSize: true,
+  description: true,
+  tags: true,
+});
+
+// Case analysis table for storing form recommendations and merit assessments
+export const caseAnalyses = pgTable("case_analyses", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  evidenceIds: integer("evidence_ids").array().notNull(),
+  caseSummary: text("case_summary").notNull(),
+  recommendedForms: json("recommended_forms").notNull(),
+  isPremiumAssessment: boolean("is_premium_assessment").default(false),
+  meritScore: integer("merit_score"),
+  meritAssessment: text("merit_assessment"),
+  meritFactors: json("merit_factors"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCaseAnalysisSchema = createInsertSchema(caseAnalyses).pick({
+  userId: true,
+  evidenceIds: true,
+  caseSummary: true,
+  recommendedForms: true,
+  isPremiumAssessment: true,
+  meritScore: true,
+  meritAssessment: true,
+  meritFactors: true,
+});
+
 // Export all types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -320,6 +372,12 @@ export type DocumentFolderAssignment = typeof documentFolderAssignments.$inferSe
 
 export type InsertIncomeVerification = z.infer<typeof insertIncomeVerificationSchema>;
 export type IncomeVerification = typeof incomeVerifications.$inferSelect;
+
+export type InsertEvidenceFile = z.infer<typeof insertEvidenceFileSchema>;
+export type EvidenceFile = typeof evidenceFiles.$inferSelect;
+
+export type InsertCaseAnalysis = z.infer<typeof insertCaseAnalysisSchema>;
+export type CaseAnalysis = typeof caseAnalyses.$inferSelect;
 
 // Community types
 export type InsertCommunityCategory = z.infer<typeof insertCommunityCategorySchema>;

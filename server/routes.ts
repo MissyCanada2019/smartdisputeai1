@@ -9,7 +9,13 @@ interface Request extends ExpressRequest {
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { userInfoFormSchema, insertUserSchema, insertUserDocumentSchema } from "@shared/schema";
+import { 
+  userInfoFormSchema, 
+  insertUserSchema, 
+  insertUserDocumentSchema,
+  insertEvidenceFileSchema,
+  insertCaseAnalysisSchema
+} from "@shared/schema";
 import Stripe from "stripe";
 // OpenAI import removed
 import PDFDocument from "pdfkit";
@@ -2060,6 +2066,571 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error converting lead to user:", error);
       res.status(500).json({ message: "Error converting lead to user" });
+    }
+  });
+  
+  // Evidence files API endpoints
+  
+  // Get all evidence files for a user
+  app.get("/api/evidence-files/user/:userId", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Validate user permissions (users can only access their own files)
+      if (req.user.id !== userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own evidence files" });
+        }
+      }
+      
+      const evidenceFiles = await storage.getEvidenceFiles(userId);
+      res.json(evidenceFiles);
+    } catch (error: any) {
+      console.error("Error fetching evidence files:", error);
+      res.status(500).json({ message: `Error fetching evidence files: ${error.message}` });
+    }
+  });
+  
+  // Get a specific evidence file
+  app.get("/api/evidence-files/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid evidence file ID" });
+      }
+      
+      const evidenceFile = await storage.getEvidenceFile(id);
+      if (!evidenceFile) {
+        return res.status(404).json({ message: "Evidence file not found" });
+      }
+      
+      // Validate user permissions (users can only access their own files)
+      if (req.user.id !== evidenceFile.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own evidence files" });
+        }
+      }
+      
+      res.json(evidenceFile);
+    } catch (error: any) {
+      console.error("Error fetching evidence file:", error);
+      res.status(500).json({ message: `Error fetching evidence file: ${error.message}` });
+    }
+  });
+  
+  // Upload evidence files
+  app.post("/api/evidence-files/upload", upload.array("evidence", 10), async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+      
+      const userId = req.user.id;
+      const { description, tags } = req.body;
+      
+      const uploadedFiles = [];
+      
+      for (const file of req.files as Express.Multer.File[]) {
+        const newFile = await storage.createEvidenceFile({
+          userId,
+          fileName: file.filename,
+          originalName: file.originalname,
+          filePath: file.path,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          description: description || null,
+          tags: tags ? tags.split(',').map((tag: string) => tag.trim()) : []
+        });
+        
+        uploadedFiles.push(newFile);
+      }
+      
+      // Send notification through WebSocket if needed
+      if (app.locals.broadcastMessage) {
+        app.locals.broadcastMessage({
+          type: 'evidence_uploaded',
+          userId: userId,
+          count: uploadedFiles.length,
+          timestamp: new Date()
+        }, { userId });
+      }
+      
+      res.status(201).json({ 
+        message: "Files uploaded successfully", 
+        files: uploadedFiles
+      });
+    } catch (error: any) {
+      console.error("Error uploading evidence files:", error);
+      res.status(500).json({ message: `Error uploading evidence files: ${error.message}` });
+    }
+  });
+  
+  // Update evidence file
+  app.patch("/api/evidence-files/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid evidence file ID" });
+      }
+      
+      const evidenceFile = await storage.getEvidenceFile(id);
+      if (!evidenceFile) {
+        return res.status(404).json({ message: "Evidence file not found" });
+      }
+      
+      // Validate user permissions (users can only update their own files)
+      if (req.user.id !== evidenceFile.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only update your own evidence files" });
+        }
+      }
+      
+      const { description, tags } = req.body;
+      const updateData: Partial<typeof evidenceFile> = {};
+      
+      if (description !== undefined) {
+        updateData.description = description;
+      }
+      
+      if (tags !== undefined) {
+        updateData.tags = Array.isArray(tags) ? tags : tags.split(',').map((tag: string) => tag.trim());
+      }
+      
+      const updatedFile = await storage.updateEvidenceFile(id, updateData);
+      res.json(updatedFile);
+    } catch (error: any) {
+      console.error("Error updating evidence file:", error);
+      res.status(500).json({ message: `Error updating evidence file: ${error.message}` });
+    }
+  });
+  
+  // Delete evidence file
+  app.delete("/api/evidence-files/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid evidence file ID" });
+      }
+      
+      const evidenceFile = await storage.getEvidenceFile(id);
+      if (!evidenceFile) {
+        return res.status(404).json({ message: "Evidence file not found" });
+      }
+      
+      // Validate user permissions (users can only delete their own files)
+      if (req.user.id !== evidenceFile.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only delete your own evidence files" });
+        }
+      }
+      
+      // Delete the actual file from the filesystem
+      try {
+        fs.unlinkSync(evidenceFile.filePath);
+      } catch (fsError) {
+        console.warn(`Could not delete physical file ${evidenceFile.filePath}:`, fsError);
+      }
+      
+      // Delete the file record from storage
+      const success = await storage.deleteEvidenceFile(id);
+      
+      if (success) {
+        res.json({ message: "Evidence file deleted successfully" });
+      } else {
+        res.status(500).json({ message: "Error deleting evidence file" });
+      }
+    } catch (error: any) {
+      console.error("Error deleting evidence file:", error);
+      res.status(500).json({ message: `Error deleting evidence file: ${error.message}` });
+    }
+  });
+  
+  // Analyze evidence content
+  app.post("/api/evidence-files/:id/analyze", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid evidence file ID" });
+      }
+      
+      const evidenceFile = await storage.getEvidenceFile(id);
+      if (!evidenceFile) {
+        return res.status(404).json({ message: "Evidence file not found" });
+      }
+      
+      // Validate user permissions (users can only analyze their own files)
+      if (req.user.id !== evidenceFile.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only analyze your own evidence files" });
+        }
+      }
+      
+      // In a real implementation, we would use OCR or other techniques to extract
+      // text from the evidence file (if it's an image or PDF), or parse the content
+      // directly if it's a text file. For now, we'll simulate the analysis by
+      // generating placeholder analysis text.
+      
+      // This is a placeholder for actual analysis logic
+      let analyzedContent = "";
+      const fileExt = path.extname(evidenceFile.originalName).toLowerCase();
+      
+      if (fileExt === '.pdf' || fileExt === '.doc' || fileExt === '.docx') {
+        // Text extraction would happen here for document files
+        analyzedContent = `Document analysis of file ${evidenceFile.originalName}:\n` +
+                          `This appears to be a ${fileExt.substring(1)} document with relevant information for your case.`;
+      } else if (['.jpg', '.jpeg', '.png', '.gif'].includes(fileExt)) {
+        // OCR would happen here for image files
+        analyzedContent = `Image analysis of file ${evidenceFile.originalName}:\n` +
+                          `This appears to be an image with potential evidence for your case.`;
+      } else {
+        analyzedContent = `Analysis of file ${evidenceFile.originalName}:\n` +
+                          `This file type (${fileExt}) has been processed for relevant case information.`;
+      }
+      
+      // Update the evidence file with the analyzed content
+      const updatedFile = await storage.updateEvidenceAnalysis(id, analyzedContent);
+      
+      if (updatedFile) {
+        res.json({
+          message: "Evidence file analyzed successfully",
+          file: updatedFile
+        });
+      } else {
+        res.status(500).json({ message: "Error updating evidence analysis" });
+      }
+    } catch (error: any) {
+      console.error("Error analyzing evidence file:", error);
+      res.status(500).json({ message: `Error analyzing evidence file: ${error.message}` });
+    }
+  });
+  
+  // Case Analysis API endpoints
+  
+  // Get all case analyses for a user
+  app.get("/api/case-analyses/user/:userId", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Validate user permissions (users can only access their own analyses)
+      if (req.user.id !== userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own case analyses" });
+        }
+      }
+      
+      const caseAnalyses = await storage.getCaseAnalyses(userId);
+      res.json(caseAnalyses);
+    } catch (error: any) {
+      console.error("Error fetching case analyses:", error);
+      res.status(500).json({ message: `Error fetching case analyses: ${error.message}` });
+    }
+  });
+  
+  // Get a specific case analysis
+  app.get("/api/case-analyses/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid case analysis ID" });
+      }
+      
+      const caseAnalysis = await storage.getCaseAnalysis(id);
+      if (!caseAnalysis) {
+        return res.status(404).json({ message: "Case analysis not found" });
+      }
+      
+      // Validate user permissions (users can only access their own analyses)
+      if (req.user.id !== caseAnalysis.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only access your own case analyses" });
+        }
+      }
+      
+      res.json(caseAnalysis);
+    } catch (error: any) {
+      console.error("Error fetching case analysis:", error);
+      res.status(500).json({ message: `Error fetching case analysis: ${error.message}` });
+    }
+  });
+  
+  // Get case analysis by evidence ids
+  app.post("/api/case-analyses/by-evidence", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const { evidenceIds } = req.body;
+      
+      if (!evidenceIds || !Array.isArray(evidenceIds) || evidenceIds.length === 0) {
+        return res.status(400).json({ message: "Invalid or missing evidence IDs" });
+      }
+      
+      // Validate all evidence IDs are numbers
+      const invalidId = evidenceIds.find(id => isNaN(parseInt(id)));
+      if (invalidId) {
+        return res.status(400).json({ message: `Invalid evidence ID format: ${invalidId}` });
+      }
+      
+      // Validate user permissions (users can only access analyses for their own evidence)
+      for (const evidenceId of evidenceIds) {
+        const evidence = await storage.getEvidenceFile(parseInt(evidenceId));
+        if (!evidence) {
+          return res.status(404).json({ message: `Evidence file with ID ${evidenceId} not found` });
+        }
+        
+        if (req.user.id !== evidence.userId) {
+          const userRole = await storage.getUserRole(req.user.id);
+          if (!userRole || userRole.role !== 'admin') {
+            return res.status(403).json({ message: "You can only access analyses for your own evidence" });
+          }
+        }
+      }
+      
+      const caseAnalysis = await storage.getCaseAnalysisByEvidence(evidenceIds);
+      
+      if (caseAnalysis) {
+        res.json(caseAnalysis);
+      } else {
+        res.status(404).json({ message: "No case analysis found for the provided evidence IDs" });
+      }
+    } catch (error: any) {
+      console.error("Error fetching case analysis by evidence:", error);
+      res.status(500).json({ message: `Error fetching case analysis: ${error.message}` });
+    }
+  });
+  
+  // Create a new case analysis
+  app.post("/api/case-analyses", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Validate request body
+      const validationResult = insertCaseAnalysisSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid case analysis data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const caseAnalysisData = validationResult.data;
+      
+      // Ensure the user is only creating analyses for their own evidence
+      for (const evidenceId of caseAnalysisData.evidenceIds) {
+        const evidence = await storage.getEvidenceFile(evidenceId);
+        if (!evidence) {
+          return res.status(404).json({ message: `Evidence file with ID ${evidenceId} not found` });
+        }
+        
+        if (req.user.id !== evidence.userId) {
+          const userRole = await storage.getUserRole(req.user.id);
+          if (!userRole || userRole.role !== 'admin') {
+            return res.status(403).json({ message: "You can only create analyses for your own evidence" });
+          }
+        }
+      }
+      
+      // Override userId to ensure it matches the authenticated user
+      caseAnalysisData.userId = req.user.id;
+      
+      const newCaseAnalysis = await storage.createCaseAnalysis(caseAnalysisData);
+      
+      res.status(201).json(newCaseAnalysis);
+    } catch (error: any) {
+      console.error("Error creating case analysis:", error);
+      res.status(500).json({ message: `Error creating case analysis: ${error.message}` });
+    }
+  });
+  
+  // Update a case analysis
+  app.patch("/api/case-analyses/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid case analysis ID" });
+      }
+      
+      const caseAnalysis = await storage.getCaseAnalysis(id);
+      if (!caseAnalysis) {
+        return res.status(404).json({ message: "Case analysis not found" });
+      }
+      
+      // Validate user permissions (users can only update their own analyses)
+      if (req.user.id !== caseAnalysis.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only update your own case analyses" });
+        }
+      }
+      
+      // Extract only valid update fields
+      const {
+        caseSummary,
+        recommendedForms,
+        isPremiumAssessment,
+        evidenceIds
+      } = req.body;
+      
+      const updateData: Partial<typeof caseAnalysis> = {};
+      
+      if (caseSummary !== undefined) {
+        updateData.caseSummary = caseSummary;
+      }
+      
+      if (recommendedForms !== undefined) {
+        updateData.recommendedForms = recommendedForms;
+      }
+      
+      if (isPremiumAssessment !== undefined) {
+        updateData.isPremiumAssessment = isPremiumAssessment;
+      }
+      
+      if (evidenceIds !== undefined && Array.isArray(evidenceIds)) {
+        // Verify all evidence belongs to this user
+        for (const evidenceId of evidenceIds) {
+          const evidence = await storage.getEvidenceFile(evidenceId);
+          if (!evidence) {
+            return res.status(404).json({ message: `Evidence file with ID ${evidenceId} not found` });
+          }
+          
+          if (req.user.id !== evidence.userId) {
+            const userRole = await storage.getUserRole(req.user.id);
+            if (!userRole || userRole.role !== 'admin') {
+              return res.status(403).json({ message: "You can only reference your own evidence files" });
+            }
+          }
+        }
+        
+        updateData.evidenceIds = evidenceIds;
+      }
+      
+      const updatedAnalysis = await storage.updateCaseAnalysis(id, updateData);
+      res.json(updatedAnalysis);
+    } catch (error: any) {
+      console.error("Error updating case analysis:", error);
+      res.status(500).json({ message: `Error updating case analysis: ${error.message}` });
+    }
+  });
+  
+  // Add merit assessment to a case analysis
+  app.post("/api/case-analyses/:id/merit-assessment", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid case analysis ID" });
+      }
+      
+      const caseAnalysis = await storage.getCaseAnalysis(id);
+      if (!caseAnalysis) {
+        return res.status(404).json({ message: "Case analysis not found" });
+      }
+      
+      // Validate user permissions (users can only update their own analyses)
+      if (req.user.id !== caseAnalysis.userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You can only update your own case analyses" });
+        }
+      }
+      
+      // Validate that this is a premium assessment
+      if (!caseAnalysis.isPremiumAssessment) {
+        return res.status(400).json({ message: "Merit assessment is only available for premium case analyses" });
+      }
+      
+      const { meritScore, meritAssessment, meritFactors } = req.body;
+      
+      if (
+        meritScore === undefined || 
+        meritAssessment === undefined || 
+        meritFactors === undefined
+      ) {
+        return res.status(400).json({ 
+          message: "Missing required fields",
+          required: ["meritScore", "meritAssessment", "meritFactors"]
+        });
+      }
+      
+      if (typeof meritScore !== 'number' || meritScore < 0 || meritScore > 100) {
+        return res.status(400).json({ message: "Merit score must be a number between 0 and 100" });
+      }
+      
+      if (typeof meritAssessment !== 'string' || meritAssessment.trim() === '') {
+        return res.status(400).json({ message: "Merit assessment must be a non-empty string" });
+      }
+      
+      // Add the merit assessment
+      const updatedAnalysis = await storage.addMeritAssessment(
+        id, 
+        meritScore, 
+        meritAssessment, 
+        meritFactors
+      );
+      
+      if (updatedAnalysis) {
+        res.json(updatedAnalysis);
+      } else {
+        res.status(500).json({ message: "Error adding merit assessment" });
+      }
+    } catch (error: any) {
+      console.error("Error adding merit assessment:", error);
+      res.status(500).json({ message: `Error adding merit assessment: ${error.message}` });
     }
   });
   

@@ -13,7 +13,9 @@ import {
   communityBookmarks, type CommunityBookmark, type InsertCommunityBookmark,
   userRoles, type UserRole, type InsertUserRole,
   marketingFunnelEvents, type MarketingFunnelEvent, type InsertMarketingFunnelEvent,
-  marketingLeads, type MarketingLead, type InsertMarketingLead
+  marketingLeads, type MarketingLead, type InsertMarketingLead,
+  evidenceFiles, type EvidenceFile, type InsertEvidenceFile,
+  caseAnalyses, type CaseAnalysis, type InsertCaseAnalysis
 } from "@shared/schema";
 
 // Storage interface
@@ -111,6 +113,22 @@ export interface IStorage {
   getMarketingLeadByEmail(email: string): Promise<MarketingLead | undefined>;
   updateMarketingLead(id: number, lead: Partial<MarketingLead>): Promise<MarketingLead | undefined>;
   convertLeadToUser(leadId: number, userId: number): Promise<MarketingLead>;
+  
+  // Evidence file operations
+  getEvidenceFiles(userId: number): Promise<EvidenceFile[]>;
+  getEvidenceFile(id: number): Promise<EvidenceFile | undefined>;
+  createEvidenceFile(file: InsertEvidenceFile): Promise<EvidenceFile>;
+  updateEvidenceFile(id: number, file: Partial<EvidenceFile>): Promise<EvidenceFile | undefined>;
+  deleteEvidenceFile(id: number): Promise<boolean>;
+  updateEvidenceAnalysis(id: number, analyzedContent: string): Promise<EvidenceFile | undefined>;
+  
+  // Case analysis operations
+  getCaseAnalyses(userId: number): Promise<CaseAnalysis[]>;
+  getCaseAnalysis(id: number): Promise<CaseAnalysis | undefined>;
+  createCaseAnalysis(analysis: InsertCaseAnalysis): Promise<CaseAnalysis>;
+  updateCaseAnalysis(id: number, analysis: Partial<CaseAnalysis>): Promise<CaseAnalysis | undefined>;
+  getCaseAnalysisByEvidence(evidenceIds: number[]): Promise<CaseAnalysis | undefined>;
+  addMeritAssessment(id: number, meritScore: number, meritAssessment: string, meritFactors: any): Promise<CaseAnalysis | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -134,6 +152,10 @@ export class MemStorage implements IStorage {
   private marketingFunnelEvents: Map<number, MarketingFunnelEvent>;
   private marketingLeads: Map<number, MarketingLead>;
   
+  // Evidence and case analysis related data maps
+  private evidenceFiles: Map<number, EvidenceFile>;
+  private caseAnalyses: Map<number, CaseAnalysis>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
@@ -153,6 +175,10 @@ export class MemStorage implements IStorage {
   // Marketing related counters
   private currentMarketingFunnelEventId: number;
   private currentMarketingLeadId: number;
+  
+  // Evidence and case analysis related counters
+  private currentEvidenceFileId: number;
+  private currentCaseAnalysisId: number;
 
   constructor() {
     // Initialize main collections
@@ -176,6 +202,10 @@ export class MemStorage implements IStorage {
     this.marketingFunnelEvents = new Map();
     this.marketingLeads = new Map();
     
+    // Initialize evidence and case analysis collections
+    this.evidenceFiles = new Map();
+    this.caseAnalyses = new Map();
+    
     // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
@@ -196,6 +226,10 @@ export class MemStorage implements IStorage {
     // Initialize marketing IDs
     this.currentMarketingFunnelEventId = 1;
     this.currentMarketingLeadId = 1;
+    
+    // Initialize evidence and case analysis IDs
+    this.currentEvidenceFileId = 1;
+    this.currentCaseAnalysisId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -1392,6 +1426,135 @@ export class MemStorage implements IStorage {
     };
     this.marketingLeads.set(leadId, updatedLead);
     return updatedLead;
+  }
+  
+  // Evidence file operations
+  async getEvidenceFiles(userId: number): Promise<EvidenceFile[]> {
+    return Array.from(this.evidenceFiles.values()).filter(
+      (file) => file.userId === userId
+    );
+  }
+  
+  async getEvidenceFile(id: number): Promise<EvidenceFile | undefined> {
+    return this.evidenceFiles.get(id);
+  }
+  
+  async createEvidenceFile(file: InsertEvidenceFile): Promise<EvidenceFile> {
+    const id = this.currentEvidenceFileId++;
+    const now = new Date().toISOString();
+    const newFile: EvidenceFile = {
+      ...file,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      analyzedContent: null
+    };
+    this.evidenceFiles.set(id, newFile);
+    return newFile;
+  }
+  
+  async updateEvidenceFile(id: number, fileData: Partial<EvidenceFile>): Promise<EvidenceFile | undefined> {
+    const existingFile = this.evidenceFiles.get(id);
+    if (!existingFile) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedFile = {
+      ...existingFile,
+      ...fileData,
+      updatedAt: now
+    };
+    this.evidenceFiles.set(id, updatedFile);
+    return updatedFile;
+  }
+  
+  async deleteEvidenceFile(id: number): Promise<boolean> {
+    const exists = this.evidenceFiles.has(id);
+    if (!exists) return false;
+    
+    this.evidenceFiles.delete(id);
+    return true;
+  }
+  
+  async updateEvidenceAnalysis(id: number, analyzedContent: string): Promise<EvidenceFile | undefined> {
+    const existingFile = this.evidenceFiles.get(id);
+    if (!existingFile) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedFile = {
+      ...existingFile,
+      analyzedContent,
+      updatedAt: now
+    };
+    this.evidenceFiles.set(id, updatedFile);
+    return updatedFile;
+  }
+  
+  // Case analysis operations
+  async getCaseAnalyses(userId: number): Promise<CaseAnalysis[]> {
+    return Array.from(this.caseAnalyses.values()).filter(
+      (analysis) => analysis.userId === userId
+    );
+  }
+  
+  async getCaseAnalysis(id: number): Promise<CaseAnalysis | undefined> {
+    return this.caseAnalyses.get(id);
+  }
+  
+  async createCaseAnalysis(analysis: InsertCaseAnalysis): Promise<CaseAnalysis> {
+    const id = this.currentCaseAnalysisId++;
+    const now = new Date().toISOString();
+    const newAnalysis: CaseAnalysis = {
+      ...analysis,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      meritScore: null,
+      meritAssessment: null,
+      meritFactors: null
+    };
+    this.caseAnalyses.set(id, newAnalysis);
+    return newAnalysis;
+  }
+  
+  async updateCaseAnalysis(id: number, analysisData: Partial<CaseAnalysis>): Promise<CaseAnalysis | undefined> {
+    const existingAnalysis = this.caseAnalyses.get(id);
+    if (!existingAnalysis) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedAnalysis = {
+      ...existingAnalysis,
+      ...analysisData,
+      updatedAt: now
+    };
+    this.caseAnalyses.set(id, updatedAnalysis);
+    return updatedAnalysis;
+  }
+  
+  async getCaseAnalysisByEvidence(evidenceIds: number[]): Promise<CaseAnalysis | undefined> {
+    // Find a case analysis that contains all the specified evidence files
+    return Array.from(this.caseAnalyses.values()).find(analysis => {
+      // Check if the analysis has a properly formatted evidenceIds field and if it contains all the specified evidence IDs
+      if (!analysis.evidenceIds) return false;
+      
+      const analysisEvidenceIds = JSON.parse(analysis.evidenceIds as string);
+      return evidenceIds.every(id => analysisEvidenceIds.includes(id));
+    });
+  }
+  
+  async addMeritAssessment(id: number, meritScore: number, meritAssessment: string, meritFactors: any): Promise<CaseAnalysis | undefined> {
+    const existingAnalysis = this.caseAnalyses.get(id);
+    if (!existingAnalysis) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedAnalysis = {
+      ...existingAnalysis,
+      meritScore,
+      meritAssessment,
+      meritFactors: JSON.stringify(meritFactors),
+      updatedAt: now
+    };
+    this.caseAnalyses.set(id, updatedAnalysis);
+    return updatedAnalysis;
   }
 }
 
