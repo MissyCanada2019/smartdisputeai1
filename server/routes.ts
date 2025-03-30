@@ -46,27 +46,27 @@ const broadcastMessage = (clients: Map<string, WebSocketClient>, message: any, f
   });
 };
 
-// Initialize Stripe
+// Initialize Stripe with a fallback for development
 if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('Missing STRIPE_SECRET_KEY. Payment processing will not work properly.');
+  console.warn('Missing STRIPE_SECRET_KEY. Payment processing will not work properly. API calls will be mocked.');
 }
 
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: "2023-10-16" as any, // Specify the API version
     })
-  : undefined;
-  
-// Initialize OpenAI
+  : null; // Set to null rather than undefined
+
+// Initialize OpenAI with a fallback for development
 if (!process.env.OPENAI_API_KEY) {
-  console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly.');
+  console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly. API calls will be mocked.');
 }
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
-  : undefined;
+  : null; // Set to null rather than undefined
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Output directory for generated PDFs
