@@ -107,7 +107,7 @@ export default function About() {
                 </p>
                 
                 <p className="text-lg leading-relaxed">
-                  But in 2017, my world changed. I had a beautiful baby boy, Landon. He became my reason to keep going. I got clean and stayed clean—for a while. But one night, thinking I was strong enough, I slipped. That one mistake cost me everything. I lost custody of my son and ended up back in jail. While waiting for bail, I was served papers saying my son had been declared an orphan. That crushed me.
+                  But in 2017, my world changed. I had a beautiful baby boy, Landon. He became my reason to keep going. I got clean and stayed clean—for a while. But one night, thinking I was strong enough, I slipped. That one mistake cost me everything. I lost custody of my son and ended up back in jail. While waiting for bail, I was served papers saying my son had been apprehended. That crushed me.
                 </p>
                 
                 <p className="text-lg leading-relaxed">
