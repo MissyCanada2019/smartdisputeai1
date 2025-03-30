@@ -646,24 +646,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Create income verification request
-  app.post("/api/income-verification", async (req: Request, res: Response) => {
+  // Income and status verification endpoint
+  app.post("/api/income-verification", upload.single('verification_document'), async (req: Request, res: Response) => {
     try {
-      const { userId, notes } = req.body;
+      // Get user ID from session if authenticated
+      const userId = req.isAuthenticated() ? req.user.id : null;
+      const { verificationType, selfDeclaration } = req.body;
       
-      if (!userId || typeof userId !== 'number') {
-        return res.status(400).json({ message: "Invalid user ID" });
+      if (!userId) {
+        return res.status(401).json({ message: "You must be logged in to verify your status" });
       }
       
-      // Create verification request
-      const verification = await storage.createIncomeVerification({
-        userId,
-        verificationDocumentPath: undefined,
-        notes: notes || undefined
-      });
+      if (!verificationType || !['low_income', 'disability', 'agency'].includes(verificationType)) {
+        return res.status(400).json({ message: "Invalid verification type" });
+      }
       
-      res.status(201).json(verification);
+      // Check if we have a document upload or self-declaration
+      let documentPath = undefined;
+      
+      if (req.file) {
+        // We have an uploaded document
+        documentPath = req.file.path;
+        console.log(`Received verification document: ${documentPath}`);
+      } else if (selfDeclaration === 'true') {
+        // User is self-declaring - we trust them for now
+        console.log(`User ${userId} self-declared ${verificationType} status`);
+      } else {
+        return res.status(400).json({ message: "Either a document upload or self-declaration is required" });
+      }
+      
+      // Store verification in database - in a real system, this would be pending review
+      // For now, we'll auto-approve the verification
+      const verification = {
+        userId,
+        notes: `Verification type: ${verificationType}, Self-declared: ${selfDeclaration === 'true'}`,
+        verificationDocumentPath: documentPath,
+      };
+      
+      // Save verification to the database
+      const savedVerification = await storage.createIncomeVerification(verification);
+      
+      // For the demo, we'll just return a success response
+      res.status(200).json({ 
+        verified: true,
+        message: "Your verification has been accepted",
+        verificationType,
+        selfDeclared: selfDeclaration === 'true'
+      });
     } catch (error: any) {
-      res.status(500).json({ message: `Error creating verification request: ${error.message}` });
+      console.error("Income verification error:", error);
+      res.status(500).json({ message: `Error processing verification: ${error.message}` });
     }
   });
   
