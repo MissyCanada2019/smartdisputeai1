@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Star, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, Facebook, Instagram, Linkedin, Star, Twitter, TrendingUp, Users } from "lucide-react";
 import teresaPhoto from "@assets/IMG_0103.jpeg";
 import jadaPhoto from "@assets/IMG_0276.jpeg";
 
@@ -260,6 +260,46 @@ export default function About() {
               <p className="text-gray-700">
                 We stand with those who've been knocked down by a biased system, providing both the tools and solidarity needed to rise up and demand the fair treatment they deserve.
               </p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Social Media and Connect Section */}
+        <div className="mt-12 py-8 border-t border-gray-200">
+          <h2 className="text-2xl font-bold mb-6 text-center">Connect With Us</h2>
+          <p className="text-center text-gray-600 mb-6">
+            Follow us on social media to stay updated with our latest resources, success stories, and community events.
+          </p>
+          
+          <div className="flex justify-center gap-6">
+            <a href="https://www.facebook.com/smartdisputeai" target="_blank" rel="noopener noreferrer" 
+               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+              <Facebook className="h-5 w-5" />
+              <span>Facebook</span>
+            </a>
+            <a href="https://twitter.com/smartdisputeai" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600 transition-colors">
+              <Twitter className="h-5 w-5" />
+              <span>Twitter</span>
+            </a>
+            <a href="https://www.instagram.com/smartdisputeai" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-md hover:bg-pink-700 transition-colors">
+              <Instagram className="h-5 w-5" />
+              <span>Instagram</span>
+            </a>
+            <a href="https://www.linkedin.com/company/smartdisputeai" target="_blank" rel="noopener noreferrer"
+               className="flex items-center gap-2 px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors">
+              <Linkedin className="h-5 w-5" />
+              <span>LinkedIn</span>
+            </a>
+          </div>
+          
+          <div className="mt-8 text-center text-gray-500 text-sm">
+            <p>© {new Date().getFullYear()} SmartDispute.ai Canada. All rights reserved.</p>
+            <div className="mt-2 flex justify-center gap-4">
+              <a href="/terms" className="hover:text-red-600 transition-colors">Terms of Service</a>
+              <a href="/privacy" className="hover:text-red-600 transition-colors">Privacy Policy</a>
+              <a href="/contact" className="hover:text-red-600 transition-colors">Contact Us</a>
             </div>
           </div>
         </div>
