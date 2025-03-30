@@ -181,11 +181,51 @@ export default function About() {
               </p>
             </div>
           </div>
+        </div>
+        
+        {/* Call to Action Section */}
+        <div className="bg-gray-50 rounded-lg p-10 shadow-lg border border-red-200 text-center">
+          <h2 className="text-3xl font-bold mb-4 text-gray-900">Ready to Fight Back?</h2>
+          <p className="text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
+            You don't have to face the system alone. SmartDispute.ai gives you the legal tools that powerful institutions don't want you to have.
+          </p>
           
-          <div className="flex items-center justify-center">
-            <p className="text-lg font-medium flex items-center">
-              Join us as we transform access to justice in Canada
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <div className="flex flex-col md:flex-row gap-6 justify-center mb-8">
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex-1 max-w-xs">
+              <h3 className="font-bold text-lg mb-3 text-red-700">Create Your First Document</h3>
+              <p className="text-gray-600 mb-4">
+                Generate a legally sound document in minutes, tailored to your specific situation and provincial requirements.
+              </p>
+              <a href="/documents" className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md transition-colors w-full text-center">
+                Start Now
+              </a>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex-1 max-w-xs">
+              <h3 className="font-bold text-lg mb-3 text-red-700">Analyze Your Case</h3>
+              <p className="text-gray-600 mb-4">
+                Upload your evidence and get an AI-powered analysis of your case's strengths, weaknesses, and next steps.
+              </p>
+              <a href="/case-analysis" className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md transition-colors w-full text-center">
+                Analyze Evidence
+              </a>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex-1 max-w-xs">
+              <h3 className="font-bold text-lg mb-3 text-red-700">Join Our Community</h3>
+              <p className="text-gray-600 mb-4">
+                Connect with others fighting similar battles, share experiences, and find support in your legal journey.
+              </p>
+              <a href="/community" className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-md transition-colors w-full text-center">
+                Join Community
+              </a>
+            </div>
+          </div>
+          
+          <div className="bg-red-50 p-5 rounded-lg inline-block">
+            <p className="text-gray-800 font-medium">
+              "The system doesn't work for people like us. But we can work the system." <br />
+              <span className="text-sm text-gray-600 italic">— Teresa Bertin, Founder</span>
             </p>
           </div>
         </div>
