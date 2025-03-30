@@ -1,0 +1,109 @@
+SmartDispute.ai – Terms of Service
+
+Effective Date: [Insert Date]
+
+1. Acceptance of Terms
+
+By accessing or using SmartDispute.ai (“the Service”), you agree to be bound by these Terms of Service. If you do not agree, do not use the platform.
+
+2. Service Description
+
+SmartDispute.ai is an AI-powered self-help tool designed to assist Canadians in preparing legal letters, forms, and documentation for personal use in disputes such as housing, credit reporting errors, and administrative complaints.
+SmartDispute.ai does not provide legal advice and is not a substitute for a licensed lawyer.
+
+3. Eligibility
+
+To use this service, you must:
+	•	Be at least 18 years old
+	•	Reside in Canada
+	•	Use the service for lawful, personal purposes only
+
+4. No Legal Representation
+
+SmartDispute.ai is not a law firm.
+No lawyer-client relationship is formed by using the site. All documents generated are for informational and self-help purposes only.
+
+5. User Responsibilities
+
+You are solely responsible for:
+	•	Reviewing any generated documents before submitting them
+	•	Meeting any legal deadlines or procedural rules
+	•	Uploading accurate and truthful information
+
+6. Payments and Refunds
+
+Fees for document downloads, subscriptions, or services are clearly displayed at checkout.
+Due to the digital nature of the product, all sales are final, except where required by law.
+
+7. Limitation of Liability
+
+SmartDispute.ai and its creators are not liable for:
+	•	Court outcomes
+	•	Missed deadlines
+	•	Errors resulting from user-entered information
+
+Maximum liability is limited to the amount you paid for the specific service.
+
+8. Termination
+
+We reserve the right to suspend or terminate any account that violates our terms or is used to abuse or threaten others.
+
+9. Modifications
+
+We may update these Terms at any time. Continued use of the service after changes means you accept the new terms.
+
+⸻
+
+SmartDispute.ai – Privacy Policy
+
+Effective Date: [Insert Date]
+
+1. Information We Collect
+	•	Personal Info: Name, address, phone, email (for generating documents and account use)
+	•	Form Input Data: Dispute or complaint details entered into our system
+	•	Payment Info: Processed securely via Stripe or third-party gateways (we do not store card data)
+	•	Usage Data: Device, browser, and session info (for security and improvement)
+
+2. How We Use Your Info
+	•	To generate dispute letters, legal documents, and timelines
+	•	To send you your documents via email or make them downloadable
+	•	To process payments and subscriptions
+	•	To contact you with important updates
+
+3. How We Protect Your Info
+
+We use:
+	•	SSL encryption
+	•	Access-restricted storage
+	•	Periodic security audits
+Your data is stored in Canada or other countries with equivalent privacy standards.
+
+4. Data Sharing
+
+We do not sell or rent your personal info.
+We may share data:
+	•	With service providers (e.g. Stripe, Google Workspace)
+	•	If required by law (e.g. subpoena, fraud investigation)
+
+5. Data Retention
+
+We retain your data only as long as needed to:
+	•	Provide the service
+	•	Meet legal obligations
+You may request deletion of your data at any time by emailing support@smartdispute.ai.
+
+6. Children’s Privacy
+
+This service is not intended for use by children under 18.
+
+7. Your Rights
+
+You may:
+	•	Access or correct your data
+	•	Request deletion
+	•	Withdraw consent (note: may affect service)
+
+8. Contact
+
+For privacy concerns, contact us at:
+support@smartdispute.ai
