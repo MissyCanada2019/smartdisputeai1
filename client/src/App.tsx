@@ -32,7 +32,7 @@ import CommunitySearch from "@/pages/community-search";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
-import ChildrenAidFunnel from "@/pages/marketing/funnels/children-aid";
+import ChildrenAidLandingPage from "@/pages/marketing/children-aid";
 
 function Router() {
   return (
@@ -61,7 +61,7 @@ function Router() {
       
       {/* Marketing Funnel Routes */}
       <Route path="/marketing" component={MarketingIndex} />
-      <Route path="/marketing/funnels/children-aid" component={ChildrenAidFunnel} />
+      <Route path="/marketing/children-aid" component={ChildrenAidLandingPage} />
       
       <Route component={NotFound} />
     </Switch>

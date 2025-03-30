@@ -203,7 +203,7 @@ export function FunnelConversion({
   
   // If children exist, clone them and add the onClick handler
   if (children) {
-    const child = children as React.ReactElement;
+    const child = React.Children.only(children) as React.ReactElement;
     return React.cloneElement(child, {
       onClick: async (e: React.MouseEvent) => {
         // Call the original onClick if it exists

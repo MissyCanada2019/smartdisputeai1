@@ -1,288 +1,252 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-
+import { useState, useEffect, useCallback } from 'react';
+import { Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export interface Testimonial {
   id: string;
+  quote: string;
   name: string;
   title?: string;
+  avatarSrc?: string;
+  rating?: number;
+  category?: string;
   location?: string;
-  avatarUrl?: string;
-  quote: string;
-  avatarFallback?: string;
-  stars?: number;
 }
+
+// Sample testimonials for legal advocacy
+export const legalAdvocacyTestimonials: Testimonial[] = [
+  {
+    id: '1',
+    quote: "SmartDispute.ai helped me navigate a complex landlord dispute when I was facing wrongful eviction. The clear templates and guidance made a huge difference.",
+    name: "Sarah T.",
+    title: "Tenant",
+    location: "Toronto, ON",
+    rating: 5,
+    category: "Landlord-Tenant"
+  },
+  {
+    id: '2',
+    quote: "When I couldn't afford a lawyer for my custody case, SmartDispute.ai provided me with the tools I needed to represent myself confidently.",
+    name: "Michael K.",
+    title: "Parent",
+    location: "Vancouver, BC",
+    rating: 5,
+    category: "Family Law"
+  },
+  {
+    id: '3',
+    quote: "After being denied social assistance benefits, I used SmartDispute.ai to draft an appeal letter. Two weeks later, my benefits were approved. This service is life-changing.",
+    name: "Jessica M.",
+    title: "Community Advocate",
+    location: "Montreal, QC",
+    rating: 5,
+    category: "Social Services"
+  },
+  {
+    id: '4',
+    quote: "As an Indigenous woman fighting for fair housing, I felt the system was stacked against me. SmartDispute.ai helped me document discrimination and file a successful complaint.",
+    name: "Diane R.",
+    title: "Housing Rights Advocate",
+    location: "Winnipeg, MB",
+    rating: 5,
+    category: "Housing Rights"
+  },
+  {
+    id: '5',
+    quote: "The credit dispute templates helped me fix errors on my credit report that were preventing me from getting approved for apartment rentals. Thank you!",
+    name: "Robert L.",
+    title: "Financial Recovery",
+    location: "Halifax, NS",
+    rating: 5,
+    category: "Credit Disputes"
+  }
+];
 
 interface TestimonialCarouselProps {
   testimonials: Testimonial[];
   autoPlay?: boolean;
-  interval?: number;
+  autoPlayInterval?: number;
   showControls?: boolean;
   showIndicators?: boolean;
   className?: string;
+  cardClassName?: string;
+  testimonialCategory?: string;
 }
 
 export function TestimonialCarousel({
   testimonials,
   autoPlay = true,
-  interval = 5000,
-  showControls = true,
-  showIndicators = true,
+  autoPlayInterval = 5000,
+  showControls = false,
+  showIndicators = false,
   className = '',
+  cardClassName = '',
+  testimonialCategory
 }: TestimonialCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  const [pauseAutoPlay, setPauseAutoPlay] = useState(false);
   
-  // Handle moving to next slide
-  const next = useCallback(() => {
+  // Filter testimonials by category if specified
+  const filteredTestimonials = testimonialCategory 
+    ? testimonials.filter(t => t.category === testimonialCategory)
+    : testimonials;
+    
+  // Use filtered testimonials if available, otherwise use all
+  const displayTestimonials = filteredTestimonials.length > 0 
+    ? filteredTestimonials 
+    : testimonials;
+  
+  const nextSlide = useCallback(() => {
     setActiveIndex((current) => 
-      current === testimonials.length - 1 ? 0 : current + 1
+      current === displayTestimonials.length - 1 ? 0 : current + 1
     );
-  }, [testimonials.length]);
+  }, [displayTestimonials.length]);
   
-  // Handle moving to previous slide
-  const prev = useCallback(() => {
+  const prevSlide = useCallback(() => {
     setActiveIndex((current) => 
-      current === 0 ? testimonials.length - 1 : current - 1
+      current === 0 ? displayTestimonials.length - 1 : current - 1
     );
-  }, [testimonials.length]);
+  }, [displayTestimonials.length]);
   
-  // Handle moving to a specific slide
-  const goToSlide = useCallback((index: number) => {
+  const goToSlide = (index: number) => {
     setActiveIndex(index);
-  }, []);
+  };
   
-  // Handle keyboard navigation
+  // Auto-play functionality
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        prev();
-      } else if (e.key === 'ArrowRight') {
-        next();
-      }
-    };
+    if (!autoPlay || pauseAutoPlay || displayTestimonials.length <= 1) return;
     
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [next, prev]);
+    const interval = setInterval(() => {
+      nextSlide();
+    }, autoPlayInterval);
+    
+    return () => clearInterval(interval);
+  }, [autoPlay, autoPlayInterval, nextSlide, pauseAutoPlay, displayTestimonials.length]);
   
-  // Handle auto-play
-  useEffect(() => {
-    if (!autoPlay || isPaused) return;
-    
-    const play = () => {
-      autoPlayRef.current = setTimeout(() => {
-        next();
-      }, interval);
-    };
-    
-    play();
-    
-    return () => {
-      if (autoPlayRef.current) {
-        clearTimeout(autoPlayRef.current);
-      }
-    };
-  }, [autoPlay, interval, next, isPaused, activeIndex]);
+  // Pause auto-play on mouse enter, resume on mouse leave
+  const handleMouseEnter = () => setPauseAutoPlay(true);
+  const handleMouseLeave = () => setPauseAutoPlay(false);
   
-  // If there are no testimonials, don't render anything
-  if (!testimonials.length) return null;
+  if (displayTestimonials.length === 0) {
+    return null;
+  }
   
   return (
     <div 
-      className={`relative ${className}`}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+      className={cn("relative overflow-hidden", className)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      <div className="overflow-hidden">
-        {testimonials.map((testimonial, index) => (
-          <div 
-            key={testimonial.id || index}
-            className={`transition-opacity duration-500 ${
-              index === activeIndex ? 'opacity-100' : 'opacity-0 absolute top-0 left-0'
-            }`}
-          >
-            <Card className="border shadow-sm">
-              <CardContent className="p-6">
-                {testimonial.stars && (
-                  <div className="flex mb-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${
-                          i < testimonial.stars! 
-                            ? 'text-yellow-400 fill-yellow-400' 
-                            : 'text-gray-200'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-                
-                <blockquote className="text-lg mb-6 italic text-muted-foreground">
-                  "{testimonial.quote}"
-                </blockquote>
-                
-                <div className="flex items-center">
-                  <Avatar className="h-12 w-12 mr-4">
-                    {testimonial.avatarUrl && (
-                      <AvatarImage src={testimonial.avatarUrl} alt={testimonial.name} />
-                    )}
-                    <AvatarFallback>
-                      {testimonial.avatarFallback || testimonial.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  
-                  <div>
-                    <div className="font-medium">{testimonial.name}</div>
-                    {(testimonial.title || testimonial.location) && (
-                      <div className="text-sm text-muted-foreground">
-                        {testimonial.title}
-                        {testimonial.title && testimonial.location && ', '}
-                        {testimonial.location}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      <div className="flex transition-transform duration-500 ease-in-out" 
+        style={{ transform: `translateX(-${activeIndex * 100}%)` }}>
+        {displayTestimonials.map((testimonial) => (
+          <div key={testimonial.id} className="w-full flex-shrink-0">
+            <TestimonialCard 
+              testimonial={testimonial} 
+              className={cardClassName}
+            />
           </div>
         ))}
       </div>
       
-      {showControls && testimonials.length > 1 && (
-        <div className="flex justify-between absolute top-1/2 -translate-y-1/2 left-0 right-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-8 w-8 -ml-4 bg-background/80 shadow-sm hover:bg-background"
-            onClick={prev}
+      {/* Navigation Controls */}
+      {showControls && displayTestimonials.length > 1 && (
+        <div className="absolute top-1/2 left-0 right-0 flex justify-between transform -translate-y-1/2 px-4">
+          <button 
+            onClick={prevSlide}
+            className="bg-white/80 hover:bg-white rounded-full p-2 shadow-md text-gray-800"
             aria-label="Previous testimonial"
           >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full h-8 w-8 -mr-4 bg-background/80 shadow-sm hover:bg-background"
-            onClick={next}
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button 
+            onClick={nextSlide}
+            className="bg-white/80 hover:bg-white rounded-full p-2 shadow-md text-gray-800"
             aria-label="Next testimonial"
           >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       )}
       
-      {showIndicators && testimonials.length > 1 && (
-        <div className="flex justify-center mt-4 space-x-2">
-          {testimonials.map((_, index) => (
-            <button
-              key={index}
-              className={`h-2 w-2 rounded-full transition-colors ${
-                index === activeIndex
-                  ? 'bg-primary'
-                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
-              onClick={() => goToSlide(index)}
-              aria-label={`Go to testimonial ${index + 1}`}
-            />
-          ))}
+      {/* Indicators */}
+      {showIndicators && displayTestimonials.length > 1 && (
+        <div className="absolute bottom-2 left-0 right-0">
+          <div className="flex justify-center gap-2">
+            {displayTestimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${
+                  index === activeIndex ? 'bg-primary' : 'bg-gray-300'
+                }`}
+                aria-label={`Go to testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// Sample testimonials for Children's Aid Society section
-export const childrenAidTestimonials: Testimonial[] = [
-  {
-    id: "1",
-    name: "Sarah M.",
-    location: "Ontario",
-    quote: "Using the templates from SmartDispute.ai helped me effectively respond to the Children's Aid Society. The clear formatting and professional language made a huge difference in how my case was handled.",
-    avatarFallback: "SM",
-    stars: 5
-  },
-  {
-    id: "2",
-    name: "Mark T.",
-    title: "Father of three",
-    location: "Alberta",
-    quote: "When CAS arrived at my door, I was terrified. This platform guided me through every step of the documentation process and helped me understand my rights. My family is still together thanks to these resources.",
-    avatarFallback: "MT",
-    stars: 5
-  },
-  {
-    id: "3",
-    name: "Anita K.",
-    location: "British Columbia",
-    quote: "The affordable document templates saved me thousands in legal fees. The guidance provided was almost as good as having a lawyer, and I was able to successfully challenge unsubstantiated claims.",
-    avatarFallback: "AK",
-    stars: 4
-  }
-];
+interface TestimonialCardProps {
+  testimonial: Testimonial;
+  className?: string;
+}
 
-// Sample testimonials for Landlord-Tenant section
-export const landlordTenantTestimonials: Testimonial[] = [
-  {
-    id: "1",
-    name: "Jamal H.",
-    location: "Toronto",
-    quote: "My landlord tried to evict me with just two weeks' notice. Using SmartDispute.ai, I filed the correct documents with the Landlord and Tenant Board and won my case to stay in my home.",
-    avatarFallback: "JH",
-    stars: 5
-  },
-  {
-    id: "2",
-    name: "Kim L.",
-    title: "Tenant",
-    location: "Vancouver",
-    quote: "After months of dealing with a serious repair issue, I used the Maintenance and Repairs documents from this platform. Within two weeks, my landlord finally fixed the problems I'd been reporting for months.",
-    avatarFallback: "KL",
-    stars: 5
-  },
-  {
-    id: "3",
-    name: "Devon P.",
-    location: "Montreal",
-    quote: "As someone on a limited income, I couldn't afford a lawyer when my rent was illegally increased. The templates and guidance here helped me successfully challenge the increase and save hundreds each month.",
-    avatarFallback: "DP",
-    stars: 4
-  }
-];
-
-// Sample testimonials for legal advocacy section
-export const legalAdvocacyTestimonials: Testimonial[] = [
-  {
-    id: "1",
-    name: "Priya S.",
-    title: "Self-Represented Litigant",
-    quote: "The step-by-step guidance made navigating the legal system possible for me. I went from feeling completely overwhelmed to confident in representing myself.",
-    avatarFallback: "PS",
-    stars: 5
-  },
-  {
-    id: "2",
-    name: "Michael J.",
-    location: "Nova Scotia",
-    quote: "As a person with a disability on a fixed income, I couldn't afford traditional legal help. This platform made justice accessible to me at a price I could actually afford.",
-    avatarFallback: "MJ",
-    stars: 5
-  },
-  {
-    id: "3",
-    name: "Teresa C.",
-    title: "Indigenous Rights Advocate",
-    location: "Saskatchewan",
-    quote: "The platform's focus on self-advocacy resonated with my community's needs. The templates helped us address systemic issues while respecting our cultural approaches to conflict resolution.",
-    avatarFallback: "TC",
-    stars: 5
-  }
-];
+function TestimonialCard({ testimonial, className }: TestimonialCardProps) {
+  const { quote, name, title, avatarSrc, rating, location } = testimonial;
+  
+  return (
+    <Card className={cn("mx-auto max-w-3xl", className)}>
+      <CardContent className="p-6">
+        <div className="flex items-center mb-4">
+          {/* Avatar or default initial */}
+          <div className="flex-shrink-0 mr-4">
+            {avatarSrc ? (
+              <img 
+                src={avatarSrc} 
+                alt={name} 
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                {name.charAt(0)}
+              </div>
+            )}
+          </div>
+          
+          {/* Name, title, location */}
+          <div>
+            <h4 className="font-semibold text-gray-900">{name}</h4>
+            {title && <p className="text-gray-600 text-sm">{title}</p>}
+            {location && <p className="text-gray-500 text-xs">{location}</p>}
+          </div>
+          
+          {/* Rating stars if available */}
+          {rating && (
+            <div className="ml-auto flex">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-4 w-4 ${i < rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Quote */}
+        <blockquote className="mt-4 text-gray-700 italic leading-relaxed">
+          "{quote}"
+        </blockquote>
+      </CardContent>
+    </Card>
+  );
+}

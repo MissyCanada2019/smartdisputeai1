@@ -11,6 +11,7 @@ build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
 [workflows]
+runButton = "Start application"
 
 [[workflows.workflow]]
 name = "Project"

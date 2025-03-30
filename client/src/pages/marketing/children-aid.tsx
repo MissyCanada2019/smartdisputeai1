@@ -1,435 +1,429 @@
-import { useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, FileText, Shield, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { EmailCapturePopup } from '@/components/marketing/EmailCapturePopup';
+import { FunnelTracker, usePageViewTracker, FunnelConversion, FUNNEL_STEPS, trackFunnelEvent } from '@/components/marketing/FunnelTracker';
+import { TestimonialCarousel } from '@/components/marketing/TestimonialCarousel';
 
-import { LeadMagnetForm } from '@/components/marketing/LeadMagnetForm';
-import { childrenAidTestimonials, TestimonialCarousel } from '@/components/marketing/TestimonialCarousel';
-import { FunnelConversion, usePageViewTracker, FUNNEL_STEPS } from '@/components/marketing/FunnelTracker';
-import { ExitIntentPopup } from '@/components/marketing/EmailCapturePopup';
+const FUNNEL_NAME = 'children_aid_campaign';
 
-const FUNNEL_NAME = 'children_aid_society';
-
-export default function ChildrenAidFunnel() {
-  // Track page view for this funnel
-  usePageViewTracker(FUNNEL_NAME, 'children_aid_landing_page', FUNNEL_STEPS.AWARENESS);
+export default function ChildrenAidLandingPage() {
+  const [showResourcePopup, setShowResourcePopup] = useState(false);
+  const [resourceType, setResourceType] = useState<string>('guide');
   
-  // Show exit intent popup
-  useEffect(() => {
-    // We can add any additional initialization logic here
-    return () => {
-      // Cleanup if needed
-    };
-  }, []);
+  // Track page view
+  usePageViewTracker(FUNNEL_NAME, 'children_aid_page_view', FUNNEL_STEPS.AWARENESS);
+  
+  const handleRequestResource = (type: string) => {
+    setResourceType(type);
+    setShowResourcePopup(true);
+  };
   
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Exit Intent Popup */}
-      <ExitIntentPopup
-        title="Before you go..."
-        description="Get our free guide on protecting your rights when dealing with Children's Aid Society cases."
-        funnelName={FUNNEL_NAME}
-        resource="cas_rights_guide"
-        buttonText="Get Free Guide"
-        successMessage="Your guide is on its way! Check your email inbox."
-      />
-      
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-red-700 to-red-900 text-white py-16 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                Stand Up To The Children's Aid Society
+      <section className="py-20 px-4 bg-gradient-to-br from-red-700 to-red-900 text-white">
+        <div className="container mx-auto max-w-5xl">
+          <FunnelTracker 
+            funnelName={FUNNEL_NAME}
+            eventName="hero_view"
+            stepName="awareness"
+            stepNumber={1}
+          />
+
+          <div className="flex flex-col md:flex-row items-center gap-10">
+            <div className="flex-1 space-y-6">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Stand Up To Children's Aid Society
               </h1>
-              <p className="text-xl mb-6 text-white/90">
-                Protect your rights and your family with our specialized legal document templates and AI assistance.
+              <p className="text-xl opacity-90">
+                Fight unfair treatment, false allegations, and protect your family with our legal self-help tools.
               </p>
-              <div className="space-y-3 mb-8">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-white mr-2 mt-1 flex-shrink-0" />
-                  <p>Ready-to-use legal documents tailored for CAS disputes</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-white mr-2 mt-1 flex-shrink-0" />
-                  <p>Expert guidance on preparing for hearings and meetings</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-white mr-2 mt-1 flex-shrink-0" />
-                  <p>Affordable alternatives to costly legal representation</p>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-                <Button size="lg" asChild className="bg-white text-red-900 hover:bg-white/90">
-                  <Link href="/document-selection-hierarchical?category=children-aid">
-                    View Documents
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
-                  <Link href="/faq#children-aid">
-                    Learn More <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <FunnelConversion
+                  funnelName={FUNNEL_NAME}
+                  conversionType="cta_document_browse"
+                  metadata={{ placement: 'hero' }}
+                >
+                  <Button size="lg" variant="secondary" asChild>
+                    <Link href="/document-selection-hierarchical?category=childrens-aid">
+                      Get Documents <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </FunnelConversion>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-transparent border-white text-white hover:bg-white/10"
+                  onClick={() => handleRequestResource('guide')}
+                >
+                  Get Free Parents' Rights Guide
                 </Button>
               </div>
             </div>
-            <div className="bg-white/10 p-8 rounded-lg backdrop-blur-sm">
-              <h2 className="text-2xl font-bold mb-4">Get Your Free Rights Guide</h2>
-              <p className="mb-4">
-                Download our comprehensive guide to understand your rights when dealing with Children's Aid Society.
-              </p>
-              <LeadMagnetForm
-                title="Download Free Guide"
-                funnelName={FUNNEL_NAME}
-                resource="cas_rights_guide"
-                source="landing_page_form"
-                showNameFields
-                buttonText="Send Me The Guide"
-              />
+            <div className="flex-1 flex justify-center">
+              <Card className="w-full max-w-md bg-white/10 backdrop-blur text-white border-white/20">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-2xl">How We Can Help</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3">
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 mr-3 text-white mt-0.5 flex-shrink-0" />
+                      <span>Response to CAS/CPS Investigations</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 mr-3 text-white mt-0.5 flex-shrink-0" />
+                      <span>Wrongful Allegations Documentation</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 mr-3 text-white mt-0.5 flex-shrink-0" />
+                      <span>Temporary Care Agreement Review</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 mr-3 text-white mt-0.5 flex-shrink-0" />
+                      <span>Case Review and Appeal Documents</span>
+                    </li>
+                    <li className="flex items-start">
+                      <CheckCircle className="h-5 w-5 mr-3 text-white mt-0.5 flex-shrink-0" />
+                      <span>Family Reunification Planning</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Problem & Solution Section */}
+      {/* Statistics Section */}
       <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
+        <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">The System Is Stacked Against Families</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Children's Aid Societies have significant power and resources, but you don't have to face them alone or unprepared.
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Parents Need Support</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              The system is overwhelming for many families. Here's why proper documentation and advocacy tools are essential.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <Card className="border-red-200 bg-red-50">
-              <CardHeader>
-                <CardTitle className="text-red-800">The Challenges You Face</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start">
-                  <div className="bg-red-100 p-2 rounded-full mr-3 mt-1">
-                    <span className="text-red-800 font-bold">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Overwhelming Power Imbalance</h3>
-                    <p className="text-muted-foreground">CAS has lawyers, resources, and authority on their side while families often struggle alone.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-red-100 p-2 rounded-full mr-3 mt-1">
-                    <span className="text-red-800 font-bold">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Confusing Legal Procedures</h3>
-                    <p className="text-muted-foreground">Complex legal processes that most people don't understand without expensive legal help.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-red-100 p-2 rounded-full mr-3 mt-1">
-                    <span className="text-red-800 font-bold">3</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Limited Accountability</h3>
-                    <p className="text-muted-foreground">CAS decisions can be difficult to challenge when you don't know your rights or proper procedures.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <span className="text-red-700 text-2xl font-bold">90%</span>
+              </div>
+              <h3 className="text-lg font-medium mb-2">Unrepresented</h3>
+              <p className="text-gray-600">Of parents facing CAS investigations cannot afford legal representation</p>
+            </div>
             
-            <Card className="border-green-200 bg-green-50">
-              <CardHeader>
-                <CardTitle className="text-green-800">How SmartDispute.ai Helps</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-2 rounded-full mr-3 mt-1">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Ready-to-Use Legal Documents</h3>
-                    <p className="text-muted-foreground">Professional-quality templates specifically designed for CAS cases, tailored to your situation.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-2 rounded-full mr-3 mt-1">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Step-by-Step Guidance</h3>
-                    <p className="text-muted-foreground">Clear instructions on filing documents, preparing for hearings, and understanding the process.</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="bg-green-100 p-2 rounded-full mr-3 mt-1">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Affordable Support</h3>
-                    <p className="text-muted-foreground">A fraction of the cost of hiring a lawyer, with AI assistance to help you every step of the way.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <span className="text-red-700 text-2xl font-bold">73%</span>
+              </div>
+              <h3 className="text-lg font-medium mb-2">Reunification</h3>
+              <p className="text-gray-600">Higher success rate when parents properly document and advocate for themselves</p>
+            </div>
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <span className="text-red-700 text-2xl font-bold">42%</span>
+              </div>
+              <h3 className="text-lg font-medium mb-2">Investigations</h3>
+              <p className="text-gray-600">Of cases could be resolved faster with proper documentation from the start</p>
+            </div>
+            
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
+                <span className="text-red-700 text-2xl font-bold">65%</span>
+              </div>
+              <h3 className="text-lg font-medium mb-2">Indigenous</h3>
+              <p className="text-gray-600">Overrepresentation of Indigenous children in the child welfare system</p>
+            </div>
           </div>
         </div>
       </section>
       
-      {/* Testimonials Section */}
+      {/* How It Works */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Success Stories</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Real families have successfully used our platform to navigate Children's Aid Society cases.
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">How SmartDispute.ai Works</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We provide you with the tools to respond effectively to Children's Aid Society interventions
             </p>
           </div>
           
-          <TestimonialCarousel 
-            testimonials={childrenAidTestimonials}
-            showControls
-            showIndicators
-            className="mb-8"
-          />
-        </div>
-      </section>
-      
-      {/* Document Categories Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Essential Documents For Your Case</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Our platform provides all the documents you need at each stage of your case.
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-red-700" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">1. Select Documents</h3>
+              <p className="text-gray-600">
+                Choose from our library of legal documents specifically designed for CAS/CPS cases in your province.
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-red-700" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">2. Customize Templates</h3>
+              <p className="text-gray-600">
+                Our AI helps you fill in the details of your specific situation, creating legally sound documents.
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-red-700" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">3. Submit & Follow Up</h3>
+              <p className="text-gray-600">
+                Download your completed documents, submit them to the agency, and track your progress with our guidance.
+              </p>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Response Documents</CardTitle>
-                <CardDescription>
-                  Documents to file when you've been contacted by CAS
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Initial Response Letters</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Meeting Preparation Forms</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Rights Acknowledgment Forms</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/document-selection-hierarchical?category=children-aid&subcategory=response">
-                    View Response Documents
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Hearing Documents</CardTitle>
-                <CardDescription>
-                  Documents for court hearings and legal proceedings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Affidavits and Statements</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Motion Documents</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Hearing Preparation Guides</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/document-selection-hierarchical?category=children-aid&subcategory=hearing">
-                    View Hearing Documents
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Plan of Care</CardTitle>
-                <CardDescription>
-                  Documents to demonstrate parental capability and care
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Care Plan Templates</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Progress Documentation</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
-                    <span>Resource Inventory Forms</span>
-                  </li>
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full" asChild>
-                  <Link href="/document-selection-hierarchical?category=children-aid&subcategory=care-plan">
-                    View Care Plan Documents
-                  </Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
-          
-          <div className="mt-12 text-center">
+          <div className="text-center mt-10">
             <FunnelConversion
               funnelName={FUNNEL_NAME}
-              conversionType="document_selection"
-              value={0}
-              metadata={{ resource: "document_view_children_aid" }}
+              conversionType="mid_page_signup"
             >
-              <Button size="lg" className="bg-red-800 hover:bg-red-900" asChild>
-                <Link href="/document-selection-hierarchical?category=children-aid">
-                  Browse All Documents <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+              <Button size="lg" asChild>
+                <Link href="/signup">Create Free Account</Link>
               </Button>
             </FunnelConversion>
           </div>
         </div>
       </section>
       
-      {/* CTA Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-red-800 to-red-900 text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Don't Fight This Battle Alone
-          </h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Join thousands of Canadian families who have successfully navigated Children's Aid Society cases using our platform.
-          </p>
-          <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-            <Button size="lg" className="bg-white text-red-900 hover:bg-white/90" asChild>
-              <Link href="/signup">
-                Create Free Account
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10" asChild>
-              <Link href="/pricing">
-                View Pricing Plans
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-      
-      {/* FAQs Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="container mx-auto max-w-4xl">
+      {/* Testimonials Section */}
+      <section className="py-16 px-4 bg-white border-t border-gray-200">
+        <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Frequently Asked Questions</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Get answers to common questions about using our platform for Children's Aid Society cases.
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Success Stories</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Hear from parents who successfully advocated for themselves using our tools
             </p>
           </div>
           
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Can SmartDispute.ai replace a lawyer?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  While our platform provides valuable legal documents and guidance, it doesn't replace legal advice from a licensed lawyer. However, many families successfully represent themselves using our platform, especially when they can't afford traditional legal representation. In complex cases, we recommend using our platform alongside professional legal counsel when possible.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">How quickly can I access documents?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  Documents are available instantly after purchase. You can preview document templates before buying, and once purchased, you can customize them with your information and download them immediately. For subscribers, all documents in your plan are available without additional charges.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Are the documents legally valid in my province?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  Yes, our documents are designed to comply with legal requirements across Canadian provinces. When you select your province during document creation, the templates automatically adjust to incorporate province-specific requirements. We regularly update our templates to reflect changes in provincial regulations.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">What if CAS has already taken my children?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>
-                  Our platform includes documents specifically designed for reunification cases, including temporary care agreements, visitation requests, and progress documentation. While the process may be more complex in these situations, many families have successfully used our documents to work toward reunification. We recommend starting with our "Reunification Roadmap" document for guidance.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+          <TestimonialCarousel 
+            testimonials={[
+              {
+                id: 'cas-testimonial1',
+                quote: "When Child Services threatened to take my children based on false allegations, I felt helpless. SmartDispute.ai guided me through filing the proper responses and helped me navigate the system to keep my family together.",
+                name: "Michael T.",
+                title: "Single Parent",
+                category: "Children's Aid Society",
+                location: "British Columbia",
+                rating: 5
+              },
+              {
+                id: 'cas-testimonial2',
+                quote: "When my children were taken without proper investigation, I was devastated. The platform helped me file the necessary documents to request a review, and ultimately, I was reunited with my children.",
+                name: "David C.",
+                title: "Family Advocate",
+                category: "Children's Aid Society",
+                location: "Nova Scotia",
+                rating: 5
+              },
+              {
+                id: 'cas-testimonial3',
+                quote: "As an Indigenous mother, I felt the system was biased against me from the start. Using SmartDispute.ai, I was able to document the cultural considerations that were being ignored and successfully advocate for culturally appropriate services.",
+                name: "Lisa M.",
+                title: "Community Organizer",
+                category: "Children's Aid Society",
+                location: "Manitoba",
+                rating: 5
+              }
+            ]}
+            showControls={true}
+            showIndicators={true}
+            className="mb-8"
+            testimonialCategory="Children's Aid Society"
+          />
           
-          <div className="mt-8 text-center">
-            <Button variant="link" asChild>
-              <Link href="/faq#children-aid">
-                View All FAQs <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
+          <div className="text-center mt-8">
+            <Button 
+              variant="outline"
+              onClick={() => handleRequestResource('success-stories')}
+            >
+              Read More Success Stories
             </Button>
           </div>
         </div>
       </section>
       
-      {/* Final CTA */}
-      <section className="py-10 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-bold mb-6">
-            Ready to take the first step?
-          </h2>
-          <LeadMagnetForm
-            title="Get Started with a Free Resource"
-            description="Sign up to receive our comprehensive guide to Children's Aid Society cases"
-            funnelName={FUNNEL_NAME}
-            resource="cas_getting_started_guide"
-            source="landing_page_bottom"
-            buttonText="Send Me The Guide"
-            showNameFields
-            compact
-            className="max-w-md mx-auto"
-          />
+      {/* Resources Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Resources for Parents</h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Helpful information to understand your rights and the child welfare system
+            </p>
+          </div>
+          
+          <Tabs defaultValue="rights" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-8">
+              <TabsTrigger value="rights">Know Your Rights</TabsTrigger>
+              <TabsTrigger value="steps">First Steps</TabsTrigger>
+              <TabsTrigger value="faq">Common Questions</TabsTrigger>
+            </TabsList>
+            <TabsContent value="rights" className="p-6 bg-white rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-semibold mb-4">Parental Rights During CAS Investigations</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 mr-3 text-red-700 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">Right to know allegations</span>
+                    <p className="text-gray-600 mt-1">You have the right to be informed about the specific concerns that have prompted CAS involvement.</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 mr-3 text-red-700 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">Right to legal representation</span>
+                    <p className="text-gray-600 mt-1">You have the right to consult with a lawyer at any stage of the CAS process.</p>
+                  </div>
+                </li>
+                <li className="flex items-start">
+                  <CheckCircle className="h-5 w-5 mr-3 text-red-700 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <span className="font-medium">Right to participate in planning</span>
+                    <p className="text-gray-600 mt-1">You have the right to be included in creating service plans and decisions about your children.</p>
+                  </div>
+                </li>
+              </ul>
+              <Button 
+                className="mt-6"
+                onClick={() => handleRequestResource('rights-guide')}
+              >
+                Download Full Rights Guide
+              </Button>
+            </TabsContent>
+            <TabsContent value="steps" className="p-6 bg-white rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-semibold mb-4">First Steps When CAS Contacts You</h3>
+              <ol className="space-y-4">
+                <li className="flex">
+                  <span className="font-bold text-red-700 mr-3">1.</span>
+                  <div>
+                    <span className="font-medium">Remain calm and document everything</span>
+                    <p className="text-gray-600 mt-1">Record the name of the worker, date, time, and details of what was discussed.</p>
+                  </div>
+                </li>
+                <li className="flex">
+                  <span className="font-bold text-red-700 mr-3">2.</span>
+                  <div>
+                    <span className="font-medium">Ask for specific allegations in writing</span>
+                    <p className="text-gray-600 mt-1">Request written documentation of the concerns that prompted the investigation.</p>
+                  </div>
+                </li>
+                <li className="flex">
+                  <span className="font-bold text-red-700 mr-3">3.</span>
+                  <div>
+                    <span className="font-medium">Create a response plan</span>
+                    <p className="text-gray-600 mt-1">Use our documents to formally respond to allegations and document your parenting capability.</p>
+                  </div>
+                </li>
+              </ol>
+              <Button 
+                className="mt-6"
+                onClick={() => handleRequestResource('first-steps-guide')}
+              >
+                Get First Steps Checklist
+              </Button>
+            </TabsContent>
+            <TabsContent value="faq" className="p-6 bg-white rounded-lg border border-gray-200">
+              <h3 className="text-2xl font-semibold mb-4">Frequently Asked Questions</h3>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium">Can CAS take my children without warning?</h4>
+                  <p className="text-gray-600 mt-1">CAS can only remove children without a court order if they believe there is immediate danger. In most cases, they must seek a court order.</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">Do I have to let CAS workers into my home?</h4>
+                  <p className="text-gray-600 mt-1">You are not legally required to let CAS workers into your home unless they have a court order or warrant.</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">How can I challenge a CAS assessment?</h4>
+                  <p className="text-gray-600 mt-1">You can request an internal review, file a formal complaint, or challenge decisions in court. Our documents can help you with each of these processes.</p>
+                </div>
+              </div>
+              <Button 
+                className="mt-6"
+                onClick={() => handleRequestResource('faq-guide')}
+              >
+                Download Complete FAQ Guide
+              </Button>
+            </TabsContent>
+          </Tabs>
         </div>
       </section>
+      
+      {/* CTA Section */}
+      <section className="py-16 px-4 bg-gradient-to-r from-red-800 to-red-900 text-white">
+        <div className="container mx-auto max-w-5xl text-center">
+          <h2 className="text-3xl font-bold mb-4">Ready to Protect Your Family?</h2>
+          <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
+            Join thousands of Canadian parents who have successfully advocated for themselves using SmartDispute.ai
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <FunnelConversion
+              funnelName={FUNNEL_NAME}
+              conversionType="footer_cta_signup"
+            >
+              <Button size="lg" variant="secondary" asChild>
+                <Link href="/signup">
+                  Create Free Account
+                </Link>
+              </Button>
+            </FunnelConversion>
+            
+            <Button
+              variant="outline"
+              size="lg"
+              className="bg-transparent border-white text-white hover:bg-white/10"
+              onClick={() => handleRequestResource('pricing')}
+            >
+              View Pricing Plans
+            </Button>
+          </div>
+        </div>
+      </section>
+      
+      {/* Resource Request Popup */}
+      <EmailCapturePopup
+        title={`Get Access to ${
+          resourceType === 'guide' ? 'Parents\' Rights Guide' : 
+          resourceType === 'rights-guide' ? 'Complete Parents\' Rights Guide' :
+          resourceType === 'first-steps-guide' ? 'First Steps Checklist' :
+          resourceType === 'faq-guide' ? 'CAS FAQ Guide' :
+          resourceType === 'success-stories' ? 'Success Stories Collection' : 
+          'Pricing Information'
+        }`}
+        description="Enter your email to receive immediate access to this resource."
+        funnelName={FUNNEL_NAME}
+        resource={resourceType}
+        buttonText="Send Me The Resource"
+        successMessage="Thank you! We've sent the resource to your email."
+        open={showResourcePopup}
+        onOpenChange={setShowResourcePopup}
+        onSuccess={() => {
+          // Track resource download conversion
+          trackFunnelEvent(
+            FUNNEL_NAME,
+            `resource_requested_${resourceType}`,
+            { resource: resourceType },
+            FUNNEL_STEPS.CONSIDERATION
+          );
+        }}
+      />
     </div>
   );
 }
