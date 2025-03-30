@@ -29,6 +29,11 @@ import Community from "@/pages/community";
 import NewPost from "@/pages/new-post";
 import PostDetail from "@/pages/post-detail";
 import CommunitySearch from "@/pages/community-search";
+import TermsOfService from "@/pages/terms-of-service";
+import PrivacyPolicy from "@/pages/privacy-policy";
+import CookiePolicy from "@/pages/cookie-policy";
+import Disclaimer from "@/pages/disclaimer";
+import AffiliateProgram from "@/pages/affiliate-program";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -52,6 +57,13 @@ function Router() {
       <Route path="/chat" component={Chat} />
       <Route path="/resources" component={Resources} />
       <Route path="/faq" component={FAQ} />
+      
+      {/* Legal Pages */}
+      <Route path="/terms-of-service" component={TermsOfService} />
+      <Route path="/privacy-policy" component={PrivacyPolicy} />
+      <Route path="/cookie-policy" component={CookiePolicy} />
+      <Route path="/disclaimer" component={Disclaimer} />
+      <Route path="/affiliate-program" component={AffiliateProgram} />
       
       {/* Community Routes */}
       <Route path="/community" component={Community} />

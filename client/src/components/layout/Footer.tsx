@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 pt-12 pb-8">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">LegalAssist</h3>
+            <h3 className="text-lg font-semibold mb-4">SmartDispute</h3>
             <p className="text-gray-400 text-sm mb-4">
               Simplified legal solutions for everyday Canadians facing government agency disputes.
             </p>
@@ -47,18 +47,18 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/about" className="hover:text-white">Our Team</Link></li>
-              <li><a href="#" className="hover:text-white">Careers</a></li>
-              <li><a href="#" className="hover:text-white">Contact</a></li>
+              <li><Link href="/affiliate-program" className="hover:text-white">Affiliate Program</Link></li>
+              <li><a href="mailto:support@smartdispute.ai" className="hover:text-white">Contact</a></li>
             </ul>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white">Cookie Policy</a></li>
-              <li><a href="#" className="hover:text-white">Disclaimer</a></li>
+              <li><Link href="/terms-of-service" className="hover:text-white">Terms of Service</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-white">Privacy Policy</Link></li>
+              <li><Link href="/cookie-policy" className="hover:text-white">Cookie Policy</Link></li>
+              <li><Link href="/disclaimer" className="hover:text-white">Legal Disclaimer</Link></li>
             </ul>
           </div>
         </div>

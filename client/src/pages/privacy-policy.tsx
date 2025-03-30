@@ -20,33 +20,74 @@ export default function PrivacyPolicy() {
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">1. Information We Collect</h2>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li><span className="font-medium">Personal Info:</span> Name, address, phone, email (for generating documents and account use)</li>
-            <li><span className="font-medium">Form Input Data:</span> Dispute or complaint details entered into our system</li>
-            <li><span className="font-medium">Payment Info:</span> Processed securely via Stripe or third-party gateways (we do not store card data)</li>
-            <li><span className="font-medium">Usage Data:</span> Device, browser, and session info (for security and improvement)</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>
+                <span className="font-medium">Personal Info:</span> Name, address, phone, email (for generating documents and account use)
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>
+                <span className="font-medium">Form Input Data:</span> Dispute or complaint details entered into our system
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>
+                <span className="font-medium">Payment Info:</span> Processed securely via Stripe or third-party gateways (we do not store card data)
+              </div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>
+                <span className="font-medium">Usage Data:</span> Device, browser, and session info (for security and improvement)
+              </div>
+            </li>
           </ul>
         </section>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">2. How We Use Your Info</h2>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li>To generate dispute letters, legal documents, and timelines</li>
-            <li>To send you your documents via email or make them downloadable</li>
-            <li>To process payments and subscriptions</li>
-            <li>To contact you with important updates</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>To generate dispute letters, legal documents, and timelines</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>To send you your documents via email or make them downloadable</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>To process payments and subscriptions</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>To contact you with important updates</div>
+            </li>
           </ul>
         </section>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">3. How We Protect Your Info</h2>
           <p className="mb-2">We use:</p>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li>SSL encryption</li>
-            <li>Access-restricted storage</li>
-            <li>Periodic security audits</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>SSL encryption</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Access-restricted storage</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Periodic security audits</div>
+            </li>
           </ul>
-          <p className="mb-2">
+          <p className="mt-2">
             Your data is stored in Canada or other countries with equivalent privacy standards.
           </p>
         </section>
@@ -55,21 +96,36 @@ export default function PrivacyPolicy() {
           <h2 className="text-xl font-semibold mb-3">4. Data Sharing</h2>
           <p className="mb-2">We do not sell or rent your personal info.</p>
           <p className="mb-2">We may share data:</p>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li>With service providers (e.g. Stripe, Google Workspace)</li>
-            <li>If required by law (e.g. subpoena, fraud investigation)</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>With service providers (e.g. Stripe, Google Workspace)</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>If required by law (e.g. subpoena, fraud investigation)</div>
+            </li>
           </ul>
         </section>
 
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">5. Data Retention</h2>
           <p className="mb-2">We retain your data only as long as needed to:</p>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li>Provide the service</li>
-            <li>Meet legal obligations</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Provide the service</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Meet legal obligations</div>
+            </li>
           </ul>
-          <p className="mb-2">
-            You may request deletion of your data at any time by emailing support@smartdispute.ai.
+          <p className="mt-2">
+            You may request deletion of your data at any time by emailing 
+            <a href="mailto:support@smartdispute.ai" className="text-blue-600 hover:underline ml-1">
+              support@smartdispute.ai
+            </a>.
           </p>
         </section>
 
@@ -83,10 +139,19 @@ export default function PrivacyPolicy() {
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-3">7. Your Rights</h2>
           <p className="mb-2">You may:</p>
-          <ul className="list-disc list-inside mb-2 pl-4 space-y-1">
-            <li>Access or correct your data</li>
-            <li>Request deletion</li>
-            <li>Withdraw consent (note: may affect service)</li>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Access or correct your data</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Request deletion</div>
+            </li>
+            <li className="flex items-start">
+              <span className="text-gray-700 font-medium mr-2">•</span>
+              <div>Withdraw consent (note: may affect service)</div>
+            </li>
           </ul>
         </section>
 
