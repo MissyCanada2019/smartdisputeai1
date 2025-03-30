@@ -103,26 +103,50 @@ export default function Subscribe() {
   const [planAmount, setPlanAmount] = useState(50);
   
   useEffect(() => {
-    // Create subscription payment intent
-    apiRequest("POST", "/api/create-subscription", { 
-      plan: selectedPlan,
-      amount: planAmount
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setClientSecret(data.clientSecret);
-        setIsLoading(false);
+    // We'll only use get-or-create-subscription for recurring subscription plans
+    const isRecurringPlan = selectedPlan === 'monthly' || selectedPlan === 'annual' || selectedPlan === 'low_income_year';
+    
+    if (isRecurringPlan) {
+      // Create or get subscription using the new endpoint
+      apiRequest("POST", "/api/get-or-create-subscription", { 
+        plan: selectedPlan
       })
-      .catch((error) => {
-        console.error("Error:", error);
-        toast({
-          title: "Error",
-          description: "Could not initialize subscription. Please try again.",
-          variant: "destructive",
+        .then((res) => res.json())
+        .then((data) => {
+          setClientSecret(data.clientSecret);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          toast({
+            title: "Error",
+            description: "Could not initialize subscription. Please try again or check if you're logged in.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
         });
-        setIsLoading(false);
-      });
-  }, [selectedPlan]);
+    } else {
+      // For one-time payments, use the existing endpoint
+      apiRequest("POST", "/api/create-subscription", { 
+        plan: selectedPlan,
+        amount: planAmount
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          setClientSecret(data.clientSecret);
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          toast({
+            title: "Error",
+            description: "Could not initialize payment. Please try again.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        });
+    }
+  }, [selectedPlan, planAmount]);
 
   if (isLoading || !clientSecret || !stripePromise) {
     return (

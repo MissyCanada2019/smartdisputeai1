@@ -370,7 +370,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Create subscription payment intent
+  // Create or get a subscription
+  app.post("/api/get-or-create-subscription", async (req: Request, res: Response) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ message: "Stripe is not configured" });
+      }
+
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Please log in to create a subscription" });
+      }
+
+      let user = req.user;
+
+      // If the user already has a subscription, return the existing subscription
+      if (user.stripeSubscriptionId) {
+        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        
+        // Extract the payment intent client secret safely
+        let clientSecret = null;
+        if (subscription.latest_invoice && 
+            typeof subscription.latest_invoice !== 'string' && 
+            subscription.latest_invoice.payment_intent && 
+            typeof subscription.latest_invoice.payment_intent !== 'string') {
+          clientSecret = subscription.latest_invoice.payment_intent.client_secret;
+        }
+
+        res.json({
+          subscriptionId: subscription.id,
+          clientSecret: clientSecret,
+        });
+
+        return;
+      }
+      
+      if (!user.email) {
+        return res.status(400).json({ message: "User email is required for subscription" });
+      }
+
+      try {
+        // Create a customer first if the user doesn't have a Stripe customer ID
+        let customerId = user.stripeCustomerId;
+        
+        if (!customerId) {
+          const customer = await stripe.customers.create({
+            email: user.email,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
+          });
+          
+          customerId = customer.id;
+          user = await storage.updateStripeCustomerId(user.id, customer.id);
+        }
+        
+        // Get plan details from request
+        const { plan } = req.body;
+        if (!plan) {
+          return res.status(400).json({ message: "Plan selection is required" });
+        }
+        
+        // Determine price based on plan type
+        let priceId;
+        
+        // This would be replaced with actual Stripe price IDs from your Stripe dashboard
+        // For now, we'll use placeholders
+        switch(plan) {
+          case 'monthly':
+            priceId = process.env.STRIPE_MONTHLY_PRICE_ID || 'price_monthly';
+            break;
+          case 'annual':
+            priceId = process.env.STRIPE_ANNUAL_PRICE_ID || 'price_annual';
+            break;
+          case 'low_income_year':
+            priceId = process.env.STRIPE_LOW_INCOME_PRICE_ID || 'price_low_income';
+            break;
+          default:
+            return res.status(400).json({ message: "Invalid plan selected" });
+        }
+
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{
+            price: priceId, // You'll need to create these price objects in your Stripe dashboard
+          }],
+          payment_behavior: 'default_incomplete',
+          expand: ['latest_invoice.payment_intent'],
+        });
+
+        // Update user with subscription information
+        await storage.updateUserStripeInfo(user.id, {
+          customerId, 
+          subscriptionId: subscription.id
+        });
+    
+        // Extract the payment intent client secret safely
+        let clientSecret = null;
+        if (subscription.latest_invoice && 
+            typeof subscription.latest_invoice !== 'string' && 
+            subscription.latest_invoice.payment_intent && 
+            typeof subscription.latest_invoice.payment_intent !== 'string') {
+          clientSecret = subscription.latest_invoice.payment_intent.client_secret;
+        }
+    
+        res.json({
+          subscriptionId: subscription.id,
+          clientSecret,
+        });
+      } catch (error: any) {
+        return res.status(400).json({ error: { message: error.message } });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating subscription: ${error.message}` });
+    }
+  });
+  
+  // For single document purchases or low-income single document purchase
   app.post("/api/create-subscription", async (req: Request, res: Response) => {
     try {
       if (!stripe) {
