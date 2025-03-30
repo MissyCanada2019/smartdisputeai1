@@ -95,7 +95,7 @@ export default function About() {
                 </p>
                 
                 <p className="text-lg leading-relaxed">
-                  In grade 10, a terrible accident in shop class landed me in the ICU burn unit at Hamilton General. I flatlined on the table due to blood loss and lost a finger. Neither of my parents showed up until the day before I was discharged—and when they did, all they did was scream at each other. The woman who had taken me in stayed by my side the entire time, even losing her job to be there for me. She was my angel. Losing her recently was one of the hardest things I've faced.
+                  In grade 10, a terrible accident in shop class landed me in the ICU burn unit at Hamilton General. I flatlined on the table due to blood loss and lost a finger. The woman who had taken me in stayed by my side the entire time, even losing her job to be there for me. She was my angel. Losing her recently was one of the hardest things I've faced.
                 </p>
                 
                 <p className="text-lg leading-relaxed">
