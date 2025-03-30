@@ -352,7 +352,9 @@ export const insertCaseAnalysisSchema = createInsertSchema(caseAnalyses).pick({
   recommendedForms: true,
   isPremiumAssessment: true,
   meritScore: true,
+  meritWeight: true,
   meritAssessment: true,
+  predictedOutcome: true,
   meritFactors: true,
 });
 
@@ -380,6 +382,13 @@ export type EvidenceFile = typeof evidenceFiles.$inferSelect;
 
 export type InsertCaseAnalysis = z.infer<typeof insertCaseAnalysisSchema>;
 export type CaseAnalysis = typeof caseAnalyses.$inferSelect;
+
+// Chat types
+export type InsertChatConversation = z.infer<typeof insertChatConversationSchema>;
+export type ChatConversation = typeof chatConversations.$inferSelect;
+
+export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
+export type ChatMessage = typeof chatMessages.$inferSelect;
 
 // Community types
 export type InsertCommunityCategory = z.infer<typeof insertCommunityCategorySchema>;
@@ -444,6 +453,39 @@ export const disputeCategories = [
   { id: "equifax", name: "Equifax Disputes", description: "Disputes related to credit reports, errors, and information corrections" },
   { id: "transition", name: "Transition Services", description: "Disputes related to social services during life transitions" }
 ];
+
+// Chat tables for support system
+export const chatConversations = pgTable("chat_conversations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  isPremiumSupport: boolean("is_premium_support").default(false),
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const chatMessages = pgTable("chat_messages", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => chatConversations.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  isUserMessage: boolean("is_user_message").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertChatConversationSchema = createInsertSchema(chatConversations).pick({
+  userId: true,
+  title: true,
+  isPremiumSupport: true,
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).pick({
+  conversationId: true,
+  senderId: true,
+  isUserMessage: true,
+  content: true,
+});
 
 // Canadian provinces
 export const provinces = [

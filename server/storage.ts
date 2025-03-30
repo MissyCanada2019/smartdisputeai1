@@ -128,7 +128,15 @@ export interface IStorage {
   createCaseAnalysis(analysis: InsertCaseAnalysis): Promise<CaseAnalysis>;
   updateCaseAnalysis(id: number, analysis: Partial<CaseAnalysis>): Promise<CaseAnalysis | undefined>;
   getCaseAnalysisByEvidence(evidenceIds: number[]): Promise<CaseAnalysis | undefined>;
-  addMeritAssessment(id: number, meritScore: number, meritAssessment: string, meritFactors: any): Promise<CaseAnalysis | undefined>;
+  addMeritAssessment(id: number, meritScore: number, meritWeight: number, meritAssessment: string, predictedOutcome: string, meritFactors: any): Promise<CaseAnalysis | undefined>;
+  
+  // Chat operations
+  getChatConversations(userId: number): Promise<ChatConversation[]>;
+  getChatConversation(id: number): Promise<ChatConversation | undefined>;
+  createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation>;
+  updateChatConversation(id: number, conversation: Partial<ChatConversation>): Promise<ChatConversation | undefined>;
+  getChatMessages(conversationId: number): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
 }
 
 export class MemStorage implements IStorage {
@@ -156,6 +164,10 @@ export class MemStorage implements IStorage {
   private evidenceFiles: Map<number, EvidenceFile>;
   private caseAnalyses: Map<number, CaseAnalysis>;
   
+  // Chat related data maps
+  private chatConversations: Map<number, ChatConversation>;
+  private chatMessages: Map<number, ChatMessage>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
@@ -179,6 +191,10 @@ export class MemStorage implements IStorage {
   // Evidence and case analysis related counters
   private currentEvidenceFileId: number;
   private currentCaseAnalysisId: number;
+  
+  // Chat related counters
+  private currentChatConversationId: number;
+  private currentChatMessageId: number;
 
   constructor() {
     // Initialize main collections
@@ -206,6 +222,10 @@ export class MemStorage implements IStorage {
     this.evidenceFiles = new Map();
     this.caseAnalyses = new Map();
     
+    // Initialize chat collections
+    this.chatConversations = new Map();
+    this.chatMessages = new Map();
+    
     // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
@@ -230,6 +250,10 @@ export class MemStorage implements IStorage {
     // Initialize evidence and case analysis IDs
     this.currentEvidenceFileId = 1;
     this.currentCaseAnalysisId = 1;
+    
+    // Initialize chat IDs
+    this.currentChatConversationId = 1;
+    this.currentChatMessageId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -1509,7 +1533,9 @@ export class MemStorage implements IStorage {
       createdAt: now,
       updatedAt: now,
       meritScore: null,
+      meritWeight: null,
       meritAssessment: null,
+      predictedOutcome: null,
       meritFactors: null
     };
     this.caseAnalyses.set(id, newAnalysis);
@@ -1541,7 +1567,7 @@ export class MemStorage implements IStorage {
     });
   }
   
-  async addMeritAssessment(id: number, meritScore: number, meritAssessment: string, meritFactors: any): Promise<CaseAnalysis | undefined> {
+  async addMeritAssessment(id: number, meritScore: number, meritWeight: number, meritAssessment: string, predictedOutcome: string, meritFactors: any): Promise<CaseAnalysis | undefined> {
     const existingAnalysis = this.caseAnalyses.get(id);
     if (!existingAnalysis) return undefined;
     
@@ -1549,12 +1575,79 @@ export class MemStorage implements IStorage {
     const updatedAnalysis = {
       ...existingAnalysis,
       meritScore,
+      meritWeight,
       meritAssessment,
+      predictedOutcome,
       meritFactors: JSON.stringify(meritFactors),
       updatedAt: now
     };
     this.caseAnalyses.set(id, updatedAnalysis);
     return updatedAnalysis;
+  }
+  
+  // Chat operations
+  async getChatConversations(userId: number): Promise<ChatConversation[]> {
+    return Array.from(this.chatConversations.values())
+      .filter(conversation => conversation.userId === userId)
+      .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+  }
+  
+  async getChatConversation(id: number): Promise<ChatConversation | undefined> {
+    return this.chatConversations.get(id);
+  }
+  
+  async createChatConversation(conversation: InsertChatConversation): Promise<ChatConversation> {
+    const id = this.currentChatConversationId++;
+    const now = new Date().toISOString();
+    const newConversation: ChatConversation = {
+      ...conversation,
+      id,
+      lastMessageAt: now,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.chatConversations.set(id, newConversation);
+    return newConversation;
+  }
+  
+  async updateChatConversation(id: number, conversationData: Partial<ChatConversation>): Promise<ChatConversation | undefined> {
+    const existingConversation = this.chatConversations.get(id);
+    if (!existingConversation) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedConversation = {
+      ...existingConversation,
+      ...conversationData,
+      updatedAt: now
+    };
+    this.chatConversations.set(id, updatedConversation);
+    return updatedConversation;
+  }
+  
+  async getChatMessages(conversationId: number): Promise<ChatMessage[]> {
+    return Array.from(this.chatMessages.values())
+      .filter(message => message.conversationId === conversationId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+  
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const id = this.currentChatMessageId++;
+    const now = new Date().toISOString();
+    const newMessage: ChatMessage = {
+      ...message,
+      id,
+      createdAt: now
+    };
+    this.chatMessages.set(id, newMessage);
+    
+    // Update the conversation's lastMessageAt timestamp
+    const conversation = this.chatConversations.get(message.conversationId);
+    if (conversation) {
+      conversation.lastMessageAt = now;
+      this.chatConversations.set(conversation.id, conversation);
+    }
+    
+    return newMessage;
   }
 }
 

@@ -2594,16 +2594,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Merit assessment is only available for premium case analyses" });
       }
       
-      const { meritScore, meritAssessment, meritFactors } = req.body;
+      const { meritScore, meritWeight, meritAssessment, predictedOutcome, meritFactors } = req.body;
       
       if (
         meritScore === undefined || 
+        meritWeight === undefined ||
         meritAssessment === undefined || 
+        predictedOutcome === undefined ||
         meritFactors === undefined
       ) {
         return res.status(400).json({ 
           message: "Missing required fields",
-          required: ["meritScore", "meritAssessment", "meritFactors"]
+          required: ["meritScore", "meritWeight", "meritAssessment", "predictedOutcome", "meritFactors"]
         });
       }
       
@@ -2611,15 +2613,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Merit score must be a number between 0 and 100" });
       }
       
+      if (typeof meritWeight !== 'number' || meritWeight < 0 || meritWeight > 100) {
+        return res.status(400).json({ message: "Merit weight must be a number between 0 and 100" });
+      }
+      
       if (typeof meritAssessment !== 'string' || meritAssessment.trim() === '') {
         return res.status(400).json({ message: "Merit assessment must be a non-empty string" });
+      }
+      
+      if (typeof predictedOutcome !== 'string' || predictedOutcome.trim() === '') {
+        return res.status(400).json({ message: "Predicted outcome must be a non-empty string" });
       }
       
       // Add the merit assessment
       const updatedAnalysis = await storage.addMeritAssessment(
         id, 
-        meritScore, 
-        meritAssessment, 
+        meritScore,
+        meritWeight,
+        meritAssessment,
+        predictedOutcome,
         meritFactors
       );
       
