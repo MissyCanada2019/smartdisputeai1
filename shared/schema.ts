@@ -337,7 +337,9 @@ export const caseAnalyses = pgTable("case_analyses", {
   recommendedForms: json("recommended_forms").notNull(),
   isPremiumAssessment: boolean("is_premium_assessment").default(false),
   meritScore: integer("merit_score"),
+  meritWeight: integer("merit_weight"),  // Added merit weight
   meritAssessment: text("merit_assessment"),
+  predictedOutcome: text("predicted_outcome"), // Added predicted outcome
   meritFactors: json("merit_factors"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
