@@ -1,8 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Star, TrendingUp, Users, BarChart } from "lucide-react";
+import { ArrowRight, Star, TrendingUp, Users } from "lucide-react";
 import teresaPhoto from "@assets/IMG_0103.jpeg";
-import jadaPhoto from "@assets/IMG_0102.jpeg";
 
 export default function About() {
   return (
@@ -169,52 +168,6 @@ export default function About() {
               <p className="text-gray-700">
                 We stand with those who've been knocked down by a biased system, providing both the tools and solidarity needed to rise up and demand the fair treatment they deserve.
               </p>
-            </div>
-          </div>
-        </div>
-        
-        {/* Team section */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6 text-center">Our Team</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Teresa */}
-            <div className="bg-white shadow-md rounded-lg overflow-hidden">
-              <div className="md:flex">
-                <div className="md:w-1/3">
-                  <img 
-                    src={teresaPhoto} 
-                    alt="Teresa Bertin" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 md:w-2/3">
-                  <h3 className="font-bold text-xl mb-1 text-red-700">Teresa Bertin</h3>
-                  <p className="text-gray-500 mb-3">Founder & CEO</p>
-                  <p className="text-gray-700 mb-4">
-                    Métis self-advocate who founded SmartDispute.ai Canada after successfully navigating the legal system without representation. Passionate about making justice accessible to all Canadians.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Jada */}
-            <div className="bg-white shadow-md rounded-lg overflow-hidden">
-              <div className="md:flex">
-                <div className="md:w-1/3">
-                  <img 
-                    src={jadaPhoto} 
-                    alt="Jada Prendergast" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6 md:w-2/3">
-                  <h3 className="font-bold text-xl mb-1 text-red-700">Jada Prendergast</h3>
-                  <p className="text-gray-500 mb-3">Marketing Manager</p>
-                  <p className="text-gray-700 mb-4">
-                    With a background in digital marketing and social justice advocacy, Jada leads our outreach efforts to ensure our platform reaches those who need it most. She specializes in designing marketing funnels that drive awareness about legal self-advocacy.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
