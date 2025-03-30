@@ -77,7 +77,7 @@ export default function About() {
             
             <div className="space-y-4">
               <p className="text-lg leading-relaxed">
-                My name is <strong>Jada</strong>, and I've been through more by my twenties than most will in a lifetime. I am a survivor of childhood trauma, betrayal, addiction, loss, and heartbreak—but I am still standing.
+                My name is <strong>Jada</strong>, Marketing Manager at SmartDispute.ai Canada, and I've been through more by my twenties than most will in a lifetime. I am a survivor of childhood trauma, betrayal, addiction, loss, and heartbreak—but I am still standing.
               </p>
               
               <p className="text-lg leading-relaxed">
