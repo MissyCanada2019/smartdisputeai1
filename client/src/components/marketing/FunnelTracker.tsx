@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -8,7 +8,7 @@ import { apiRequest } from '@/lib/queryClient';
 export interface FunnelStep {
   name: string;
   number: number;
-  description?: string;
+  description: string;
 }
 
 /**
@@ -18,33 +18,33 @@ export const FUNNEL_STEPS = {
   AWARENESS: {
     name: 'awareness',
     number: 1,
-    description: 'Initial discovery of the product/service',
+    description: 'First exposure to product or brand'
   },
   INTEREST: {
     name: 'interest',
     number: 2,
-    description: 'Engagement with content and learning more',
+    description: 'Engaged with content or requested more information'
   },
   CONSIDERATION: {
     name: 'consideration',
     number: 3,
-    description: 'Evaluating the offering as a potential solution',
+    description: 'Evaluating product or service for purchase'
   },
   INTENT: {
     name: 'intent',
     number: 4,
-    description: 'Taking steps toward conversion',
+    description: 'Demonstrated intention to purchase'
   },
   CONVERSION: {
     name: 'conversion',
     number: 5,
-    description: 'Completing the desired action (purchase, signup, etc.)',
+    description: 'Completed purchase or desired action'
   },
   RETENTION: {
     name: 'retention',
     number: 6,
-    description: 'Ongoing engagement and loyalty',
-  },
+    description: 'Ongoing engagement after conversion'
+  }
 };
 
 interface FunnelTrackerProps {
@@ -73,31 +73,58 @@ export function FunnelTracker({
   metadata = {},
   trackOnMount = true
 }: FunnelTrackerProps) {
-  
-  const trackEvent = useCallback(async () => {
-    try {
-      await apiRequest('POST', '/api/marketing/track-event', {
-        funnelName,
-        eventName,
-        stepName,
-        stepNumber,
-        metadata,
-        path: window.location.pathname,
-        referrer: document.referrer || null,
-        userAgent: navigator.userAgent,
-      });
-    } catch (error) {
-      console.error('Failed to track funnel event:', error);
-    }
-  }, [funnelName, eventName, stepName, stepNumber, metadata]);
-
   useEffect(() => {
     if (trackOnMount) {
-      trackEvent();
+      trackFunnelEvent(funnelName, eventName, metadata, {
+        name: stepName,
+        number: stepNumber,
+        description: `Custom step: ${stepName}`
+      });
     }
-  }, [trackOnMount, trackEvent]);
-
+  }, [funnelName, eventName, stepName, stepNumber, metadata, trackOnMount]);
+  
   return null; // This component doesn't render anything
+}
+
+/**
+ * Track a marketing funnel event
+ * @param funnelName The name of the marketing funnel
+ * @param eventName The name of the event to track
+ * @param metadata Additional metadata to store with the event
+ * @param step The funnel step information
+ */
+export async function trackFunnelEvent(
+  funnelName: string,
+  eventName: string,
+  metadata: Record<string, any> = {},
+  step: FunnelStep = FUNNEL_STEPS.AWARENESS
+): Promise<void> {
+  try {
+    // Get current URL path
+    const path = typeof window !== 'undefined' ? window.location.pathname : null;
+    
+    // Get referrer if available
+    const referrer = typeof document !== 'undefined' ? document.referrer : null;
+    
+    // Get user agent
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+    
+    const eventData = {
+      funnelName,
+      eventName,
+      stepName: step.name,
+      stepNumber: step.number,
+      path,
+      metadata,
+      referrer,
+      userAgent
+    };
+    
+    await apiRequest('POST', '/api/marketing/track-event', eventData);
+    
+  } catch (error) {
+    console.error('Error tracking funnel event:', error);
+  }
 }
 
 /**
@@ -105,29 +132,13 @@ export function FunnelTracker({
  * @param funnelName The name of the marketing funnel
  */
 export function useFunnelTracker(funnelName: string) {
-  return useCallback(
-    async (
-      eventName: string,
-      metadata: Record<string, any> = {},
-      step: FunnelStep = FUNNEL_STEPS.AWARENESS
-    ) => {
-      try {
-        await apiRequest('POST', '/api/marketing/track-event', {
-          funnelName,
-          eventName,
-          stepName: step.name,
-          stepNumber: step.number,
-          metadata,
-          path: window.location.pathname,
-          referrer: document.referrer || null,
-          userAgent: navigator.userAgent,
-        });
-      } catch (error) {
-        console.error('Failed to track funnel event:', error);
-      }
-    },
-    [funnelName]
-  );
+  return async (
+    eventName: string,
+    metadata: Record<string, any> = {},
+    step: FunnelStep = FUNNEL_STEPS.AWARENESS
+  ) => {
+    return trackFunnelEvent(funnelName, eventName, metadata, step);
+  };
 }
 
 /**
@@ -142,39 +153,30 @@ export function usePageViewTracker(
   stepInfo: FunnelStep = FUNNEL_STEPS.AWARENESS
 ) {
   const [location] = useLocation();
-  const trackFunnelEvent = useFunnelTracker(funnelName);
-
+  
   useEffect(() => {
-    const eventName = pageName || `page_view_${location.replace(/\//g, '_')}`;
-    
-    trackFunnelEvent(
-      eventName,
-      {
-        path: location,
-        title: document.title,
-      },
-      stepInfo
-    );
-
-    // Also track time spent on page when the user leaves
-    const startTime = new Date();
-
-    return () => {
-      const endTime = new Date();
-      const timeSpentMs = endTime.getTime() - startTime.getTime();
+    const track = async () => {
+      // Use provided page name or extract from pathname
+      const eventName = pageName || `page_view_${location.replace(/\//g, '_')}`;
       
-      trackFunnelEvent(
-        `${eventName}_exit`,
-        {
-          path: location,
-          title: document.title,
-          timeSpentMs,
-          timeSpentSeconds: Math.round(timeSpentMs / 1000),
-        },
+      await trackFunnelEvent(
+        funnelName,
+        eventName,
+        { path: location },
         stepInfo
       );
     };
-  }, [location, funnelName, pageName, trackFunnelEvent, stepInfo]);
+    
+    track();
+  }, [funnelName, location, pageName, stepInfo]);
+}
+
+interface FunnelConversionProps {
+  funnelName: string;
+  conversionType: string;
+  value?: number;
+  metadata?: Record<string, any>;
+  children?: ReactNode;
 }
 
 /**
@@ -183,26 +185,37 @@ export function usePageViewTracker(
 export function FunnelConversion({
   funnelName,
   conversionType,
-  conversionValue,
+  value = 0,
   metadata = {},
-}: {
-  funnelName: string;
-  conversionType: string;
-  conversionValue?: number;
-  metadata?: Record<string, any>;
-}) {
-  const trackFunnelEvent = useFunnelTracker(funnelName);
-
-  useEffect(() => {
-    trackFunnelEvent(
+  children
+}: FunnelConversionProps) {
+  const handleConversion = async () => {
+    await trackFunnelEvent(
+      funnelName,
       `conversion_${conversionType}`,
       {
         ...metadata,
-        value: conversionValue,
+        conversionValue: value
       },
       FUNNEL_STEPS.CONVERSION
     );
-  }, [funnelName, conversionType, conversionValue, metadata, trackFunnelEvent]);
-
+  };
+  
+  // If children exist, clone them and add the onClick handler
+  if (children) {
+    const child = children as React.ReactElement;
+    return React.cloneElement(child, {
+      onClick: async (e: React.MouseEvent) => {
+        // Call the original onClick if it exists
+        if (child.props.onClick) {
+          child.props.onClick(e);
+        }
+        // Track the conversion
+        await handleConversion();
+      }
+    });
+  }
+  
+  // If no children, return null (invisible component)
   return null;
 }
