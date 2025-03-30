@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Star, TrendingUp, Users } from "lucide-react";
 import teresaPhoto from "@assets/IMG_0103.jpeg";
+import jadaPhoto from "@assets/IMG_0276.jpeg";
 
 export default function About() {
   return (
@@ -73,40 +74,50 @@ export default function About() {
         {/* Jada's story - dark themed section */}
         <div className="bg-gray-900 text-white rounded-lg shadow-xl overflow-hidden">
           <div className="max-w-5xl mx-auto px-6 py-12">
-            <h2 className="text-3xl font-bold text-red-500 mb-8">Jada's Story: A Journey of Resilience</h2>
+            <h2 className="text-3xl font-bold text-red-500 mb-8">About Me – Jada's Story</h2>
             
-            <div className="space-y-4">
-              <p className="text-lg leading-relaxed">
-                My name is <strong>Jada</strong>, Marketing Manager at SmartDispute.ai Canada, and I've been through more by my twenties than most will in a lifetime. I am a survivor of childhood trauma, betrayal, addiction, loss, and heartbreak—but I am still standing.
-              </p>
+            <div className="md:flex gap-8 items-start">
+              <div className="mb-6 md:mb-0 md:w-1/3 flex-shrink-0">
+                <img 
+                  src={jadaPhoto} 
+                  alt="Jada, Marketing Manager at SmartDispute.ai Canada" 
+                  className="rounded-lg shadow-lg w-full h-auto object-cover aspect-square"
+                />
+              </div>
               
-              <p className="text-lg leading-relaxed">
-                At 10 years old, I was already carrying more than a child ever should. Fear of disappointing my mom led to a decision that changed everything—setting a fire to hide a bad test. That moment set off a chain of events that exposed just how alone I really was. Kicked out at 15 and abandoned by those who were supposed to protect me, I found comfort and care in the kindness of someone else's mother, who became my true guardian angel.
-              </p>
-              
-              <p className="text-lg leading-relaxed">
-                A tragic accident in shop class landed me in the ICU, fighting for my life. I flatlined during surgery and lost a finger, but the emotional scars ran deeper than the physical ones. My parents didn't come until the day before I was discharged. The woman who stood by my side the entire time—my friend's mom—gave up everything to be there for me. She literally saved my life, more than once. I owe her everything, and losing her recently shook me to my core.
-              </p>
-              
-              <p className="text-lg leading-relaxed">
-                After the accident, I spiraled. I was bullied, broken, and addicted to the painkillers that were supposed to help me heal. I tried to take my own life, thinking it would finally quiet the pain. But life had other plans.
-              </p>
-              
-              <p className="text-lg leading-relaxed">
-                I got engaged at 18, dreaming of stability and love. Instead, I walked into betrayal and lost everything again—my home, my college dreams, my job, and eventually, myself. My mother, instead of offering comfort, offered cocaine. That one line destroyed the progress I had fought for and began a long, painful chapter of my life marked by addiction and a criminal record.
-              </p>
-              
-              <p className="text-lg leading-relaxed">
-                But in 2017, my son Landon was born. For the first time in forever, I had hope. He became my reason to fight, and I got clean. But addiction is a beast—and one wrong decision took everything away again. One night turned into another year behind bars. While waiting for bail, I was handed papers that said my son had been declared an orphan. That moment shattered me.
-              </p>
-              
-              <p className="text-lg leading-relaxed">
-                After my release, tension with my mom reached a breaking point. A violent altercation led to a decision I never imagined I'd make. I was scared. I was cornered. But somehow, from all of that pain, something changed. My mother and I rebuilt our relationship. She got clean. I got stronger. We're now closer than we've ever been.
-              </p>
-              
-              <p className="text-lg leading-relaxed font-medium">
-                This isn't just a story of survival—it's one of redemption, raw truth, and rising from the ashes. I'm Jada, and I'm not a victim of my past. I'm a warrior shaped by it.
-              </p>
+              <div className="space-y-4 md:w-2/3">
+                <p className="text-lg leading-relaxed">
+                  My name is <strong>Jada</strong>, Marketing Manager at SmartDispute.ai Canada, and I've lived through more than most people can imagine. From childhood trauma to heartbreak, addiction, and loss—I've faced darkness and come out stronger every time.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  When I was 10, I set fire to my apartment trying to hide a bad test from my mom. I was terrified of disappointing her. That moment spiraled into a series of events that exposed how alone I really was. I was kicked out at 15 and had no stable family support. Thankfully, a friend's mother took me in and showed me the kind of love and loyalty I never knew I needed.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  In grade 10, a terrible accident in shop class landed me in the ICU burn unit at Hamilton General. I flatlined on the table due to blood loss and lost a finger. Neither of my parents showed up until the day before I was discharged—and when they did, all they did was scream at each other. The woman who had taken me in stayed by my side the entire time, even losing her job to be there for me. She was my angel. Losing her recently was one of the hardest things I've faced.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  After the accident, I was bullied badly. People said I did it for attention. They called me a freak. I became addicted to the painkillers prescribed to me and hit a point where I didn't want to live anymore. I tried to end it all, but once again, that same woman saved my life. She believed in me when I didn't believe in myself.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  At 18, I got engaged and thought I had finally found peace—until I came home one day and found my fiancé with someone else. I lost everything—my relationship, my home, my job, and eventually dropped out of the culinary arts program at Conestoga College. I hit rock bottom and didn't see a way out.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  But in 2017, my world changed. I had a beautiful baby boy, Landon. He became my reason to keep going. I got clean and stayed clean—for a while. But one night, thinking I was strong enough, I slipped. That one mistake cost me everything. I lost custody of my son and ended up back in jail. While waiting for bail, I was served papers saying my son had been declared an orphan. That crushed me.
+                </p>
+                
+                <p className="text-lg leading-relaxed">
+                  After I was released, things escalated again. A fight with my mom turned violent. I was scared, I reacted, and I'll carry the weight of that moment forever. But what came after was something I never expected—healing. My mom and I have rebuilt our relationship. She's clean now and has become the mom I always needed. We're closer than ever.
+                </p>
+                
+                <p className="text-lg leading-relaxed font-medium">
+                  This is my story—raw, painful, and real. But it's also a story of survival, resilience, and rising above. I'm Jada. I've walked through hell and came out swinging. I'm not a victim. I'm a fighter. And I'm just getting started.
+                </p>
+              </div>
             </div>
           </div>
         </div>
