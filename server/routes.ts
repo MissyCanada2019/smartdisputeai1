@@ -11,7 +11,7 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { userInfoFormSchema, insertUserSchema, insertUserDocumentSchema } from "@shared/schema";
 import Stripe from "stripe";
-import OpenAI from "openai";
+// OpenAI import removed
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
@@ -67,26 +67,7 @@ const getStripe = (): Stripe | null => {
   return stripeInstance;
 };
 
-// Lazy-loaded OpenAI client
-let openaiInstance: OpenAI | null = null;
-const getOpenAI = (): OpenAI | null => {
-  if (!openaiInstance) {
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly. API calls will be mocked.');
-      return null;
-    }
-    
-    try {
-      openaiInstance = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch (error) {
-      console.error("Error initializing OpenAI:", error);
-      return null;
-    }
-  }
-  return openaiInstance;
-};
+// OpenAI integration removed
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Create the HTTP server immediately to open the port faster
