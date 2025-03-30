@@ -46,40 +46,69 @@ const broadcastMessage = (clients: Map<string, WebSocketClient>, message: any, f
   });
 };
 
-// Initialize Stripe with a fallback for development
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.warn('Missing STRIPE_SECRET_KEY. Payment processing will not work properly. API calls will be mocked.');
-}
+// Lazy-loaded Stripe client
+let stripeInstance: Stripe | null = null;
+const getStripe = (): Stripe | null => {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.warn('Missing STRIPE_SECRET_KEY. Payment processing will not work properly. API calls will be mocked.');
+      return null;
+    }
+    
+    try {
+      stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: "2023-10-16" as any, // Specify the API version
+      });
+    } catch (error) {
+      console.error("Error initializing Stripe:", error);
+      return null;
+    }
+  }
+  return stripeInstance;
+};
 
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16" as any, // Specify the API version
-    })
-  : null; // Set to null rather than undefined
-
-// Initialize OpenAI with a fallback for development
-if (!process.env.OPENAI_API_KEY) {
-  console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly. API calls will be mocked.');
-}
-
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null; // Set to null rather than undefined
+// Lazy-loaded OpenAI client
+let openaiInstance: OpenAI | null = null;
+const getOpenAI = (): OpenAI | null => {
+  if (!openaiInstance) {
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('Missing OPENAI_API_KEY. AI chatbot will not work properly. API calls will be mocked.');
+      return null;
+    }
+    
+    try {
+      openaiInstance = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } catch (error) {
+      console.error("Error initializing OpenAI:", error);
+      return null;
+    }
+  }
+  return openaiInstance;
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Output directory for generated PDFs
-  const documentsDir = path.join(__dirname, "../docs");
-  if (!fs.existsSync(documentsDir)) {
-    fs.mkdirSync(documentsDir, { recursive: true });
-  }
+  // Create the HTTP server immediately to open the port faster
+  const httpServer = createServer(app);
   
-  // Set up upload directory for supporting documents
+  // Output directory for generated PDFs - define at function scope
+  const documentsDir = path.join(__dirname, "../docs");
+  
+  // Set up upload directory for supporting documents - define at function scope
   const uploadsDir = path.join(__dirname, "../uploads");
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
+  
+  // Set up directories in a non-blocking way
+  setTimeout(() => {
+    // Create directories if they don't exist
+    if (!fs.existsSync(documentsDir)) {
+      fs.mkdirSync(documentsDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+  }, 0);
   
   // Configure multer for file uploads
   const fileStorage = multer.diskStorage({
@@ -335,6 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create payment intent for one-time document purchase
   app.post("/api/create-payment-intent", async (req: Request, res: Response) => {
     try {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
@@ -373,6 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create or get a subscription
   app.post("/api/get-or-create-subscription", async (req: Request, res: Response) => {
     try {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
@@ -486,6 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // For single document purchases or low-income single document purchase
   app.post("/api/create-subscription", async (req: Request, res: Response) => {
     try {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
@@ -532,6 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Webhook for Stripe events
   app.post("/api/webhook", async (req: Request, res: Response) => {
     try {
+      const stripe = getStripe();
       if (!stripe) {
         return res.status(500).json({ message: "Stripe is not configured" });
       }
@@ -936,6 +969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Chatbot API endpoint
   app.post("/api/chatbot", async (req: Request, res: Response) => {
     try {
+      const openai = getOpenAI();
       if (!openai) {
         return res.status(500).json({ message: "OpenAI is not configured" });
       }
@@ -1190,8 +1224,6 @@ If you're not sure which template is most appropriate, ask clarifying questions.
     }
   });
 
-  const httpServer = createServer(app);
-  
   // Initialize WebSocket server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
