@@ -947,15 +947,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Chatbot API endpoint
+  // Chatbot API endpoint - Smart Rules-based Implementation (No OpenAI)
   app.post("/api/chatbot", async (req: Request, res: Response) => {
     try {
-      const openai = getOpenAI();
-      if (!openai) {
-        return res.status(500).json({ message: "OpenAI is not configured" });
-      }
-      
-      const { message, context } = req.body;
+      const { message, context, userId } = req.body;
       
       if (!message) {
         return res.status(400).json({ message: "Missing message content" });
@@ -964,80 +959,235 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch all document templates for reference
       const templates = await storage.getDocumentTemplates();
       
-      // Format the prompt with context about available document types
-      const systemPrompt = `You are an AI assistant for SmartDisputesAICanada, a platform that helps low-income and marginalized Canadians with legal documents for disputes against government agencies and organizations.
+      // Simple keyword matching for template recommendations
+      const messageLC = message.toLowerCase();
+      const templateScores: Record<number, number> = {};
+      let responseMessage = '';
       
-Available document categories include:
-- Children's Aid Societies disputes
-- Landlord-Tenant disputes
-- Equifax disputes
-- Transition services disputes
-
-For Children's Aid Society scenarios:
-- If they mention CAS visiting a child's school, recommend the "CAS School Visit Response Guide"
-- For cases where a child has been apprehended, recommend the "Post-Apprehension Child Return Request"
-- For court proceedings, recommend the "CAS Court Hearing Preparation Guide"
-- For disputing CAS decisions or records, recommend the relevant dispute letter or record correction templates
-
-For Landlord-Tenant disputes:
-- Recommend province-specific templates where available (Ontario, BC, Alberta, Quebec)
-- For maintenance issues, recommend the "Maintenance/Repair Demand Letter"
-- For illegal rent increases, recommend the "Illegal Rent Increase Dispute" template
-- For ending tenancy in Ontario, recommend the "Ontario N9 Notice to End Tenancy"
-
-Based on the user's situation, recommend the most appropriate document template from this list:
-${templates.map(t => `- ${t.name}: ${t.description} (Category: ${t.category}, Provinces: ${t.applicableProvinces.join(', ')})`).join('\n')}
-
-Focus on SELF-ADVOCACY: The core mission of SmartDisputesAICanada is to empower users to advocate for themselves when facing systemic challenges. Emphasize that they have the right to dispute decisions and challenge unjust treatment by government agencies.
-
-When responding:
-1. Acknowledge the user's situation with empathy
-2. Emphasize their RIGHT to dispute decisions and advocate for themselves
-3. Recommend the appropriate document template or templates (up to 3 most relevant ones)
-4. Explain how the document will help them in their self-advocacy journey
-5. Mention relevant provincial resources or advocacy groups if applicable
-6. Use simple, non-legal language that's accessible to everyone
-
-After you make your recommendation, also include the IDs of the most relevant templates in your reasoning (but don't show this to the user). Format like this at the end of your response: [TEMPLATE_IDS: 1, 5, 10] where the numbers are the template IDs that best match their scenario.
-
-If you're not sure which template is most appropriate, ask clarifying questions. Remember that users are likely facing difficult circumstances and need support that focuses on empowerment and self-advocacy.`;
-
-      // Get the completion from OpenAI
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...(context && Array.isArray(context) ? context : []),
-          { role: "user", content: message }
-        ],
-        temperature: 0.7,
-        max_tokens: 500
-      });
+      // Initial greeting and empathy response
+      responseMessage = "Thank you for reaching out to SmartDisputesAICanada. I understand navigating legal challenges can be difficult, and I'm here to help you find the right resources.\n\n";
       
-      const response = completion.choices[0].message.content || '';
-      
-      // Extract any template IDs from the response
-      const templateIdMatch = response.match(/\[TEMPLATE_IDS:\s*([\d,\s]+)\]/);
-      let recommendedTemplateIds: number[] = [];
-      let cleanResponse = response;
-      
-      if (templateIdMatch && templateIdMatch[1]) {
-        // Extract and clean up the template IDs
-        recommendedTemplateIds = templateIdMatch[1]
-          .split(',')
-          .map((id: string) => parseInt(id.trim()))
-          .filter((id: number) => !isNaN(id));
+      // CAS (Children's Aid Society) related keywords
+      if (messageLC.includes('child') || messageLC.includes('cas') || messageLC.includes('children') || 
+          messageLC.includes('kid') || messageLC.includes('parent') || messageLC.includes('school visit') || 
+          messageLC.includes('apprehension') || messageLC.includes('family')) {
+        
+        responseMessage += "I see you're dealing with a situation related to children or family services. You have the right to advocate for yourself and your family in these challenging situations.\n\n";
+        
+        if (messageLC.includes('school visit') || (messageLC.includes('school') && messageLC.includes('visit'))) {
+          // Find template about CAS school visits
+          templates.forEach(t => {
+            if (t.name.toLowerCase().includes('school visit') && t.category === 'Children\'s Aid Societies') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
           
-        // Remove the template IDs from the visible response
-        cleanResponse = response.replace(/\[TEMPLATE_IDS:\s*[\d,\s]+\]/, '').trim();
+          responseMessage += "When CAS visits a child at school, you have specific rights as a parent. The right document can help you respond appropriately.\n\n";
+        }
+        
+        if (messageLC.includes('apprehend') || messageLC.includes('take') || messageLC.includes('took') || messageLC.includes('removed')) {
+          // Find template about child apprehension
+          templates.forEach(t => {
+            if ((t.name.toLowerCase().includes('apprehension') || t.name.toLowerCase().includes('return')) && 
+                t.category === 'Children\'s Aid Societies') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
+          
+          responseMessage += "If your child has been apprehended, it's important to understand your rights and the steps you can take to address the situation.\n\n";
+        }
+        
+        if (messageLC.includes('court') || messageLC.includes('hearing') || messageLC.includes('judge')) {
+          // Find template about court proceedings
+          templates.forEach(t => {
+            if ((t.name.toLowerCase().includes('court') || t.name.toLowerCase().includes('hearing')) && 
+                t.category === 'Children\'s Aid Societies') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
+          
+          responseMessage += "Court proceedings can be intimidating, but with proper preparation, you can effectively represent your interests.\n\n";
+        }
+        
+        // Add score to all CAS templates as a fallback
+        templates.forEach(t => {
+          if (t.category === 'Children\'s Aid Societies') {
+            templateScores[t.id] = (templateScores[t.id] || 0) + 3;
+          }
+        });
+      }
+      
+      // Landlord-Tenant related keywords
+      if (messageLC.includes('landlord') || messageLC.includes('tenant') || messageLC.includes('rent') || 
+          messageLC.includes('apartment') || messageLC.includes('evict') || messageLC.includes('lease') || 
+          messageLC.includes('housing') || messageLC.includes('repair') || messageLC.includes('maintenance')) {
+        
+        responseMessage += "I understand you're facing a housing or landlord-tenant issue. These situations can be stressful, but you have rights as a tenant.\n\n";
+        
+        // Check for province-specific mentions
+        const provinces = ['ontario', 'quebec', 'british columbia', 'bc', 'alberta', 'manitoba', 
+                         'saskatchewan', 'nova scotia', 'new brunswick', 'newfoundland', 'pei', 
+                         'prince edward island', 'yukon', 'northwest territories', 'nunavut'];
+        
+        let mentionedProvince = '';
+        for (const province of provinces) {
+          if (messageLC.includes(province)) {
+            mentionedProvince = province === 'bc' ? 'British Columbia' : 
+                              province.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            break;
+          }
+        }
+        
+        if (mentionedProvince) {
+          responseMessage += `I see you're located in ${mentionedProvince}. I'll focus on templates that apply specifically to your province.\n\n`;
+          
+          // Prioritize templates for the mentioned province
+          templates.forEach(t => {
+            if (t.category === 'Landlord-Tenant' && 
+                t.applicableProvinces.some(p => p.toLowerCase() === mentionedProvince.toLowerCase())) {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 8;
+            }
+          });
+        }
+        
+        if (messageLC.includes('repair') || messageLC.includes('maintenance') || 
+            messageLC.includes('fix') || messageLC.includes('broken')) {
+          // Find templates about repairs
+          templates.forEach(t => {
+            if ((t.name.toLowerCase().includes('repair') || t.name.toLowerCase().includes('maintenance')) && 
+                t.category === 'Landlord-Tenant') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
+          
+          responseMessage += "Landlords have an obligation to maintain the property in good repair. There are specific documents that can help you request necessary repairs.\n\n";
+        }
+        
+        if (messageLC.includes('rent increase') || 
+            (messageLC.includes('rent') && (messageLC.includes('increase') || messageLC.includes('raised')))) {
+          // Find templates about rent increases
+          templates.forEach(t => {
+            if ((t.name.toLowerCase().includes('rent increase') || t.name.toLowerCase().includes('increase')) && 
+                t.category === 'Landlord-Tenant') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
+          
+          responseMessage += "Rent increases must follow specific rules and timelines. If you believe your rent increase is improper, you can challenge it.\n\n";
+        }
+        
+        if (messageLC.includes('evict') || messageLC.includes('eviction') || messageLC.includes('notice') || 
+            messageLC.includes('leave') || messageLC.includes('moving out')) {
+          // Find templates about eviction or ending tenancy
+          templates.forEach(t => {
+            if ((t.name.toLowerCase().includes('evict') || t.name.toLowerCase().includes('notice') || 
+                t.name.toLowerCase().includes('end') || t.name.toLowerCase().includes('termination')) && 
+                t.category === 'Landlord-Tenant') {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 10;
+            }
+          });
+          
+          responseMessage += "Evictions must follow proper legal procedures. Understanding your rights can help you respond effectively to eviction notices.\n\n";
+        }
+        
+        // Add score to all landlord-tenant templates as a fallback
+        templates.forEach(t => {
+          if (t.category === 'Landlord-Tenant') {
+            templateScores[t.id] = (templateScores[t.id] || 0) + 3;
+          }
+        });
+      }
+      
+      // Equifax and credit related keywords
+      if (messageLC.includes('credit') || messageLC.includes('equifax') || messageLC.includes('transunion') || 
+          messageLC.includes('report') || messageLC.includes('score') || messageLC.includes('dispute') || 
+          messageLC.includes('debt') || messageLC.includes('collection')) {
+        
+        responseMessage += "I see you're dealing with a credit reporting issue. Errors on your credit report can have serious consequences, but you have the right to dispute inaccurate information.\n\n";
+        
+        // Find templates related to credit reports
+        templates.forEach(t => {
+          if (t.category === 'Equifax' || 
+              t.name.toLowerCase().includes('credit') || 
+              t.name.toLowerCase().includes('equifax') || 
+              t.name.toLowerCase().includes('transunion')) {
+            templateScores[t.id] = (templateScores[t.id] || 0) + 8;
+          }
+        });
+        
+        responseMessage += "Credit reporting agencies must investigate disputes and correct inaccurate information. The right document can help you start this process.\n\n";
+      }
+      
+      // Transition services related keywords
+      if (messageLC.includes('transition') || messageLC.includes('housing support') || 
+          messageLC.includes('social service') || messageLC.includes('assistance program') || 
+          messageLC.includes('community support')) {
+        
+        responseMessage += "I understand you're seeking transition services or community supports. Navigating these systems can be challenging, but there are resources available to help.\n\n";
+        
+        // Find templates related to transition services
+        templates.forEach(t => {
+          if (t.category === 'Transition services' || 
+              t.name.toLowerCase().includes('transition') || 
+              t.name.toLowerCase().includes('support') || 
+              t.name.toLowerCase().includes('assistance')) {
+            templateScores[t.id] = (templateScores[t.id] || 0) + 8;
+          }
+        });
+        
+        responseMessage += "Properly documenting your needs and requests can help you access the services you're entitled to.\n\n";
+      }
+      
+      // If no specific category was matched, provide a general response
+      if (Object.keys(templateScores).length === 0) {
+        responseMessage += "I'd like to help you find the right document for your situation. Could you provide more details about:\n\n";
+        responseMessage += "1. The specific issue you're facing (e.g., landlord dispute, CAS interaction, credit report error)\n";
+        responseMessage += "2. Your province or territory\n";
+        responseMessage += "3. Any specific actions you've already taken\n\n";
+        responseMessage += "This will help me recommend the most appropriate document templates for your situation.";
+        
+        // Return a general response with no specific templates
+        if (app.locals.broadcastMessage && userId) {
+          app.locals.broadcastMessage({
+            type: 'chatbot_response',
+            message: responseMessage,
+            recommendedTemplateIds: [],
+            timestamp: new Date()
+          }, { userId });
+        }
+        
+        return res.json({
+          response: responseMessage,
+          templates: templates.map(t => ({ id: t.id, name: t.name })),
+          recommendedTemplateIds: []
+        });
+      }
+      
+      // Get the top 3 templates by score
+      const recommendedTemplateIds = Object.entries(templateScores)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([id]) => parseInt(id));
+      
+      // Add recommended templates to the response
+      if (recommendedTemplateIds.length > 0) {
+        responseMessage += "Based on what you've shared, I recommend the following document templates:\n\n";
+        
+        for (let i = 0; i < recommendedTemplateIds.length; i++) {
+          const template = templates.find(t => t.id === recommendedTemplateIds[i]);
+          if (template) {
+            responseMessage += `${i + 1}. **${template.name}**: ${template.description}\n`;
+          }
+        }
+        
+        responseMessage += "\nThese templates are designed to help you advocate for yourself effectively. You can select any of these templates to get started on your document.";
       }
       
       // If a userId was provided, send a WebSocket notification
-      const userId = req.body.userId;
       if (app.locals.broadcastMessage && userId) {
         app.locals.broadcastMessage({
           type: 'chatbot_response',
-          message: cleanResponse,
+          message: responseMessage,
           recommendedTemplateIds,
           timestamp: new Date()
         }, { userId });
@@ -1045,27 +1195,18 @@ If you're not sure which template is most appropriate, ask clarifying questions.
       
       // Return the chatbot response
       res.json({ 
-        response: cleanResponse,
+        response: responseMessage,
         templates: templates.map(t => ({ id: t.id, name: t.name })),
         recommendedTemplateIds: recommendedTemplateIds
       });
     } catch (error: any) {
       console.error("Chatbot error:", error);
       
-      // Check if this is a rate limit error (429)
-      const isRateLimit = error.status === 429 || (error.message && error.message.includes("429"));
-      
       // Fetch all document templates for reference (even in error case)
       const templates = await storage.getDocumentTemplates();
       
-      // Create fallback response based on user's query
-      let fallbackResponse = "I'm sorry, I'm currently having trouble processing your request. ";
-      
-      if (isRateLimit) {
-        fallbackResponse += "Our service is experiencing high demand right now. ";
-      }
-      
-      fallbackResponse += "In the meantime, you can browse our document templates directly using the document selection page or try again in a few minutes.";
+      // Create fallback response
+      const fallbackResponse = "I'm sorry, I'm currently having trouble processing your request. In the meantime, you can browse our document templates directly using the document selection page or try again in a few minutes.";
       
       // Try to intelligently recommend templates based on keywords in the user's message
       const message = req.body.message || "";
