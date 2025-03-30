@@ -30,6 +30,10 @@ import NewPost from "@/pages/new-post";
 import PostDetail from "@/pages/post-detail";
 import CommunitySearch from "@/pages/community-search";
 
+// Marketing Funnel Pages
+import MarketingIndex from "@/pages/marketing/index";
+import ChildrenAidFunnel from "@/pages/marketing/funnels/children-aid";
+
 function Router() {
   return (
     <Switch>
@@ -54,6 +58,10 @@ function Router() {
       <Route path="/community/new-post" component={NewPost} />
       <Route path="/community/post/:id" component={PostDetail} />
       <Route path="/community/search" component={CommunitySearch} />
+      
+      {/* Marketing Funnel Routes */}
+      <Route path="/marketing" component={MarketingIndex} />
+      <Route path="/marketing/funnels/children-aid" component={ChildrenAidFunnel} />
       
       <Route component={NotFound} />
     </Switch>

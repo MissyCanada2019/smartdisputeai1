@@ -249,6 +249,59 @@ export const insertUserRoleSchema = createInsertSchema(userRoles).pick({
   role: true,
 });
 
+// Marketing funnel events
+export const marketingFunnelEvents = pgTable("marketing_funnel_events", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  eventName: text("event_name").notNull(),
+  funnelName: text("funnel_name").notNull(),
+  stepName: text("step_name").notNull(),
+  stepNumber: integer("step_number").notNull(),
+  conversionValue: doublePrecision("conversion_value"),
+  path: text("path"),
+  referrer: text("referrer"),
+  userAgent: text("user_agent"),
+  ipAddress: text("ip_address"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMarketingFunnelEventSchema = createInsertSchema(marketingFunnelEvents).pick({
+  userId: true,
+  eventName: true,
+  funnelName: true,
+  stepName: true,
+  stepNumber: true,
+  conversionValue: true,
+  path: true,
+  referrer: true,
+  userAgent: true,
+  ipAddress: true,
+  metadata: true,
+});
+
+// Marketing leads
+export const marketingLeads = pgTable("marketing_leads", {
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  resourceRequested: text("resource_requested"),
+  funnelSource: text("funnel_source"),
+  message: text("message"),
+  convertedToUser: boolean("converted_to_user").default(false),
+  userId: integer("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertMarketingLeadSchema = createInsertSchema(marketingLeads).pick({
+  email: true,
+  name: true,
+  resourceRequested: true,
+  funnelSource: true,
+  message: true,
+});
+
 // Export all types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -289,6 +342,13 @@ export type CommunityBookmark = typeof communityBookmarks.$inferSelect;
 
 export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
 export type UserRole = typeof userRoles.$inferSelect;
+
+// Marketing funnel types
+export type InsertMarketingFunnelEvent = z.infer<typeof insertMarketingFunnelEventSchema>;
+export type MarketingFunnelEvent = typeof marketingFunnelEvents.$inferSelect;
+
+export type InsertMarketingLead = z.infer<typeof insertMarketingLeadSchema>;
+export type MarketingLead = typeof marketingLeads.$inferSelect;
 
 // Form schemas for validation
 export const userInfoFormSchema = z.object({

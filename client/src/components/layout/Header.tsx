@@ -32,14 +32,14 @@ export default function Header() {
           <Link href="/community" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/community') ? 'text-primary' : ''}`}>
             Community
           </Link>
+          <Link href="/marketing" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/marketing') ? 'text-primary' : ''}`}>
+            Resources
+          </Link>
           <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
             AI Assistant
           </Link>
           <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
             Chat
-          </Link>
-          <Link href="/resources" className={`text-gray-600 hover:text-primary font-medium ${location === '/resources' ? 'text-primary' : ''}`}>
-            Resources
           </Link>
           <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
             FAQ

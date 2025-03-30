@@ -1520,5 +1520,249 @@ If you're not sure which template is most appropriate, ask clarifying questions.
     }
   });
   
+  // Marketing funnel routes
+  
+  // Track funnel event
+  app.post("/api/marketing/track-event", async (req: Request, res: Response) => {
+    try {
+      const { funnelName, eventName, userId, metadata } = req.body;
+      
+      if (!funnelName || !eventName) {
+        return res.status(400).json({ message: "Funnel name and event name are required" });
+      }
+      
+      const eventData = {
+        funnelName, 
+        eventName,
+        userId: userId || null,
+        metadata: metadata || {}
+      };
+      
+      const newEvent = await storage.trackFunnelEvent(eventData);
+      res.status(201).json(newEvent);
+    } catch (error: any) {
+      console.error("Error tracking funnel event:", error);
+      res.status(500).json({ message: "Error tracking funnel event" });
+    }
+  });
+  
+  // Get funnel events (optionally filtered by funnel name)
+  app.get("/api/marketing/funnel-events", async (req: Request, res: Response) => {
+    try {
+      // Require admin access for this endpoint
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const funnelName = req.query.funnelName as string | undefined;
+      const events = await storage.getFunnelEvents(funnelName);
+      
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching funnel events:", error);
+      res.status(500).json({ message: "Error fetching funnel events" });
+    }
+  });
+  
+  // Get user's funnel events
+  app.get("/api/marketing/user-funnel-events/:userId", async (req: Request, res: Response) => {
+    try {
+      // Require authentication - users can see their own events, admins can see anyone's
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID" });
+      }
+      
+      // Check permissions - only own events or admin access
+      if (req.user.id !== userId) {
+        const userRole = await storage.getUserRole(req.user.id);
+        if (!userRole || userRole.role !== 'admin') {
+          return res.status(403).json({ message: "You don't have permission to view these events" });
+        }
+      }
+      
+      const events = await storage.getUserFunnelEvents(userId);
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching user funnel events:", error);
+      res.status(500).json({ message: "Error fetching user funnel events" });
+    }
+  });
+  
+  // Create marketing lead
+  app.post("/api/marketing/leads", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName, lastName, phone, province, interests, source, funnelName } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Check if lead with this email already exists
+      const existingLead = await storage.getMarketingLeadByEmail(email);
+      if (existingLead) {
+        // Update the existing lead with any new information
+        const updatedLead = await storage.updateMarketingLead(existingLead.id, {
+          firstName: firstName || existingLead.firstName,
+          lastName: lastName || existingLead.lastName,
+          phone: phone || existingLead.phone,
+          province: province || existingLead.province,
+          interests: interests || existingLead.interests,
+          source: source || existingLead.source,
+          funnelName: funnelName || existingLead.funnelName
+        });
+        
+        // Also track this as a lead return event
+        if (funnelName) {
+          await storage.trackFunnelEvent({
+            funnelName,
+            eventName: 'lead_return',
+            userId: null,
+            metadata: { leadId: existingLead.id, email }
+          });
+        }
+        
+        return res.json(updatedLead);
+      }
+      
+      // Create new lead
+      const leadData = {
+        email,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        phone: phone || null,
+        province: province || null,
+        interests: interests || {},
+        source: source || 'website',
+        funnelName: funnelName || null
+      };
+      
+      const newLead = await storage.createMarketingLead(leadData);
+      
+      // Also track this as a lead capture event
+      if (funnelName) {
+        await storage.trackFunnelEvent({
+          funnelName,
+          eventName: 'lead_capture',
+          userId: null,
+          metadata: { leadId: newLead.id, email }
+        });
+      }
+      
+      res.status(201).json(newLead);
+    } catch (error: any) {
+      console.error("Error creating marketing lead:", error);
+      res.status(500).json({ message: "Error creating marketing lead" });
+    }
+  });
+  
+  // Get marketing lead by email (admin only)
+  app.get("/api/marketing/leads/email/:email", async (req: Request, res: Response) => {
+    try {
+      // Require admin access for this endpoint
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { email } = req.params;
+      const lead = await storage.getMarketingLeadByEmail(email);
+      
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(lead);
+    } catch (error: any) {
+      console.error("Error fetching marketing lead:", error);
+      res.status(500).json({ message: "Error fetching marketing lead" });
+    }
+  });
+  
+  // Update marketing lead
+  app.put("/api/marketing/leads/:id", async (req: Request, res: Response) => {
+    try {
+      // Require admin access for this endpoint
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid lead ID" });
+      }
+      
+      const leadData = req.body;
+      const updatedLead = await storage.updateMarketingLead(id, leadData);
+      
+      if (!updatedLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      
+      res.json(updatedLead);
+    } catch (error: any) {
+      console.error("Error updating marketing lead:", error);
+      res.status(500).json({ message: "Error updating marketing lead" });
+    }
+  });
+  
+  // Convert lead to user
+  app.post("/api/marketing/leads/:leadId/convert/:userId", async (req: Request, res: Response) => {
+    try {
+      // Require admin access for this endpoint
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userRole = await storage.getUserRole(req.user.id);
+      if (!userRole || userRole.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const leadId = parseInt(req.params.leadId);
+      const userId = parseInt(req.params.userId);
+      
+      if (isNaN(leadId) || isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid lead ID or user ID" });
+      }
+      
+      // Convert the lead
+      const updatedLead = await storage.convertLeadToUser(leadId, userId);
+      
+      // Track conversion event
+      if (updatedLead.funnelName) {
+        await storage.trackFunnelEvent({
+          funnelName: updatedLead.funnelName,
+          eventName: 'lead_conversion',
+          userId,
+          metadata: { leadId, email: updatedLead.email }
+        });
+      }
+      
+      res.json(updatedLead);
+    } catch (error: any) {
+      console.error("Error converting lead to user:", error);
+      res.status(500).json({ message: "Error converting lead to user" });
+    }
+  });
+  
   return httpServer;
 }

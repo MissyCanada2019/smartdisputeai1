@@ -35,8 +35,9 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/document-selection-hierarchical" className="hover:text-white">Document Library</Link></li>
               <li><Link href="/community" className="hover:text-white">Community</Link></li>
+              <li><Link href="/marketing" className="hover:text-white">Resource Center</Link></li>
+              <li><Link href="/marketing/funnels/children-aid" className="hover:text-white">Children's Aid Guide</Link></li>
               <li><Link href="/resources" className="hover:text-white">Legal Guides</Link></li>
-              <li><Link href="/resources" className="hover:text-white">Government Resources</Link></li>
               <li><Link href="/faq" className="hover:text-white">FAQs</Link></li>
             </ul>
           </div>

@@ -11,7 +11,9 @@ import {
   communityPostLikes, type CommunityPostLike, type InsertCommunityPostLike,
   communityCommentLikes, type CommunityCommentLike, type InsertCommunityCommentLike,
   communityBookmarks, type CommunityBookmark, type InsertCommunityBookmark,
-  userRoles, type UserRole, type InsertUserRole
+  userRoles, type UserRole, type InsertUserRole,
+  marketingFunnelEvents, type MarketingFunnelEvent, type InsertMarketingFunnelEvent,
+  marketingLeads, type MarketingLead, type InsertMarketingLead
 } from "@shared/schema";
 
 // Storage interface
@@ -98,6 +100,17 @@ export interface IStorage {
   getUserRole(userId: number): Promise<UserRole | undefined>;
   assignUserRole(role: InsertUserRole): Promise<UserRole>;
   updateUserRole(userId: number, role: string): Promise<UserRole | undefined>;
+  
+  // Marketing funnel operations
+  trackFunnelEvent(event: InsertMarketingFunnelEvent): Promise<MarketingFunnelEvent>;
+  getFunnelEvents(funnelName?: string): Promise<MarketingFunnelEvent[]>;
+  getUserFunnelEvents(userId: number): Promise<MarketingFunnelEvent[]>;
+  
+  // Marketing lead operations
+  createMarketingLead(lead: InsertMarketingLead): Promise<MarketingLead>;
+  getMarketingLeadByEmail(email: string): Promise<MarketingLead | undefined>;
+  updateMarketingLead(id: number, lead: Partial<MarketingLead>): Promise<MarketingLead | undefined>;
+  convertLeadToUser(leadId: number, userId: number): Promise<MarketingLead>;
 }
 
 export class MemStorage implements IStorage {
@@ -117,6 +130,10 @@ export class MemStorage implements IStorage {
   private communityBookmarks: Map<number, CommunityBookmark>;
   private userRoles: Map<number, UserRole>;
   
+  // Marketing related data maps
+  private marketingFunnelEvents: Map<number, MarketingFunnelEvent>;
+  private marketingLeads: Map<number, MarketingLead>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
@@ -132,6 +149,10 @@ export class MemStorage implements IStorage {
   private currentCommunityCommentLikeId: number;
   private currentCommunityBookmarkId: number;
   private currentUserRoleId: number;
+  
+  // Marketing related counters
+  private currentMarketingFunnelEventId: number;
+  private currentMarketingLeadId: number;
 
   constructor() {
     // Initialize main collections
@@ -151,6 +172,10 @@ export class MemStorage implements IStorage {
     this.communityBookmarks = new Map();
     this.userRoles = new Map();
     
+    // Initialize marketing collections
+    this.marketingFunnelEvents = new Map();
+    this.marketingLeads = new Map();
+    
     // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
@@ -167,6 +192,10 @@ export class MemStorage implements IStorage {
     this.currentCommunityCommentLikeId = 1;
     this.currentCommunityBookmarkId = 1;
     this.currentUserRoleId = 1;
+    
+    // Initialize marketing IDs
+    this.currentMarketingFunnelEventId = 1;
+    this.currentMarketingLeadId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -1261,6 +1290,88 @@ export class MemStorage implements IStorage {
     };
     this.userRoles.set(existingRole.id, updatedRole);
     return updatedRole;
+  }
+
+  // Marketing funnel event methods
+  async trackFunnelEvent(event: InsertMarketingFunnelEvent): Promise<MarketingFunnelEvent> {
+    const id = this.currentMarketingFunnelEventId++;
+    const now = new Date().toISOString();
+    const newEvent: MarketingFunnelEvent = {
+      ...event,
+      id,
+      createdAt: now
+    };
+    this.marketingFunnelEvents.set(id, newEvent);
+    return newEvent;
+  }
+
+  async getFunnelEvents(funnelName?: string): Promise<MarketingFunnelEvent[]> {
+    const events = Array.from(this.marketingFunnelEvents.values());
+    
+    if (funnelName) {
+      return events.filter(event => event.funnelName === funnelName);
+    }
+    
+    return events;
+  }
+
+  async getUserFunnelEvents(userId: number): Promise<MarketingFunnelEvent[]> {
+    return Array.from(this.marketingFunnelEvents.values()).filter(
+      event => event.userId === userId
+    );
+  }
+
+  // Marketing lead methods
+  async createMarketingLead(lead: InsertMarketingLead): Promise<MarketingLead> {
+    const id = this.currentMarketingLeadId++;
+    const now = new Date().toISOString();
+    const newLead: MarketingLead = {
+      ...lead,
+      id,
+      convertedToUser: false,
+      userId: null,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.marketingLeads.set(id, newLead);
+    return newLead;
+  }
+
+  async getMarketingLeadByEmail(email: string): Promise<MarketingLead | undefined> {
+    return Array.from(this.marketingLeads.values()).find(
+      lead => lead.email === email
+    );
+  }
+
+  async updateMarketingLead(id: number, leadData: Partial<MarketingLead>): Promise<MarketingLead | undefined> {
+    const existingLead = this.marketingLeads.get(id);
+    if (!existingLead) return undefined;
+    
+    const now = new Date().toISOString();
+    const updatedLead = {
+      ...existingLead,
+      ...leadData,
+      updatedAt: now
+    };
+    this.marketingLeads.set(id, updatedLead);
+    return updatedLead;
+  }
+
+  async convertLeadToUser(leadId: number, userId: number): Promise<MarketingLead> {
+    const lead = this.marketingLeads.get(leadId);
+    if (!lead) {
+      throw new Error(`Lead with ID ${leadId} not found`);
+    }
+    
+    const now = new Date().toISOString();
+    const updatedLead = {
+      ...lead,
+      convertedToUser: true,
+      userId,
+      updatedAt: now
+    };
+    this.marketingLeads.set(leadId, updatedLead);
+    return updatedLead;
   }
 }
 
