@@ -1356,8 +1356,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize WebSocket server
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  // Initialize WebSocket server with ping/pong checks
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws',
+    clientTracking: true,
+    perMessageDeflate: false
+  });
+
+  // Set up heartbeat
+  function heartbeat() {
+    this.isAlive = true;
+  }
+
+  const interval = setInterval(() => {
+    wss.clients.forEach((ws: any) => {
+      if (ws.isAlive === false) return ws.terminate();
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, 30000);
+
+  wss.on('close', () => {
+    clearInterval(interval);
+  });
   
   // Store connected clients
   const clients = new Map<string, WebSocketClient>();
