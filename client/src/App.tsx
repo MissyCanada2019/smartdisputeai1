@@ -6,11 +6,10 @@ import { FormProvider } from "@/lib/formContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ChatBotModal from "@/components/chatbot/ChatBotModal";
+import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
-import { HubSpotPageTracker } from "@/components/marketing/HubSpotPageTracker";
-import { HubSpotChatbot } from "@/components/marketing/HubSpotChatbot";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -24,7 +23,6 @@ import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
-import Contact from "@/pages/contact";
 import Chat from "@/pages/chat";
 import Resources from "@/pages/resources-new";
 import FAQ from "@/pages/faq";
@@ -140,10 +138,7 @@ function App() {
           </main>
           <Footer />
           <ChatBotModal />
-          
-          {/* HubSpot integrations */}
-          <HubSpotPageTracker />
-          <HubSpotChatbot canadianLegalContext={true} />
+          <AutomaticUpdates />
         </div>
         <Toaster />
       </FormProvider>
