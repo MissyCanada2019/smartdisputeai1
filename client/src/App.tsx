@@ -24,6 +24,7 @@ import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
+import Contact from "@/pages/contact";
 import Chat from "@/pages/chat";
 import Resources from "@/pages/resources-new";
 import FAQ from "@/pages/faq";
