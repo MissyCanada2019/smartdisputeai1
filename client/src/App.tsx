@@ -6,7 +6,6 @@ import { FormProvider } from "@/lib/formContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ChatBotModal from "@/components/chatbot/ChatBotModal";
-import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
@@ -138,7 +137,6 @@ function App() {
           </main>
           <Footer />
           <ChatBotModal />
-          <AutomaticUpdates />
         </div>
         <Toaster />
       </FormProvider>
