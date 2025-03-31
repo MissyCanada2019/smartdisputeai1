@@ -7,19 +7,24 @@ export default function TemplateSidebar() {
   const { currentStep } = formState;
   
   const steps = [
-    { id: 1, name: "Account created", icon: <CheckCircle2Icon size={16} className="mr-2" /> },
-    { id: 2, name: "Personal information", icon: currentStep >= 2 
+    { id: 1, name: "Upload evidence", icon: currentStep >= 1 
       ? <CheckCircle2Icon size={16} className="mr-2" /> 
       : <ArrowRightCircleIcon size={16} className="mr-2" /> },
+    { id: 2, name: "Personal information", icon: currentStep >= 2 
+      ? <CheckCircle2Icon size={16} className="mr-2" /> 
+      : (currentStep === 1 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) },
     { id: 3, name: "Select document type", icon: currentStep >= 3 
       ? <CheckCircle2Icon size={16} className="mr-2" /> 
       : (currentStep === 2 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) },
     { id: 4, name: "Customize template", icon: currentStep >= 4 
       ? <CheckCircle2Icon size={16} className="mr-2" /> 
       : (currentStep === 3 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) },
-    { id: 5, name: "Review and payment", icon: currentStep >= 5 
+    { id: 5, name: "Review document", icon: currentStep >= 5 
       ? <CheckCircle2Icon size={16} className="mr-2" /> 
-      : (currentStep === 4 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) }
+      : (currentStep === 4 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) },
+    { id: 6, name: "Payment", icon: currentStep >= 6 
+      ? <CheckCircle2Icon size={16} className="mr-2" /> 
+      : (currentStep === 5 ? <ArrowRightCircleIcon size={16} className="mr-2" /> : <CircleIcon size={16} className="mr-2" />) }
   ];
   
   return (
@@ -76,6 +81,35 @@ export default function TemplateSidebar() {
           </a>
         </div>
       </div>
+      
+      {formState.caseAnalysis && (
+        <div className="mt-6 bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+          <h3 className="font-semibold mb-2 flex items-center text-green-700">
+            <CheckCircle2Icon className="h-4 w-4 mr-2" />
+            Evidence Analyzed
+          </h3>
+          {formState.caseAnalysis.meritScore && (
+            <div className="mb-3">
+              <div className="text-sm text-gray-600 mb-1">Case Merit Score:</div>
+              <div className="flex items-center">
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-green-500 h-2.5 rounded-full" 
+                    style={{ width: `${formState.caseAnalysis.meritScore}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm font-medium text-gray-700 ml-2">
+                  {formState.caseAnalysis.meritScore}%
+                </span>
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-gray-600">
+            {formState.caseAnalysis.meritAssessment || 
+              "We've analyzed your evidence and provided document recommendations based on your case details."}
+          </p>
+        </div>
+      )}
       
       {formState.userInfo?.requestIncomeBased && (
         <Alert className="mt-6 bg-blue-50 border-l-4 border-blue-500">

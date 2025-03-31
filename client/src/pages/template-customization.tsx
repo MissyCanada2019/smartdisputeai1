@@ -21,7 +21,7 @@ export default function TemplateCustomization() {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      <ProgressTracker currentStep={3} />
+      <ProgressTracker currentStep={4} />
       
       <div className="mb-8 text-center md:text-left">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Customize Your Document</h1>

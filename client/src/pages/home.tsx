@@ -26,7 +26,7 @@ export default function Home() {
           Simple, accessible legal solutions designed specifically for low-income and marginalized Canadians.
         </p>
         <div className="flex flex-wrap justify-center gap-6 mb-12">
-          <Link href="/user-info">
+          <Link href="/evidence-upload">
             <Button size="lg" className="text-lg px-10 py-6 font-semibold">
               Start Your Dispute
             </Button>
@@ -204,7 +204,7 @@ export default function Home() {
           </div>
           
           <div className="text-center mt-12">
-            <Link href="/document-selection">
+            <Link href="/evidence-upload">
               <Button size="lg" className="text-lg px-8">
                 Start Your Dispute Now
               </Button>
@@ -479,7 +479,7 @@ export default function Home() {
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Start the process now and get the legal documents you need at a price you can afford.
         </p>
-        <Link href="/user-info">
+        <Link href="/evidence-upload">
           <Button size="lg" className="text-lg px-8">
             Get Started Now
           </Button>

@@ -37,18 +37,27 @@ export default function UserInfoForm() {
   const onSubmit = (data: UserInfoFormValues) => {
     try {
       setErrorMessage(null);
-      setFormState({
+
+      // Preserve any evidence information that was collected in the previous step
+      const updatedState = {
         ...formState,
         userInfo: data,
         currentStep: 2
-      });
+      };
+      
+      setFormState(updatedState);
+      
+      // If we already have recommended forms from evidence analysis, go directly to them
+      const nextPage = formState.recommendedForms && formState.recommendedForms.length > 0
+        ? `/document-selection?recommended=true`
+        : "/document-selection";
       
       toast({
         title: "Personal information saved",
         description: "Moving to document selection."
       });
       
-      navigate("/document-selection");
+      navigate(nextPage);
     } catch (error) {
       console.error("Form submission error:", error);
       setErrorMessage("An error occurred while saving your information. Please try again.");
@@ -292,8 +301,8 @@ export default function UserInfoForm() {
         </div>
         
         <div className="flex justify-between mt-8">
-          <Button type="button" variant="outline" onClick={() => navigate("/")}>
-            Back
+          <Button type="button" variant="outline" onClick={() => navigate("/evidence-upload")}>
+            Back to Evidence
           </Button>
           <Button type="submit">
             Continue to Document Selection

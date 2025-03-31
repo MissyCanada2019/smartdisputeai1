@@ -38,6 +38,7 @@ import CookiePolicy from "@/pages/cookie-policy";
 import Disclaimer from "@/pages/disclaimer";
 import AffiliateProgram from "@/pages/affiliate-program";
 import FileUploaderDemo from "@/pages/file-uploader-demo";
+import EvidenceUpload from "@/pages/evidence-upload";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -47,6 +48,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/evidence-upload" component={EvidenceUpload} />
       <Route path="/user-info" component={UserInfo} />
       <Route path="/document-selection" component={DocumentSelection} />
       <Route path="/document-selection-hierarchical" component={DocumentSelectionHierarchical} />

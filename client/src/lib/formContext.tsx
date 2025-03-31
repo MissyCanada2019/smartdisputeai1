@@ -7,6 +7,21 @@ interface FormState {
   selectedTemplate?: DocumentTemplate;
   documentData?: Record<string, any>;
   documentId?: number;
+  // Evidence-related fields
+  issueDescription?: string;
+  agency?: string;
+  province?: string;
+  evidenceFileIds?: number[];
+  userId?: number | null;
+  caseAnalysis?: {
+    id?: number;
+    caseSummary?: string;
+    recommendedForms?: any[];
+    meritScore?: number;
+    meritAssessment?: string;
+    predictedOutcome?: string;
+  };
+  recommendedForms?: any[];
 }
 
 interface FormContextType {
@@ -18,7 +33,7 @@ const FormContext = createContext<FormContextType | undefined>(undefined);
 
 export function FormProvider({ children }: { children: ReactNode }) {
   const [formState, setFormState] = useState<FormState>({
-    currentStep: 1
+    currentStep: 0
   });
 
   return (

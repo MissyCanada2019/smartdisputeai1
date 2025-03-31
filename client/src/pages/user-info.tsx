@@ -7,7 +7,7 @@ import { InfoIcon, ShieldAlert } from "lucide-react";
 export default function UserInfo() {
   return (
     <div className="container mx-auto px-4 py-8">
-      <ProgressTracker currentStep={1} />
+      <ProgressTracker currentStep={2} />
       
       <div className="mb-8 text-center md:text-left">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Create Your Legal Documents</h1>
@@ -37,8 +37,8 @@ export default function UserInfo() {
               </AlertDescription>
             </Alert>
             
-            <Alert variant="warning" className="bg-yellow-50 rounded-lg p-4 border-l-4 border-warning">
-              <AlertTitle className="font-medium text-warning mb-2 flex items-center">
+            <Alert variant="destructive" className="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-500">
+              <AlertTitle className="font-medium text-yellow-700 mb-2 flex items-center">
                 <ShieldAlert className="mr-1 h-4 w-4" /> Income Verification
               </AlertTitle>
               <AlertDescription className="text-sm text-gray-600">

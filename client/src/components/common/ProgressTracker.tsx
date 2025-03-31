@@ -7,8 +7,8 @@ interface ProgressTrackerProps {
 
 export default function ProgressTracker({
   currentStep,
-  totalSteps = 5,
-  stepNames = ["User Info", "Document Type", "Template", "Review", "Payment"],
+  totalSteps = 6,
+  stepNames = ["Evidence", "User Info", "Document Type", "Template", "Review", "Payment"],
   title = "Filing a Government Agency Dispute"
 }: ProgressTrackerProps) {
   const percentage = (currentStep / totalSteps) * 100;
