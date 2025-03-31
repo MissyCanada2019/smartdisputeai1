@@ -11,6 +11,9 @@ interface FileUploadProps {
   maxFileSizeMB?: number;
   label?: string;
   helpText?: string;
+  showPreview?: boolean;
+  errorCallback?: (error: string) => void;
+  className?: string;
 }
 
 export default function FileUpload({
@@ -20,6 +23,9 @@ export default function FileUpload({
   maxFileSizeMB = 5,
   label = "Upload Documents",
   helpText = "Upload any supporting documents for your dispute (PDF, DOC, JPG)",
+  showPreview = true,
+  errorCallback,
+  className = "",
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -33,26 +39,41 @@ export default function FileUpload({
   
   const validateAndAddFiles = (selectedFiles: File[]) => {
     const maxSizeBytes = maxFileSizeMB * 1024 * 1024;
-    const fileExtensionRegex = new RegExp(`\\.(${acceptedFileTypes.replace(/\./g, '').replace(/,/g, '|')})$`, 'i');
+    const acceptedTypes = acceptedFileTypes.replace(/\./g, '').replace(/,/g, '|');
+    const fileExtensionRegex = new RegExp(`\\.(${acceptedTypes})$`, 'i');
     
     const validFiles = selectedFiles.filter(file => {
       // Check file size
       if (file.size > maxSizeBytes) {
+        const errorMessage = `${file.name} exceeds the maximum file size of ${maxFileSizeMB}MB`;
         toast({
           title: "File too large",
-          description: `${file.name} exceeds the maximum file size of ${maxFileSizeMB}MB`,
+          description: errorMessage,
           variant: "destructive",
         });
+        
+        if (errorCallback) {
+          errorCallback(errorMessage);
+        }
         return false;
       }
       
       // Check file type
       if (!fileExtensionRegex.test(file.name)) {
+        // Get file extension
+        const extension = file.name.split('.').pop() || '';
+        const acceptedTypesFormatted = acceptedFileTypes.replace(/\./g, '').toUpperCase().split(',').join(', ');
+        const errorMessage = `${file.name} has an unsupported file type (.${extension}). Accepted types: ${acceptedTypesFormatted}`;
+        
         toast({
           title: "Invalid file type",
-          description: `${file.name} is not an accepted file type`,
+          description: errorMessage,
           variant: "destructive",
         });
+        
+        if (errorCallback) {
+          errorCallback(errorMessage);
+        }
         return false;
       }
       
@@ -68,6 +89,12 @@ export default function FileUpload({
         title: "Files added",
         description: `Successfully added ${validFiles.length} file${validFiles.length > 1 ? 's' : ''}`,
       });
+    } else if (selectedFiles.length > 0 && validFiles.length === 0) {
+      // All files were invalid
+      const errorMessage = "No valid files were selected";
+      if (errorCallback) {
+        errorCallback(errorMessage);
+      }
     }
   };
   
@@ -116,15 +143,15 @@ export default function FileUpload({
   };
   
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <div className="flex flex-col space-y-2">
         <h3 className="text-lg font-medium">{label}</h3>
         <p className="text-sm text-gray-500">{helpText}</p>
       </div>
       
       <Card 
-        className={`border-dashed cursor-pointer ${
-          isDragging ? "border-primary bg-primary/5" : "border-gray-300"
+        className={`border-dashed cursor-pointer transition-colors duration-200 ${
+          isDragging ? "border-primary bg-primary/5" : "border-gray-300 hover:border-gray-400"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -136,8 +163,13 @@ export default function FileUpload({
           <p className="text-lg font-medium mb-2">Drag and drop files here</p>
           <p className="text-sm text-gray-500 mb-4">Or click to browse your computer</p>
           <Button variant="outline" onClick={(e) => { e.stopPropagation(); triggerFileInput(); }}>
-            Select Files
+            Select Files {multiple && "(Multiple)"}
           </Button>
+          <p className="text-xs text-gray-400 mt-4">
+            Accepted file types: {acceptedFileTypes.replace(/\./g, '').toUpperCase().split(',').join(', ')}
+            <br />
+            Maximum file size: {maxFileSizeMB} MB
+          </p>
           <input
             type="file"
             ref={fileInputRef}
@@ -145,13 +177,14 @@ export default function FileUpload({
             multiple={multiple}
             accept={acceptedFileTypes}
             onChange={handleFileChange}
+            aria-label={`Upload ${label}`}
           />
         </CardContent>
       </Card>
       
-      {files.length > 0 && (
+      {showPreview && files.length > 0 && (
         <div className="mt-4">
-          <h4 className="text-md font-medium mb-2">Uploaded Files</h4>
+          <h4 className="text-md font-medium mb-2">Selected Files</h4>
           <div className="space-y-2">
             {files.map((file, index) => (
               <div key={index} className="flex items-center justify-between py-2 px-4 bg-gray-50 rounded-md border">
@@ -169,6 +202,7 @@ export default function FileUpload({
                     size="icon" 
                     onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                     className="h-8 w-8 rounded-full text-gray-500 hover:text-red-500"
+                    aria-label={`Remove ${file.name}`}
                   >
                     <X className="h-4 w-4" />
                   </Button>

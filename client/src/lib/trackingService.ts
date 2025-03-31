@@ -66,6 +66,17 @@ export const Events = {
   DOCUMENT_CREATED: 'document_created',
   DOCUMENT_DOWNLOADED: 'document_downloaded',
   DOCUMENT_SHARED: 'document_shared',
+  DOCUMENT_TEMPLATE_VIEWED: 'document_template_viewed',
+  DOCUMENT_FILLED: 'document_form_filled',
+  DOCUMENT_GENERATED: 'document_generated',
+  
+  // Evidence and analysis events
+  EVIDENCE_UPLOADED: 'evidence_uploaded',
+  EVIDENCE_ANALYZED: 'evidence_analyzed',
+  CASE_ANALYSIS_CREATED: 'case_analysis_created',
+  DOCUMENT_RECOMMENDED: 'document_recommended',
+  MERIT_ASSESSMENT_REQUESTED: 'merit_assessment_requested',
+  MERIT_ASSESSMENT_VIEWED: 'merit_assessment_viewed',
   
   // Subscription events
   SUBSCRIPTION_STARTED: 'subscription_started',
@@ -74,6 +85,8 @@ export const Events = {
   
   // Interaction events
   CHATBOT_INTERACTION: 'chatbot_interaction',
+  CHATBOT_STARTED: 'chatbot_started',
+  CHATBOT_COMPLETED: 'chatbot_completed',
   RESOURCE_VIEWED: 'resource_viewed',
   SEARCH_PERFORMED: 'search_performed',
   
@@ -81,6 +94,11 @@ export const Events = {
   PAYMENT_INITIATED: 'payment_initiated',
   PAYMENT_COMPLETED: 'payment_completed',
   PAYMENT_FAILED: 'payment_failed',
+  
+  // Lead generation events
+  LEAD_CAPTURED: 'lead_captured',
+  LEAD_QUALIFIED: 'lead_qualified',
+  LEAD_CONVERTED: 'lead_converted'
 };
 
 // Define interface for window._hsq

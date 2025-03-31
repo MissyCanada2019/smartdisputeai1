@@ -37,6 +37,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import CookiePolicy from "@/pages/cookie-policy";
 import Disclaimer from "@/pages/disclaimer";
 import AffiliateProgram from "@/pages/affiliate-program";
+import FileUploaderDemo from "@/pages/file-uploader-demo";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -77,6 +78,9 @@ function Router() {
       {/* Marketing Funnel Routes */}
       <Route path="/marketing" component={MarketingIndex} />
       <Route path="/marketing/children-aid" component={ChildrenAidLandingPage} />
+      
+      {/* Component Demos */}
+      <Route path="/demos/file-uploader" component={FileUploaderDemo} />
       
       <Route component={NotFound} />
     </Switch>
