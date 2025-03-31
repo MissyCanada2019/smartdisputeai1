@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { HubSpotChatButton } from "@/components/marketing/HubSpotChatButton";
 
 export default function Header() {
   const [location] = useLocation();
@@ -51,6 +52,11 @@ export default function Header() {
         
         <div className="flex items-center space-x-4">
           <a href="#" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</a>
+          <HubSpotChatButton 
+            buttonText="Legal Help" 
+            className="hidden md:flex bg-secondary text-white"
+            size="sm"
+          />
           <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
             Get Started
           </Link>

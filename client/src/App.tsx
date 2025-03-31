@@ -9,6 +9,8 @@ import ChatBotModal from "@/components/chatbot/ChatBotModal";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
+import { HubSpotPageTracker } from "@/components/marketing/HubSpotPageTracker";
+import { HubSpotChatbot } from "@/components/marketing/HubSpotChatbot";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -137,6 +139,10 @@ function App() {
           </main>
           <Footer />
           <ChatBotModal />
+          
+          {/* HubSpot integrations */}
+          <HubSpotPageTracker />
+          <HubSpotChatbot canadianLegalContext={true} />
         </div>
         <Toaster />
       </FormProvider>
