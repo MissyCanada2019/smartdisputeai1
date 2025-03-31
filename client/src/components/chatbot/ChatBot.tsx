@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Send, X } from "lucide-react";
+import { Loader2, Send, X, BookOpen, MapPin, Info } from "lucide-react";
 import { webSocketService, MessageType, WebSocketMessage } from "@/lib/webSocketService";
+import { trackEvent, Events } from "@/lib/trackingService";
 
 interface Message {
   content: string;
@@ -29,7 +30,7 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
-      content: "Hello! I'm your legal document assistant. Tell me about your situation, and I'll help you find the right form or document for your needs.",
+      content: "Hello! I'm your Canadian legal document assistant. Tell me about your situation, and I'll help you find the right form or document for your needs. I specialize in Canadian provincial and federal laws, particularly for landlord-tenant issues, family law, and consumer protections.",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -96,6 +97,15 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsSending(true);
+    
+    // Track chatbot interaction with HubSpot
+    const hasConsented = localStorage.getItem('cookieConsent') === 'true';
+    if (hasConsented) {
+      trackEvent(Events.CHATBOT_INTERACTION, {
+        query: input,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     try {
       // Create context from previous messages
@@ -183,14 +193,32 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
   };
 
   const handleTemplateSelect = (templateId: number) => {
+    // Track template selection with HubSpot if user consented
+    const hasConsented = localStorage.getItem('cookieConsent') === 'true';
+    if (hasConsented) {
+      trackEvent(Events.DOCUMENT_CREATED, {
+        templateId,
+        source: 'chatbot',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
     navigate(`/document-selection?template=${templateId}`);
+  };
+  
+  // Quick prompt helper function
+  const handleQuickPrompt = (promptText: string) => {
+    setInput(promptText);
   };
 
   return (
     <Card className={`flex flex-col ${isModal ? "w-full max-w-md h-[500px]" : "w-full h-[600px]"}`}>
       <CardHeader className="bg-primary/5 border-b">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-primary text-lg">Legal Document Assistant</CardTitle>
+          <CardTitle className="text-primary text-lg flex items-center">
+            <BookOpen className="h-5 w-5 mr-2" /> 
+            Canadian Legal Assistant
+          </CardTitle>
           {isModal && onClose && (
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -230,6 +258,26 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
         )}
         <div ref={messagesEndRef} />
       </CardContent>
+      
+      {/* Quick Prompts */}
+      {messages.length <= 2 && !isSending && (
+        <div className="p-3 border-t bg-muted/10">
+          <p className="text-xs font-medium mb-2">Common Canadian legal scenarios:</p>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => handleQuickPrompt("My landlord wants to increase my rent by 15% in Toronto, Ontario.")}>
+              <MapPin className="h-3 w-3 mr-1" /> Rent increase in Ontario
+            </Badge>
+            <Badge variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => handleQuickPrompt("Children's Aid Society visited my child at school without my permission in Quebec.")}>
+              <Info className="h-3 w-3 mr-1" /> CAS school visit
+            </Badge>
+            <Badge variant="outline" className="cursor-pointer hover:bg-primary/10" onClick={() => handleQuickPrompt("I found errors on my Equifax credit report and want to dispute them.")}>
+              Credit report errors
+            </Badge>
+          </div>
+        </div>
+      )}
+      
+      {/* Recommended Templates */}
       {templates.length > 0 && (
         <div className="p-3 border-t border-b bg-muted/30">
           <p className="text-xs font-medium mb-2">Recommended templates:</p>
@@ -246,13 +294,14 @@ export default function ChatBot({ isModal = false, onClose }: ChatBotProps) {
           </div>
         </div>
       )}
+      
       <CardFooter className="p-3 border-t">
         <div className="flex w-full items-center space-x-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder="Type your legal question..."
             disabled={isSending}
             className="flex-1"
           />

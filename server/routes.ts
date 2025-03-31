@@ -977,6 +977,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initial greeting and empathy response
       responseMessage = "Thank you for reaching out to SmartDisputesAICanada. I understand navigating legal challenges can be difficult, and I'm here to help you find the right resources.\n\n";
       
+      // Check for Canadian province/territory mentions
+      const canadianProvinces = [
+        'alberta', 'british columbia', 'bc', 'manitoba', 'new brunswick', 
+        'newfoundland and labrador', 'newfoundland', 'northwest territories', 
+        'nova scotia', 'nunavut', 'ontario', 'prince edward island', 'pei', 
+        'quebec', 'saskatchewan', 'yukon'
+      ];
+      
+      let detectedProvince = '';
+      for (const province of canadianProvinces) {
+        if (messageLC.includes(province)) {
+          detectedProvince = province;
+          // Map abbreviated versions to full names
+          if (province === 'bc') detectedProvince = 'British Columbia';
+          if (province === 'pei') detectedProvince = 'Prince Edward Island';
+          
+          // Format province name properly
+          detectedProvince = detectedProvince
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          // Enhance the score of templates applicable to this province
+          templates.forEach(t => {
+            if (t.applicableProvinces && 
+                Array.isArray(t.applicableProvinces) && 
+                t.applicableProvinces.some(p => p.toLowerCase().includes(detectedProvince.toLowerCase()))) {
+              templateScores[t.id] = (templateScores[t.id] || 0) + 5;
+            }
+          });
+          
+          responseMessage += `I see you're located in ${detectedProvince}. I'll tailor my advice to the laws specific to your province.\n\n`;
+          break;
+        }
+      }
+      
       // CAS (Children's Aid Society) related keywords
       if (messageLC.includes('child') || messageLC.includes('cas') || messageLC.includes('children') || 
           messageLC.includes('kid') || messageLC.includes('parent') || messageLC.includes('school visit') || 
@@ -1221,21 +1257,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try to intelligently recommend templates based on keywords in the user's message
       const message = req.body.message || "";
       const keywords: Record<string, number[]> = {
-        "children": [1, 2, 3],              // Children's Aid Societies
-        "child": [1, 2, 3],                 // Children's Aid Societies
-        "cas": [1, 2, 3],                   // Children's Aid Societies
-        "rent": [4, 5, 6],                  // Landlord-Tenant
-        "landlord": [4, 5, 6],              // Landlord-Tenant
-        "tenant": [4, 5, 6],                // Landlord-Tenant
-        "apartment": [4, 5, 6],             // Landlord-Tenant
-        "housing": [4, 5, 6],               // Landlord-Tenant
-        "credit": [7, 8, 9],                // Equifax
-        "equifax": [7, 8, 9],               // Equifax
-        "report": [7, 8, 9],                // Equifax
-        "score": [7, 8, 9],                 // Equifax
-        "transition": [10, 11, 12],         // Transition services
-        "service": [10, 11, 12],            // Transition services
-        "support": [10, 11, 12]             // Transition services
+        // Children's Aid Societies
+        "children": [1, 2, 3],              
+        "child": [1, 2, 3],                 
+        "cas": [1, 2, 3],
+        "protection": [1, 2, 3],
+        "family": [1, 2, 3],
+        "apprehension": [1, 2, 3],
+        "youth": [1, 2, 3],
+        
+        // Landlord-Tenant
+        "rent": [4, 5, 6],                  
+        "landlord": [4, 5, 6],              
+        "tenant": [4, 5, 6],
+        "rtb": [4, 5, 6],   // Residential Tenancy Branch (BC)
+        "ltb": [4, 5, 6],   // Landlord Tenant Board (Ontario)
+        "apartment": [4, 5, 6],             
+        "housing": [4, 5, 6],
+        "eviction": [4, 5, 6],
+        "lease": [4, 5, 6],
+        "notice": [4, 5, 6],
+        
+        // Equifax
+        "credit": [7, 8, 9],                
+        "equifax": [7, 8, 9],               
+        "transunion": [7, 8, 9],
+        "report": [7, 8, 9],                
+        "score": [7, 8, 9],
+        "dispute": [7, 8, 9],
+        "debt": [7, 8, 9],
+        "collection": [7, 8, 9],
+        
+        // Transition services
+        "transition": [10, 11, 12],         
+        "service": [10, 11, 12],            
+        "support": [10, 11, 12],
+        "assistance": [10, 11, 12],
+        "community": [10, 11, 12],
+        "social": [10, 11, 12],
+        "welfare": [10, 11, 12],
+        "benefits": [10, 11, 12]
       };
       
       let recommendedTemplateIds: number[] = [];
