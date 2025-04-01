@@ -7,12 +7,27 @@ interface FormState {
   selectedTemplate?: DocumentTemplate;
   documentData?: Record<string, any>;
   documentId?: number;
+  
+  // User Account Information
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
+  phoneNumber?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
+  
   // Evidence-related fields
   issueDescription?: string;
   agency?: string;
   province?: string;
   evidenceFileIds?: number[];
   userId?: number | null;
+  evidence?: {
+    files?: any[];
+    description?: string;
+  };
   caseAnalysis?: {
     id?: number;
     caseSummary?: string;

@@ -18,9 +18,22 @@ import { apiRequest } from "@/lib/queryClient";
 
 // Form validation schema
 const evidenceFormSchema = z.object({
+  // User account information
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  
+  // Case information
   issueDescription: z.string().min(10, "Please provide a more detailed description of your issue"),
   agency: z.string().optional(),
-  province: z.string().min(2, "Please select your province or territory")
+  province: z.string().min(2, "Please select your province or territory"),
+  
+  // Contact information
+  phoneNumber: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional()
 });
 
 type EvidenceFormValues = z.infer<typeof evidenceFormSchema>;
@@ -69,9 +82,22 @@ export default function EvidenceUpload() {
   const form = useForm<EvidenceFormValues>({
     resolver: zodResolver(evidenceFormSchema),
     defaultValues: {
+      // User account info
+      email: formState.email || "",
+      password: "",
+      firstName: formState.firstName || "",
+      lastName: formState.lastName || "",
+      
+      // Case information
       issueDescription: formState.issueDescription || "",
       agency: formState.agency || "",
-      province: formState.province || ""
+      province: formState.province || "",
+      
+      // Contact information
+      phoneNumber: formState.phoneNumber || "",
+      address: formState.address || "",
+      city: formState.city || "",
+      postalCode: formState.postalCode || ""
     }
   });
 
@@ -93,25 +119,72 @@ export default function EvidenceUpload() {
     setIsAnalyzing(true);
     
     try {
-      // Save the form data to state first
+      // Create the actual user account
+      const newUserResponse = await apiRequest("POST", "/api/users", {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        province: data.province,
+        address: data.address,
+        city: data.city,
+        postalCode: data.postalCode,
+        phoneNumber: data.phoneNumber,
+        isTemporary: false
+      });
+      
+      if (!newUserResponse.ok) {
+        throw new Error("Failed to create account. Please try again.");
+      }
+      
+      const newUserData = await newUserResponse.json();
+      const permanentUserId = newUserData.id;
+      
+      // If we previously used a temporary user ID for uploads, we need to associate those files with the new user
+      if (userId && userId !== permanentUserId && evidenceFiles.length > 0) {
+        // Transfer ownership of uploaded files to the permanent user account
+        await apiRequest("PATCH", `/api/evidence-files/transfer/${userId}/${permanentUserId}`, {});
+      }
+      
+      // Save all form data to state
       setFormState({
         ...formState,
+        // User info
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        address: data.address,
+        city: data.city,
+        postalCode: data.postalCode,
+        
+        // Issue info
         issueDescription: data.issueDescription,
         agency: data.agency,
         province: data.province,
+        
+        // Evidence info
         evidenceFileIds: evidenceFiles.map(file => file.id),
-        userId: userId,
+        evidence: {
+          files: evidenceFiles,
+          description: data.issueDescription
+        },
+        
+        // Set permanent user ID
+        userId: permanentUserId,
+        
+        // Set current step
         currentStep: 1
       });
       
-      // If we have evidence files, analyze them
-      if (evidenceFiles.length > 0 && userId) {
+      // If we have evidence files, analyze them with the permanent user ID
+      if (evidenceFiles.length > 0) {
         // Get file IDs from evidence files
         const evidenceIds = evidenceFiles.map(file => file.id);
         
         // Request case analysis based on the evidence
         const analysisResponse = await apiRequest("POST", "/api/case-analyses/by-evidence", {
-          userId: userId,
+          userId: permanentUserId,
           evidenceIds: evidenceIds,
           description: data.issueDescription
         });
@@ -122,7 +195,6 @@ export default function EvidenceUpload() {
         
         const analysisData = await analysisResponse.json();
         
-        // Add analysis data to form state
         // Update form state with analysis data
         const updatedState = {
           ...formState,
@@ -137,8 +209,10 @@ export default function EvidenceUpload() {
         });
       }
       
-      // Navigate to the next step
-      navigate("/user-info");
+      // Skip the user-info step since we already collected that info here
+      // Go directly to document selection
+      navigate("/document-selection?recommended=true");
+      
     } catch (error: any) {
       console.error("Error in evidence submission:", error);
       toast({
@@ -222,80 +296,252 @@ export default function EvidenceUpload() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="issueDescription"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>What issue are you facing? <span className="text-red-500">*</span></FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Please be as specific as possible. For example: 'My landlord hasn't fixed my leaking roof for 3 months despite multiple requests' or 'I received a notice from CAS and I'm not sure how to respond'"
-                            className="min-h-[150px]"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid md:grid-cols-2 gap-4">
+                  {/* Issue Description Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium border-b pb-2 mb-4">Issue Details</h3>
                     <FormField
                       control={form.control}
-                      name="agency"
+                      name="issueDescription"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Which agency or organization are you dealing with?</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value || ""}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an agency (optional)" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {agencies.map(agency => (
-                                <SelectItem key={agency.value} value={agency.value}>
-                                  {agency.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>What issue are you facing? <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Please be as specific as possible. For example: 'My landlord hasn't fixed my leaking roof for 3 months despite multiple requests' or 'I received a notice from CAS and I'm not sure how to respond'"
+                              className="min-h-[150px]"
+                              {...field}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="province"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Your Province or Territory <span className="text-red-500">*</span></FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value || ""}
-                          >
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="agency"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Which agency or organization are you dealing with?</FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select an agency (optional)" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {agencies.map(agency => (
+                                  <SelectItem key={agency.value} value={agency.value}>
+                                    {agency.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="province"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Your Province or Territory <span className="text-red-500">*</span></FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              value={field.value || ""}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select your location" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {provinces.map(province => (
+                                  <SelectItem key={province.value} value={province.value}>
+                                    {province.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Account Information Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select your location" />
-                              </SelectTrigger>
+                              <input
+                                type="text"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your first name"
+                                {...field}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              {provinces.map(province => (
-                                <SelectItem key={province.value} value={province.value}>
-                                  {province.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <input
+                                type="text"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your last name"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <input
+                                type="email"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your email address"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <input
+                                type="password"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Create a password (min. 8 characters)"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Contact Information Section */}
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium border-b pb-2 mb-4">Contact Information</h3>
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <input
+                                type="tel"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your phone number (optional)"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <input
+                                type="text"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Enter your street address (optional)"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City</FormLabel>
+                              <FormControl>
+                                <input
+                                  type="text"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Enter your city (optional)"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="postalCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Postal Code</FormLabel>
+                              <FormControl>
+                                <input
+                                  type="text"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Enter your postal code (optional)"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="flex justify-between mt-8">
@@ -310,7 +556,7 @@ export default function EvidenceUpload() {
                       type="submit"
                       disabled={isAnalyzing}
                     >
-                      {isAnalyzing ? 'Analyzing Your Evidence...' : 'Continue to Personal Information'}
+                      {isAnalyzing ? 'Analyzing Your Evidence...' : 'Create Account & Continue'}
                     </Button>
                   </div>
                 </form>
