@@ -39,6 +39,7 @@ import Disclaimer from "@/pages/disclaimer";
 import AffiliateProgram from "@/pages/affiliate-program";
 import FileUploaderDemo from "@/pages/file-uploader-demo";
 import EvidenceUpload from "@/pages/evidence-upload";
+import Services from "@/pages/services";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/chat" component={Chat} />
       <Route path="/resources" component={Resources} />
+      <Route path="/services" component={Services} />
       <Route path="/faq" component={FAQ} />
       
       {/* Legal Pages */}

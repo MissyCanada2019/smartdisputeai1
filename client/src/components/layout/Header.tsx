@@ -23,7 +23,7 @@ export default function Header() {
           <Link href="/" className={`text-gray-600 hover:text-primary font-medium ${location === '/' ? 'text-primary' : ''}`}>
             Home
           </Link>
-          <Link href="/document-selection-hierarchical" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-selection-hierarchical' ? 'text-primary' : ''}`}>
+          <Link href="/services" className={`text-gray-600 hover:text-primary font-medium ${location === '/services' ? 'text-primary' : ''}`}>
             Services
           </Link>
           <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
