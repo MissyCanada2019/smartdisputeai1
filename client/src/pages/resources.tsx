@@ -436,6 +436,20 @@ export default function Resources() {
                             <li>The right to be treated with respect and without discrimination</li>
                           </ul>
                           
+                          <h4 className="text-lg font-semibold mt-4 mb-2">Ontario's Child, Youth and Family Services Act Protections</h4>
+                          <p className="mb-2">The Child, Youth and Family Services Act (CYFSA) of Ontario provides specific protections for parents:</p>
+                          <ul>
+                            <li><strong>Section 74(2):</strong> A child cannot be considered in need of protection solely because the parent is receiving or has received services for mental health issues</li>
+                            <li><strong>Section 74(3):</strong> Child protection actions cannot be taken solely because a child has been exposed to family violence unless the child has suffered harm or is at risk of harm</li>
+                            <li><strong>Section 75(5):</strong> The society must make reasonable efforts to assist a First Nations, Inuk or Métis child to remain with family and community</li>
+                            <li><strong>Section 79(2):</strong> The least disruptive course of action must be considered, such as leaving the child with a parent or family member with supervision</li>
+                            <li><strong>Section 80(1):</strong> Temporary care agreements are a voluntary option that parents can terminate with 21 days' notice</li>
+                            <li><strong>Section 109(1):</strong> Parents have a right to notice of and participation in child protection hearings</li>
+                            <li><strong>Section 112:</strong> Alternative dispute resolution methods should be considered before proceeding to court</li>
+                            <li><strong>Section 197(2):</strong> It is an offense for a society worker to knowingly make false statements in their reports</li>
+                          </ul>
+                          <p className="mt-2 mb-4">You can find the full act at <a href="https://www.ontario.ca/laws/statute/17c14" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">https://www.ontario.ca/laws/statute/17c14</a>. Although this law is specific to Ontario, similar principles exist in child protection legislation across Canada.</p>
+                          
                           <h4 className="text-lg font-semibold mt-4 mb-2">After Being Served a Court Order</h4>
                           <ul>
                             <li>Read the order carefully - it contains specific conditions you must follow</li>
