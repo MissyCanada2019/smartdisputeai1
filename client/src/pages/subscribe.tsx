@@ -61,7 +61,7 @@ const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, plan
       <div 
         ref={containerRef}
         className="payments-iframe-container" 
-        data-src="https://app-na3.hubspot.com/payments/6KCgXjp4?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
+        data-src="https://app-na3.hubspot.com/payments/hSWcnRKgSn?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
       ></div>
       
       <div className="text-center text-xs text-gray-500 mt-4">
