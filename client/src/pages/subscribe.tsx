@@ -23,7 +23,7 @@ const HubSpotPaymentsEmbed = ({
 }: { 
   planName: string, 
   planAmount: number,
-  paymentType?: 'default' | 'mail_out' | 'file_review' | 'digital_vault' | 'priority_processing'
+  paymentType?: 'default' | 'mail_out' | 'file_review' | 'digital_vault' | 'priority_processing' | 'pro_toolkit'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -40,6 +40,8 @@ const HubSpotPaymentsEmbed = ({
         return "https://app-na3.hubspot.com/payments/N2hNPJJ7ryqR9x?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       case 'priority_processing':
         return "https://app-na3.hubspot.com/payments/bTJCrQGRkz2h4?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+      case 'pro_toolkit':
+        return "https://app-na3.hubspot.com/payments/TWXgpN7HnKbQhqf?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       default:
         return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
     }
@@ -261,7 +263,8 @@ export default function Subscribe() {
     "agency_monthly" |
     "agency_annual" |
     "digital_evidence_vault" |
-    "priority_processing"
+    "priority_processing" |
+    "pro_toolkit"
   >("standard_monthly");
   const [planAmount, setPlanAmount] = useState(50);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
@@ -560,7 +563,7 @@ export default function Subscribe() {
           </div>
         </div>
         
-        {/* Priority Processing */}
+        {/* Enhanced Services */}
         <div className="flex flex-wrap justify-center gap-8 mb-8">
           {/* Priority Processing Option */}
           <div 
@@ -593,6 +596,44 @@ export default function Subscribe() {
                 }}
               >
                 Add Priority Processing
+              </Button>
+            </div>
+          </div>
+          
+          {/* SmartDispute Pro Toolkit */}
+          <div 
+            className={`w-full md:w-[300px] bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg
+              ${selectedPlan === "pro_toolkit" ? "ring-2 ring-purple-500" : ""}`}
+          >
+            <div className="p-6">
+              <h3 className="text-2xl font-bold text-gray-800">Pro Toolkit</h3>
+              <p className="text-3xl font-bold my-2">$99.99</p>
+              <div className="mt-1 mb-3">
+                <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300">One-time purchase</Badge>
+              </div>
+              <ul className="my-6 space-y-3">
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Every form & template included</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Downloadable legal explainers</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Perfect for paralegals & advocates</span>
+                </li>
+              </ul>
+              <Button 
+                variant={selectedPlan === "pro_toolkit" ? "default" : "outline"} 
+                className="w-full py-6 bg-purple-600 hover:bg-purple-700"
+                onClick={() => {
+                  setSelectedPlan("pro_toolkit");
+                  setPlanAmount(99.99);
+                }}
+              >
+                Buy Pro Toolkit
               </Button>
             </div>
           </div>
@@ -943,7 +984,11 @@ export default function Subscribe() {
                   ? 'file_review' 
                   : selectedPlan === 'digital_evidence_vault' 
                     ? 'digital_vault' 
-                    : 'mail_out'
+                    : selectedPlan === 'priority_processing'
+                      ? 'priority_processing'
+                      : selectedPlan === 'pro_toolkit'
+                        ? 'pro_toolkit'
+                        : 'mail_out'
               }
             />
             
