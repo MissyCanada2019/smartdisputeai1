@@ -43,6 +43,7 @@ import Disclaimer from "@/pages/disclaimer";
 import AffiliateProgram from "@/pages/affiliate-program";
 import FileUploaderDemo from "@/pages/file-uploader-demo";
 import EvidenceUpload from "@/pages/evidence-upload";
+import CaseAnalysis from "@/pages/case-analysis";
 import Services from "@/pages/services";
 
 // Marketing Funnel Pages
@@ -54,6 +55,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/evidence-upload" component={EvidenceUpload} />
+      <Route path="/case-analysis" component={CaseAnalysis} />
       <Route path="/user-info" component={UserInfo} />
       <Route path="/document-selection" component={DocumentSelection} />
       <Route path="/document-selection-hierarchical" component={DocumentSelectionHierarchical} />
