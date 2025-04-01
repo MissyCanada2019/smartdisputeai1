@@ -272,7 +272,7 @@ export default function About() {
           </p>
           
           <div className="flex justify-center gap-6">
-            <a href="https://www.facebook.com/smartdisputeai" target="_blank" rel="noopener noreferrer" 
+            <a href="https://www.facebook.com/share/1CuiiMqjWk/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" 
                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
               <Facebook className="h-5 w-5" />
               <span>Facebook</span>
