@@ -277,6 +277,11 @@ export default function About() {
               <Facebook className="h-5 w-5" />
               <span>Facebook</span>
             </a>
+            <a href="https://x.com/smartdisputesai?s=21" target="_blank" rel="noopener noreferrer" 
+               className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-900 transition-colors">
+              <Twitter className="h-5 w-5" />
+              <span>Twitter</span>
+            </a>
             <a href="https://wa.me/message/JRUKWPOXZSJFK1" target="_blank" rel="noopener noreferrer"
                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
