@@ -20,7 +20,9 @@ import {
   chatMessages, type ChatMessage, type InsertChatMessage,
   resourceCategories, type ResourceCategory, type InsertResourceCategory,
   resourceSubcategories, type ResourceSubcategory, type InsertResourceSubcategory,
-  resources, type Resource, type InsertResource
+  resources, type Resource, type InsertResource,
+  resourceLikes, type ResourceLike, type InsertResourceLike,
+  resourceBookmarks, type ResourceBookmark, type InsertResourceBookmark
 } from "@shared/schema";
 
 // Storage interface
@@ -163,6 +165,18 @@ export interface IStorage {
   createResource(resource: InsertResource): Promise<Resource>;
   updateResource(id: number, resource: Partial<Resource>): Promise<Resource | undefined>;
   deleteResource(id: number): Promise<boolean>;
+  
+  // Resource like operations
+  getResourceLikes(resourceId: number): Promise<ResourceLike[]>;
+  getResourceLikeByUserAndResource(userId: number, resourceId: number): Promise<ResourceLike | undefined>;
+  createResourceLike(like: InsertResourceLike): Promise<ResourceLike>;
+  deleteResourceLike(id: number): Promise<boolean>;
+  
+  // Resource bookmark operations
+  getResourceBookmarks(userId: number): Promise<ResourceBookmark[]>;
+  getResourceBookmarkByUserAndResource(userId: number, resourceId: number): Promise<ResourceBookmark | undefined>;
+  createResourceBookmark(bookmark: InsertResourceBookmark): Promise<ResourceBookmark>;
+  deleteResourceBookmark(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -198,6 +212,8 @@ export class MemStorage implements IStorage {
   private resourceCategories: Map<number, ResourceCategory>;
   private resourceSubcategories: Map<number, ResourceSubcategory>;
   private resources: Map<number, Resource>;
+  private resourceLikes: Map<number, ResourceLike>;
+  private resourceBookmarks: Map<number, ResourceBookmark>;
   
   private currentUserId: number;
   private currentDocumentTemplateId: number;
@@ -231,6 +247,8 @@ export class MemStorage implements IStorage {
   private currentResourceCategoryId: number;
   private currentResourceSubcategoryId: number;
   private currentResourceId: number;
+  private currentResourceLikeId: number;
+  private currentResourceBookmarkId: number;
 
   constructor() {
     // Initialize main collections
@@ -266,6 +284,8 @@ export class MemStorage implements IStorage {
     this.resourceCategories = new Map();
     this.resourceSubcategories = new Map();
     this.resources = new Map();
+    this.resourceLikes = new Map();
+    this.resourceBookmarks = new Map();
     
     // Initialize main IDs
     this.currentUserId = 1;
@@ -300,6 +320,8 @@ export class MemStorage implements IStorage {
     this.currentResourceCategoryId = 1;
     this.currentResourceSubcategoryId = 1;
     this.currentResourceId = 1;
+    this.currentResourceLikeId = 1;
+    this.currentResourceBookmarkId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -1941,6 +1963,70 @@ export class MemStorage implements IStorage {
         (resource.tags && resource.tags.some(tag => tag.toLowerCase().includes(lowerSearchTerm)))
       );
     });
+  }
+
+  // Resource like operations
+  async getResourceLikes(resourceId: number): Promise<ResourceLike[]> {
+    return Array.from(this.resourceLikes.values())
+      .filter(like => like.resourceId === resourceId);
+  }
+
+  async getResourceLikeByUserAndResource(userId: number, resourceId: number): Promise<ResourceLike | undefined> {
+    return Array.from(this.resourceLikes.values())
+      .find(like => like.userId === userId && like.resourceId === resourceId);
+  }
+
+  async createResourceLike(like: InsertResourceLike): Promise<ResourceLike> {
+    // Check if the user already liked this resource
+    const existingLike = await this.getResourceLikeByUserAndResource(like.userId, like.resourceId);
+    if (existingLike) {
+      return existingLike;
+    }
+
+    const newLike: ResourceLike = {
+      id: this.currentResourceLikeId++,
+      ...like,
+      createdAt: new Date()
+    };
+
+    this.resourceLikes.set(newLike.id, newLike);
+    return newLike;
+  }
+
+  async deleteResourceLike(id: number): Promise<boolean> {
+    return this.resourceLikes.delete(id);
+  }
+
+  // Resource bookmark operations
+  async getResourceBookmarks(userId: number): Promise<ResourceBookmark[]> {
+    return Array.from(this.resourceBookmarks.values())
+      .filter(bookmark => bookmark.userId === userId);
+  }
+
+  async getResourceBookmarkByUserAndResource(userId: number, resourceId: number): Promise<ResourceBookmark | undefined> {
+    return Array.from(this.resourceBookmarks.values())
+      .find(bookmark => bookmark.userId === userId && bookmark.resourceId === resourceId);
+  }
+
+  async createResourceBookmark(bookmark: InsertResourceBookmark): Promise<ResourceBookmark> {
+    // Check if the user already bookmarked this resource
+    const existingBookmark = await this.getResourceBookmarkByUserAndResource(bookmark.userId, bookmark.resourceId);
+    if (existingBookmark) {
+      return existingBookmark;
+    }
+
+    const newBookmark: ResourceBookmark = {
+      id: this.currentResourceBookmarkId++,
+      ...bookmark,
+      createdAt: new Date()
+    };
+
+    this.resourceBookmarks.set(newBookmark.id, newBookmark);
+    return newBookmark;
+  }
+
+  async deleteResourceBookmark(id: number): Promise<boolean> {
+    return this.resourceBookmarks.delete(id);
   }
 }
 

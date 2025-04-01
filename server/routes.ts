@@ -3365,6 +3365,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Resource not found" });
       }
       
+      // Increment view count
+      await storage.updateResource(id, { 
+        viewCount: (resource.viewCount || 0) + 1 
+      });
+      
       // Check if premium content should be visible to this user
       if (resource.isPremium) {
         if (!req.isAuthenticated()) {
@@ -3385,6 +3390,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: `Error fetching resource: ${error.message}` });
     }
   });
+  
+  // Get community resources with filtering for the Community Resource Sharing Network
+  app.get("/api/community/resources", async (req: Request, res: Response) => {
+    try {
+      const options: { 
+        province?: string; 
+        resourceType?: string; 
+        isVerified?: boolean;
+        userId?: number;
+      } = {};
+      
+      if (req.query.province) {
+        options.province = req.query.province as string;
+      }
+      
+      if (req.query.type) {
+        options.resourceType = req.query.type as string;
+      }
+      
+      if (req.query.verified !== undefined) {
+        options.isVerified = req.query.verified === 'true';
+      }
+      
+      if (req.query.userId) {
+        const userId = parseInt(req.query.userId as string);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "Invalid user ID format" });
+        }
+        options.userId = userId;
+      }
+      
+      // Get all resources
+      const allResources = await storage.getResources();
+      
+      // Filter resources based on options
+      let filteredResources = allResources;
+      
+      if (options.province) {
+        filteredResources = filteredResources.filter(resource => 
+          resource.province === options.province
+        );
+      }
+      
+      if (options.resourceType) {
+        filteredResources = filteredResources.filter(resource => 
+          resource.resourceType === options.resourceType
+        );
+      }
+      
+      if (options.isVerified !== undefined) {
+        filteredResources = filteredResources.filter(resource => 
+          resource.isVerified === options.isVerified
+        );
+      }
+      
+      if (options.userId) {
+        filteredResources = filteredResources.filter(resource => 
+          resource.userId === options.userId
+        );
+      }
+      
+      // Handle search functionality
+      if (req.query.search) {
+        const searchTerm = (req.query.search as string).toLowerCase();
+        filteredResources = filteredResources.filter(resource => 
+          resource.title.toLowerCase().includes(searchTerm) || 
+          resource.description.toLowerCase().includes(searchTerm) ||
+          resource.content.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      res.json(filteredResources);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching community resources: ${error.message}` });
+    }
+  });
+  
+  // Get a single community resource
+  app.get("/api/community/resources/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const resource = await storage.getResource(id);
+      if (!resource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      // Increment view count
+      await storage.updateResource(id, { 
+        viewCount: (resource.viewCount || 0) + 1 
+      });
+      
+      res.json(resource);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching community resource: ${error.message}` });
+    }
+  });
+  
+  // Create a community resource
+  app.post("/api/community/resources", upload.single('file'), async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Extract data from form
+      const { title, description, resourceType, province, tags } = req.body;
+      let resourceUrl = req.body.resourceUrl || null;
+      let fileUrl = null;
+      
+      // Handle file upload
+      if (req.file) {
+        fileUrl = `/uploads/${req.file.filename}`;
+      }
+      
+      // Validate required fields
+      if (!title || !description || !resourceType || !province) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Convert tags string to array
+      const tagsArray = tags ? tags.split(',').map((tag: string) => tag.trim()) : [];
+      
+      // Create resource
+      const newResource = await storage.createResource({
+        userId: req.user.id,
+        title,
+        description,
+        content: description, // Use description as content for now
+        resourceType,
+        province,
+        resourceUrl,
+        fileUrl,
+        tags: tagsArray,
+        isVerified: false,
+        isPremium: false,
+      });
+      
+      res.status(201).json(newResource);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error creating community resource: ${error.message}` });
+    }
+  });
+  
+  // Like a community resource
+  app.post("/api/community/resources/:id/like", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const resourceId = parseInt(req.params.id);
+      if (isNaN(resourceId)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const resource = await storage.getResource(resourceId);
+      if (!resource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      // Check if user already liked this resource
+      const existingLike = await storage.getResourceLikeByUserAndResource(req.user.id, resourceId);
+      
+      if (existingLike) {
+        // Unlike the resource
+        await storage.deleteResourceLike(existingLike.id);
+        
+        // Decrement like count
+        await storage.updateResource(resourceId, {
+          likeCount: Math.max(0, (resource.likeCount || 0) - 1)
+        });
+        
+        return res.json({ 
+          liked: false, 
+          likeCount: Math.max(0, (resource.likeCount || 0) - 1)
+        });
+      } else {
+        // Like the resource
+        await storage.createResourceLike({
+          resourceId,
+          userId: req.user.id
+        });
+        
+        // Increment like count
+        await storage.updateResource(resourceId, {
+          likeCount: (resource.likeCount || 0) + 1
+        });
+        
+        return res.json({ 
+          liked: true, 
+          likeCount: (resource.likeCount || 0) + 1
+        });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Error liking resource: ${error.message}` });
+    }
+  });
+  
+  // Bookmark a community resource
+  app.post("/api/community/resources/:id/bookmark", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const resourceId = parseInt(req.params.id);
+      if (isNaN(resourceId)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const resource = await storage.getResource(resourceId);
+      if (!resource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      // Check if user already bookmarked this resource
+      const existingBookmark = await storage.getResourceBookmarkByUserAndResource(req.user.id, resourceId);
+      
+      if (existingBookmark) {
+        // Remove bookmark
+        await storage.deleteResourceBookmark(existingBookmark.id);
+        return res.json({ bookmarked: false });
+      } else {
+        // Add bookmark
+        await storage.createResourceBookmark({
+          resourceId,
+          userId: req.user.id
+        });
+        return res.json({ bookmarked: true });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Error bookmarking resource: ${error.message}` });
+    }
+  });
+  
+  // Get user's bookmarked resources
+  app.get("/api/community/resources/bookmarks", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get all resource bookmarks for the user
+      const bookmarks = await storage.getResourceBookmarksByUser(req.user.id);
+      
+      // Fetch the complete resource data for each bookmarked resource
+      const bookmarkedResources = [];
+      for (const bookmark of bookmarks) {
+        const resource = await storage.getResource(bookmark.resourceId);
+        if (resource) {
+          bookmarkedResources.push(resource);
+        }
+      }
+      res.json(bookmarkedResources);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching bookmarked resources: ${error.message}` });
+    }
+  });
+  
+  // Admin endpoints for managing resources
   
   // Create a resource (admin only)
   app.post("/api/resources", async (req: Request, res: Response) => {

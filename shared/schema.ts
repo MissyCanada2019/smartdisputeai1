@@ -536,32 +536,74 @@ export const insertResourceSubcategorySchema = createInsertSchema(resourceSubcat
 // Resource table
 export const resources = pgTable("resources", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
   title: text("title").notNull(),
   description: text("description").notNull(),
   content: text("content").notNull(),
+  resourceType: text("resource_type").notNull(), // document, link, template, guide, contact
   province: text("province").notNull(),
-  categoryId: integer("category_id").notNull().references(() => resourceCategories.id),
+  categoryId: integer("category_id").references(() => resourceCategories.id),
   subcategoryId: integer("subcategory_id").references(() => resourceSubcategories.id),
-  url: text("url"),
+  resourceUrl: text("resource_url"),
+  fileUrl: text("file_url"),
   contactInfo: text("contact_info"),
   tags: text("tags").array(),
   isPremium: boolean("is_premium").default(false),
+  isVerified: boolean("is_verified").default(false),
+  likeCount: integer("like_count").default(0),
+  viewCount: integer("view_count").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const insertResourceSchema = createInsertSchema(resources).pick({
+  userId: true,
   title: true,
   description: true,
   content: true,
+  resourceType: true,
   province: true,
   categoryId: true,
   subcategoryId: true,
-  url: true,
+  resourceUrl: true,
+  fileUrl: true,
   contactInfo: true,
   tags: true,
   isPremium: true,
+  isVerified: true,
 });
+
+// Resource likes table
+export const resourceLikes = pgTable("resource_likes", {
+  id: serial("id").primaryKey(),
+  resourceId: integer("resource_id").notNull().references(() => resources.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertResourceLikeSchema = createInsertSchema(resourceLikes).pick({
+  resourceId: true,
+  userId: true,
+});
+
+export type InsertResourceLike = z.infer<typeof insertResourceLikeSchema>;
+export type ResourceLike = typeof resourceLikes.$inferSelect;
+
+// Resource saves/bookmarks table
+export const resourceBookmarks = pgTable("resource_bookmarks", {
+  id: serial("id").primaryKey(),
+  resourceId: integer("resource_id").notNull().references(() => resources.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertResourceBookmarkSchema = createInsertSchema(resourceBookmarks).pick({
+  resourceId: true,
+  userId: true,
+});
+
+export type InsertResourceBookmark = z.infer<typeof insertResourceBookmarkSchema>;
+export type ResourceBookmark = typeof resourceBookmarks.$inferSelect;
 
 // Canadian provinces
 export const provinces = [

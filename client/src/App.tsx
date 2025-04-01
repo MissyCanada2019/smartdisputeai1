@@ -27,6 +27,8 @@ import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
 import Chat from "@/pages/chat";
 import Resources from "@/pages/resources-new";
+import ResourceSharing from "@/pages/resource-sharing";
+import NewResource from "@/pages/new-resource";
 import FAQ from "@/pages/faq";
 import Community from "@/pages/community";
 import NewPost from "@/pages/new-post";
@@ -65,6 +67,10 @@ function Router() {
       <Route path="/resources" component={Resources} />
       <Route path="/services" component={Services} />
       <Route path="/faq" component={FAQ} />
+      
+      {/* Resource Sharing Routes */}
+      <Route path="/resource-sharing" component={ResourceSharing} />
+      <Route path="/resource-sharing/new" component={NewResource} />
       
       {/* Legal Pages */}
       <Route path="/terms-of-service" component={TermsOfService} />
