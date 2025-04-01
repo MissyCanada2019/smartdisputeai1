@@ -506,6 +506,13 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
               New Document
             </Link>
           </Button>
+          <Button 
+            variant="secondary"
+            onClick={() => setIsUploadToFolderOpen(true)}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload Documents
+          </Button>
         </div>
         
         <div className="relative w-full md:w-64">

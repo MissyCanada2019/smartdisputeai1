@@ -1378,8 +1378,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const newDoc = await storage.createUserDocument({
               userId: parseInt(userId),
               templateId: 0, // Special template ID for uploaded files
-              title: file.originalName,
-              content: JSON.stringify(file),
+              documentData: JSON.stringify({
+                title: file.originalName,
+                content: JSON.stringify(file)
+              }),
               finalPrice: 0,
               paymentStatus: 'paid', // Mark as paid since it's a direct upload
               status: 'completed',
