@@ -8,10 +8,12 @@ import Footer from "@/components/layout/Footer";
 import ChatBotModal from "@/components/chatbot/ChatBotModal";
 import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
+import { LeadCaptureProvider } from "@/components/marketing/LeadCaptureProvider";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
 import { trackPageView } from "@/lib/trackingService";
+import { useLeadCapture } from "@/hooks/use-lead-capture";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -154,20 +156,33 @@ function App() {
     };
   }, [toast]);
   
+  // Set up default lead capture configuration based on current page
+  // Use banner on homepage, exit intent elsewhere
+  const initialLeadCaptureConfig = {
+    type: location === '/' ? 'banner' : 'exit_intent',
+    resourceName: 'Legal Letter Template',
+    title: 'Get Your Free Legal Template',
+    description: 'Sign up to receive a free legal letter template that can help with your dispute.',
+    delay: 5000, // Show after 5 seconds
+    pageViewThreshold: 1 // Show after 1 page view
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <FormProvider>
-        <div className="flex flex-col min-h-screen bg-gray-50">
-          <Header />
-          <main className="flex-grow">
-            <Router />
-          </main>
-          <Footer />
-          <ChatBotModal />
-          <CookieConsentBanner />
-          <AutomaticUpdates />
-        </div>
-        <Toaster />
+        <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
+          <div className="flex flex-col min-h-screen bg-gray-50">
+            <Header />
+            <main className="flex-grow">
+              <Router />
+            </main>
+            <Footer />
+            <ChatBotModal />
+            <CookieConsentBanner />
+            <AutomaticUpdates />
+          </div>
+          <Toaster />
+        </LeadCaptureProvider>
       </FormProvider>
     </QueryClientProvider>
   );
