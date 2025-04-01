@@ -23,7 +23,7 @@ const HubSpotPaymentsEmbed = ({
 }: { 
   planName: string, 
   planAmount: number,
-  paymentType?: 'default' | 'mail_out' | 'file_review'
+  paymentType?: 'default' | 'mail_out' | 'file_review' | 'digital_vault'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -36,6 +36,8 @@ const HubSpotPaymentsEmbed = ({
         return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       case 'file_review':
         return "https://app-na3.hubspot.com/payments/FYJXcmnQhV?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+      case 'digital_vault':
+        return "https://app-na3.hubspot.com/payments/N2hNPJJ7ryqR9x?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       default:
         return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
     }
@@ -899,7 +901,7 @@ export default function Subscribe() {
                 selectedPlan.includes('document') 
                   ? 'file_review' 
                   : selectedPlan === 'digital_evidence_vault' 
-                    ? 'file_review' 
+                    ? 'digital_vault' 
                     : 'mail_out'
               }
             />
