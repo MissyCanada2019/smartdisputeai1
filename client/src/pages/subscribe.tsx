@@ -23,7 +23,7 @@ const HubSpotPaymentsEmbed = ({
 }: { 
   planName: string, 
   planAmount: number,
-  paymentType?: 'default' | 'mail_out' | 'file_review' | 'digital_vault'
+  paymentType?: 'default' | 'mail_out' | 'file_review' | 'digital_vault' | 'priority_processing'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -38,6 +38,8 @@ const HubSpotPaymentsEmbed = ({
         return "https://app-na3.hubspot.com/payments/FYJXcmnQhV?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       case 'digital_vault':
         return "https://app-na3.hubspot.com/payments/N2hNPJJ7ryqR9x?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+      case 'priority_processing':
+        return "https://app-na3.hubspot.com/payments/bTJCrQGRkz2h4?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
       default:
         return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
     }
@@ -258,7 +260,8 @@ export default function Subscribe() {
     "disability_document" |
     "agency_monthly" |
     "agency_annual" |
-    "digital_evidence_vault"
+    "digital_evidence_vault" |
+    "priority_processing"
   >("standard_monthly");
   const [planAmount, setPlanAmount] = useState(50);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
@@ -552,6 +555,44 @@ export default function Subscribe() {
                 }}
               >
                 Subscribe Monthly
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Priority Processing */}
+        <div className="flex flex-wrap justify-center gap-8 mb-8">
+          {/* Priority Processing Option */}
+          <div 
+            className={`w-full md:w-[300px] bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg
+              ${selectedPlan === "priority_processing" ? "ring-2 ring-amber-500" : ""}`}
+          >
+            <div className="p-6">
+              <h3 className="text-2xl font-bold text-gray-800">Priority Processing</h3>
+              <p className="text-3xl font-bold my-2">$3.99</p>
+              <ul className="my-6 space-y-3">
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-amber-500 mr-2" />
+                  <span>Expedited document processing</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-amber-500 mr-2" />
+                  <span>24-hour turnaround time</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-amber-500 mr-2" />
+                  <span>Priority support response</span>
+                </li>
+              </ul>
+              <Button 
+                variant={selectedPlan === "priority_processing" ? "default" : "outline"} 
+                className="w-full py-6 bg-amber-600 hover:bg-amber-700"
+                onClick={() => {
+                  setSelectedPlan("priority_processing");
+                  setPlanAmount(3.99);
+                }}
+              >
+                Add Priority Processing
               </Button>
             </div>
           </div>
