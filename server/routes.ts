@@ -1351,7 +1351,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         originalName: file.originalname,
         mimetype: file.mimetype,
         size: file.size,
-        path: file.path
+        path: file.path,
+        filePath: file.path
       }));
       
       // If document ID is provided, update the document with the file attachments
@@ -1399,11 +1400,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // If userId is provided (for income verification), update the income verification record
+      // If userId is provided (for either income verification or evidence files)
       if (userId) {
         const uId = parseInt(userId);
         if (!isNaN(uId)) {
-          // Get the most recent income verification request for this user
+          // Check if we have an income verification request for this user
           const verifications = await storage.getIncomeVerifications(uId);
           if (verifications.length > 0) {
             const mostRecent = verifications[0]; // Assuming sorted by date descending
@@ -1418,6 +1419,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 });
               }
             }
+          }
+          
+          // Create evidence files for this user (used in the evidence-upload page)
+          const createdEvidenceFiles = [];
+          for (const file of uploadedFiles) {
+            try {
+              const newEvidenceFile = await storage.createEvidenceFile({
+                userId: uId,
+                fileName: file.filename,
+                originalName: file.originalName,
+                filePath: file.path,
+                fileType: file.mimetype,
+                fileSize: file.size,
+                description: null,
+                tags: []
+              });
+              
+              if (newEvidenceFile) {
+                createdEvidenceFiles.push(newEvidenceFile);
+              }
+            } catch (evidenceErr) {
+              console.error("Error creating evidence file:", evidenceErr);
+            }
+          }
+          
+          // If we created evidence files, include them in the response
+          if (createdEvidenceFiles.length > 0) {
+            return res.status(200).json({ 
+              success: true, 
+              message: "Files uploaded successfully as evidence", 
+              files: createdEvidenceFiles 
+            });
           }
         }
       }
@@ -2387,6 +2420,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error deleting evidence file:", error);
       res.status(500).json({ message: `Error deleting evidence file: ${error.message}` });
+    }
+  });
+  
+  // Transfer evidence files from one user to another (used when converting temporary user)
+  app.patch("/api/evidence-files/transfer/:fromUserId/:toUserId", async (req: Request, res: Response) => {
+    try {
+      const fromUserId = parseInt(req.params.fromUserId);
+      const toUserId = parseInt(req.params.toUserId);
+      
+      if (isNaN(fromUserId) || isNaN(toUserId)) {
+        return res.status(400).json({ message: "Invalid user IDs" });
+      }
+      
+      // Get all evidence files for the source user
+      const evidenceFiles = await storage.getEvidenceFiles(fromUserId);
+      
+      if (evidenceFiles.length === 0) {
+        return res.json({ 
+          message: "No files to transfer",
+          count: 0
+        });
+      }
+      
+      // Transfer each file to the new user
+      let transferCount = 0;
+      for (const file of evidenceFiles) {
+        const updated = await storage.updateEvidenceFile(file.id, { userId: toUserId });
+        if (updated) transferCount++;
+      }
+      
+      res.json({ 
+        message: `Successfully transferred ${transferCount} evidence files`,
+        count: transferCount,
+        files: evidenceFiles.map(f => f.id)
+      });
+    } catch (error: any) {
+      console.error("Error transferring evidence files:", error);
+      res.status(500).json({ message: `Error transferring evidence files: ${error.message}` });
     }
   });
   

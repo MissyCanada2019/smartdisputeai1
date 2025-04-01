@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import DocumentUploader from "@/components/documents/DocumentUploader";
+import EvidenceUploader from "@/components/evidence/EvidenceUploader";
 import { apiRequest } from "@/lib/queryClient";
 
 // Form validation schema
@@ -272,7 +273,7 @@ export default function EvidenceUpload() {
             </CardHeader>
             <CardContent>
               {userId ? (
-                <DocumentUploader
+                <EvidenceUploader
                   userId={userId}
                   title="Evidence Documents"
                   description="Upload documents, photos, messages or any other evidence related to your dispute"
