@@ -8,6 +8,20 @@ import { useFormState } from "@/lib/formContext";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
+
+// Create an extended type that makes requiredFields explicitly an array of strings
+interface ExtendedDocumentTemplate {
+  id: number;
+  name: string;
+  description: string;
+  category: string;
+  applicableProvinces: string[];
+  basePrice: number;
+  templateContent: string;
+  previewImageUrl?: string;
+  requiredFields: string[];
+}
 
 interface DocumentPreviewerProps {
   onComplete: () => void;
@@ -19,7 +33,10 @@ export default function DocumentPreviewer({ onComplete }: DocumentPreviewerProps
   const { toast } = useToast();
   const [previewContent, setPreviewContent] = useState<string>("");
   
-  const template = formState.selectedTemplate;
+  // Type cast the template to ensure we have access to required fields
+  const template = formState.selectedTemplate as ExtendedDocumentTemplate;
+  
+  // Note: if formState.selectedTemplate is null, the if check below will catch it
   
   if (!template) {
     navigate("/document-selection");
@@ -48,19 +65,39 @@ export default function DocumentPreviewer({ onComplete }: DocumentPreviewerProps
     return () => subscription.unsubscribe();
   }, [form.watch, template.templateContent]);
   
-  const onSubmit = (data: any) => {
-    setFormState({
-      ...formState,
-      documentData: data,
-      currentStep: 4
-    });
-    
-    toast({
-      title: "Document customized",
-      description: "Your document has been customized successfully."
-    });
-    
-    onComplete();
+  const onSubmit = async (data: any) => {
+    try {
+      // Create user document now instead of waiting until payment
+      const response = await apiRequest("POST", "/api/user-documents", {
+        userId: formState.userId || 1, // Use actual user ID if available
+        templateId: template.id,
+        documentData: data,
+        finalPrice: template.basePrice // We'll update this during payment if there are discounts
+      });
+      
+      const document = await response.json();
+      
+      setFormState({
+        ...formState,
+        documentData: data,
+        documentId: document.id,
+        currentStep: 4
+      });
+      
+      toast({
+        title: "Document customized",
+        description: "Your document has been created and customized successfully."
+      });
+      
+      onComplete();
+    } catch (error) {
+      console.error("Error creating document:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem creating your document. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
@@ -73,7 +110,7 @@ export default function DocumentPreviewer({ onComplete }: DocumentPreviewerProps
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {template.requiredFields.map((field: string) => {
+            {(template.requiredFields as string[]).map((field: string) => {
               // Format field labels for better readability
               const formatLabel = (field: string) => {
                 return field

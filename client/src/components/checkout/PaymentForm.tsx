@@ -119,8 +119,8 @@ export default function PaymentForm() {
   const finalPrice = calculateDiscountedPrice();
   
   useEffect(() => {
-    const createDocument = async () => {
-      if (!template || !documentData) {
+    const initializePayment = async () => {
+      if (!template) {
         toast({
           title: "Missing information",
           description: "Please complete the previous steps first.",
@@ -130,26 +130,28 @@ export default function PaymentForm() {
       }
       
       try {
-        // Create user document
-        const docResponse = await apiRequest("POST", "/api/user-documents", {
-          userId: 1, // In a real app, this would be the authenticated user's ID
-          templateId: template.id,
-          documentData,
-          finalPrice
-        });
+        // Check if we already have a document ID
+        if (!formState.documentId) {
+          toast({
+            title: "Missing document",
+            description: "Please go back to the document customization page.",
+            variant: "destructive",
+          });
+          return;
+        }
         
-        const document = await docResponse.json();
-        
-        // Save the document ID to form state
-        setFormState({
-          ...formState,
-          documentId: document.id
-        });
+        // Now just update the price to reflect any discounts
+        // First, apply the discount to the existing document if needed
+        if (finalPrice !== template.basePrice) {
+          await apiRequest("PATCH", `/api/user-documents/${formState.documentId}`, {
+            finalPrice
+          });
+        }
         
         // Create payment intent
         const response = await apiRequest("POST", "/api/create-payment-intent", { 
           amount: finalPrice,
-          documentId: document.id
+          documentId: formState.documentId
         });
         
         const data = await response.json();
@@ -166,29 +168,7 @@ export default function PaymentForm() {
       }
     };
     
-    if (!formState.documentId) {
-      createDocument();
-    } else {
-      // If we already have a document ID, just create the payment intent
-      apiRequest("POST", "/api/create-payment-intent", { 
-        amount: finalPrice,
-        documentId: formState.documentId
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setClientSecret(data.clientSecret);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          toast({
-            title: "Error",
-            description: "Could not initialize payment. Please try again.",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-        });
-    }
+    initializePayment();
   }, []);
   
   if (isLoading || !clientSecret || !stripePromise) {
