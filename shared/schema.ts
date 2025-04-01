@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   requestIncomeBased: boolean("request_income_based").default(false),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  isTemporary: boolean("is_temporary").default(false),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -36,6 +37,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   postalCode: true,
   incomeRange: true,
   requestIncomeBased: true,
+  isTemporary: true,
 });
 
 // Document templates

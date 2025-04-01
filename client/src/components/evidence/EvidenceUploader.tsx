@@ -52,15 +52,20 @@ export default function EvidenceUploader({
     try {
       const formData = new FormData();
       files.forEach(file => {
-        // Use 'documents' to match the server's expected field name in the upload-documents route
-        formData.append('documents', file);
+        // Use 'evidence' to match the server's expected field name in the evidence-files/upload route
+        formData.append('evidence', file);
       });
 
       // Include the user ID for the temporary user
       formData.append('userId', userId.toString());
+      
+      // Add optional metadata
+      if (title) {
+        formData.append('description', title);
+      }
 
-      // Use the general upload route since we're using a temp user that isn't authenticated
-      const response = await apiRequest("POST", "/api/upload-documents", formData);
+      // Use the evidence files upload endpoint that now supports temporary users
+      const response = await apiRequest("POST", "/api/evidence-files/upload", formData);
 
       const data = await response.json();
 

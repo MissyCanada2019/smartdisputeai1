@@ -614,28 +614,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a user (simplified for demo)
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
-      const userSchema = insertUserSchema.extend({
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        email: z.string().email("Invalid email format")
-      });
+      // Check if this is a temporary user request
+      const { isTemporary } = req.body;
       
-      // Validate request body
-      const validationResult = userSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ message: "Invalid user data", errors: validationResult.error.format() });
+      if (isTemporary) {
+        // For temporary users, use a more relaxed validation
+        const tempUserSchema = z.object({
+          username: z.string(),
+          password: z.string(),
+          isTemporary: z.boolean().optional().default(true)
+        });
+        
+        // Validate temporary user data
+        const validationResult = tempUserSchema.safeParse(req.body);
+        if (!validationResult.success) {
+          return res.status(400).json({ message: "Invalid temporary user data", errors: validationResult.error.format() });
+        }
+        
+        const tempUserData = validationResult.data;
+        
+        // Temporary users get a random email to avoid conflicts
+        const randomEmail = `temp_${Date.now()}@smartdispute.ai`;
+        
+        // Create the temporary user
+        const newUser = await storage.createUser({
+          ...tempUserData,
+          email: randomEmail,
+          firstName: "Temporary",
+          lastName: "User"
+        });
+        
+        return res.status(201).json(newUser);
+      } else {
+        // For regular users, use the full validation
+        const userSchema = insertUserSchema.extend({
+          password: z.string().min(6, "Password must be at least 6 characters"),
+          email: z.string().email("Invalid email format")
+        });
+        
+        // Validate request body
+        const validationResult = userSchema.safeParse(req.body);
+        if (!validationResult.success) {
+          return res.status(400).json({ message: "Invalid user data", errors: validationResult.error.format() });
+        }
+        
+        const userData = validationResult.data;
+        
+        // Check if user with email already exists
+        const existingUser = await storage.getUserByEmail(userData.email!);
+        if (existingUser) {
+          return res.status(409).json({ message: "User with this email already exists" });
+        }
+        
+        // Create user
+        const newUser = await storage.createUser(userData);
+        res.status(201).json(newUser);
       }
-      
-      const userData = validationResult.data;
-      
-      // Check if user with email already exists
-      const existingUser = await storage.getUserByEmail(userData.email!);
-      if (existingUser) {
-        return res.status(409).json({ message: "User with this email already exists" });
-      }
-      
-      // Create user
-      const newUser = await storage.createUser(userData);
-      res.status(201).json(newUser);
     } catch (error: any) {
       res.status(500).json({ message: `Error creating user: ${error.message}` });
     }
@@ -2285,15 +2319,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload evidence files
   app.post("/api/evidence-files/upload", upload.array("evidence", 10), async (req: Request, res: Response) => {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Authentication required" });
+      // Allow uploads from either authenticated users or those with a temporary userId in the request body
+      let userId: number;
+      
+      if (req.isAuthenticated()) {
+        // Use the authenticated user's ID
+        userId = req.user.id;
+      } else if (req.body.userId) {
+        // Use the userId provided in the request for temporary users
+        userId = parseInt(req.body.userId);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "Invalid user ID format" });
+        }
+        
+        // Verify this is a valid user ID (and optionally check if it's marked as temporary)
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+      } else {
+        return res.status(401).json({ message: "Authentication required or userId must be provided" });
       }
       
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
         return res.status(400).json({ message: "No files uploaded" });
       }
       
-      const userId = req.user.id;
       const { description, tags } = req.body;
       
       const uploadedFiles = [];
