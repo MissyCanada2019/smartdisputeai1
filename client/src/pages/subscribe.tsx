@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { useStripe, useElements, Elements, PaymentElement } from '@stripe/react-stripe-js';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -17,79 +15,49 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// Make sure to call `loadStripe` outside of a component's render to avoid
-// recreating the `Stripe` object on every render.
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  console.warn('Missing VITE_STRIPE_PUBLIC_KEY. Payment processing will not work properly.');
-}
-// Initialize Stripe with the publishable key
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY ? 
-  loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) : 
-  null;
-
-const SubscriptionForm = () => {
-  const stripe = useStripe();
-  const elements = useElements();
+// HubSpot Payments Component
+const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, planAmount: number }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [scriptLoaded, setScriptLoaded] = useState(false);
 
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-    setErrorMessage(null);
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/success?subscription=true`,
-      },
-    });
-
-    if (error) {
-      setErrorMessage(error.message || "An unexpected error occurred.");
-      toast({
-        title: "Payment Failed",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    }
+  useEffect(() => {
+    // Create and load the HubSpot Payments embed script
+    const script = document.createElement('script');
+    script.src = "https://static.hsappstatic.net/payments-embed/ex/PaymentsEmbedCode.js";
+    script.type = "text/javascript";
+    script.async = true;
+    script.onload = () => {
+      setScriptLoaded(true);
+    };
     
-    setIsProcessing(false);
-  };
+    document.body.appendChild(script);
+    
+    return () => {
+      // Clean up the script when the component unmounts
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {errorMessage && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Payment Error</AlertTitle>
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      )}
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium">Complete your {planName} purchase</h3>
+      <p className="text-sm text-gray-500">Secure payment processing by HubSpot Payments</p>
       
-      <PaymentElement />
+      {/* HubSpot Payments Embed Container */}
+      <div 
+        ref={containerRef}
+        className="payments-iframe-container" 
+        data-src="https://app-na3.hubspot.com/payments/gSTQJ9fSr?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
+      ></div>
       
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={!stripe || isProcessing}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          'Subscribe Now'
-        )}
-      </Button>
-    </form>
+      <div className="text-center text-xs text-gray-500 mt-4">
+        <p>Your payment is secure and encrypted.</p>
+        <p>For questions regarding your payment, please contact support.</p>
+      </div>
+    </div>
   );
 };
 
@@ -243,7 +211,6 @@ const IncomeVerificationDialog = ({
 };
 
 export default function Subscribe() {
-  const [clientSecret, setClientSecret] = useState("");
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPlan, setSelectedPlan] = useState<
@@ -345,7 +312,7 @@ export default function Subscribe() {
       })
         .then((res) => res.json())
         .then((data) => {
-          setClientSecret(data.clientSecret);
+          // HubSpot payment widget integration doesn't need client secret
           setIsLoading(false);
         })
         .catch((error) => {
@@ -365,7 +332,7 @@ export default function Subscribe() {
       })
         .then((res) => res.json())
         .then((data) => {
-          setClientSecret(data.clientSecret);
+          // HubSpot payment widget integration doesn't need client secret
           setIsLoading(false);
         })
         .catch((error) => {
@@ -380,7 +347,8 @@ export default function Subscribe() {
     }
   }, [selectedPlan, planAmount, verificationComplete, verificationPlanType]);
 
-  if (isLoading || !clientSecret || !stripePromise) {
+  // Use HubSpot payment widget instead of Stripe
+  if (isLoading) {
     return (
       <div className="w-full flex items-center justify-center py-12">
         <div className="text-center">
@@ -838,7 +806,8 @@ export default function Subscribe() {
           </div>
         </div>
         
-        {clientSecret && stripePromise && (
+        {/* HubSpot payment section replaces Stripe */}
+        {!isLoading && (
           <div className="bg-white rounded-xl shadow-md p-6 mt-8 max-w-xl mx-auto">
             <h3 className="text-xl font-bold mb-6 text-center">Complete Your Payment</h3>
             
@@ -853,12 +822,13 @@ export default function Subscribe() {
               </div>
             </div>
             
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <SubscriptionForm />
-            </Elements>
+            <HubSpotPaymentsEmbed 
+              planName={selectedPlan.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())} 
+              planAmount={planAmount} 
+            />
             
             <div className="mt-4 text-center text-xs text-gray-500">
-              <p>Your payment is processed securely through Stripe.</p>
+              <p>Your payment is processed securely through HubSpot Payments.</p>
               <p className="mt-1">You can cancel your subscription at any time.</p>
             </div>
           </div>
