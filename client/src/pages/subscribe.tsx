@@ -22,23 +22,34 @@ const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, plan
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   useEffect(() => {
-    // Create and load the HubSpot Payments embed script
-    const script = document.createElement('script');
-    script.src = "https://static.hsappstatic.net/payments-embed/ex/PaymentsEmbedCode.js";
-    script.type = "text/javascript";
-    script.async = true;
-    script.onload = () => {
+    // Check if the script already exists to avoid duplicates
+    if (!document.getElementById('hubspot-payments-script')) {
+      // Create and load the HubSpot Payments embed script
+      const script = document.createElement('script');
+      script.id = 'hubspot-payments-script';
+      script.src = "https://static.hsappstatic.net/payments-embed/ex/PaymentsEmbedCode.js";
+      script.type = "text/javascript";
+      script.async = true;
+      
+      script.onload = () => {
+        console.log("HubSpot Payments script loaded successfully");
+        setScriptLoaded(true);
+      };
+      
+      script.onerror = (error) => {
+        console.error("Failed to load HubSpot Payments script:", error);
+        toast({
+          title: "Payment System Error",
+          description: "There was an issue loading the payment system. Please refresh the page and try again.",
+          variant: "destructive",
+        });
+      };
+      
+      document.body.appendChild(script);
+    } else {
+      // Script already exists
       setScriptLoaded(true);
-    };
-    
-    document.body.appendChild(script);
-    
-    return () => {
-      // Clean up the script when the component unmounts
-      if (document.body.contains(script)) {
-        document.body.removeChild(script);
-      }
-    };
+    }
   }, []);
 
   return (
@@ -50,7 +61,7 @@ const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, plan
       <div 
         ref={containerRef}
         className="payments-iframe-container" 
-        data-src="https://app-na3.hubspot.com/payments/gSTQJ9fSr?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
+        data-src="https://app-na3.hubspot.com/payments/6KCgXjp4?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
       ></div>
       
       <div className="text-center text-xs text-gray-500 mt-4">
