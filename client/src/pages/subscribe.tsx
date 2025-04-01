@@ -16,10 +16,30 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 
 // HubSpot Payments Component
-const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, planAmount: number }) => {
+const HubSpotPaymentsEmbed = ({ 
+  planName, 
+  planAmount, 
+  paymentType = 'default' 
+}: { 
+  planName: string, 
+  planAmount: number,
+  paymentType?: 'default' | 'mail_out' | 'file_review'
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  // Determine which payment link to use based on payment type
+  const getPaymentLink = () => {
+    switch(paymentType) {
+      case 'mail_out':
+        return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+      case 'file_review':
+        return "https://app-na3.hubspot.com/payments/FYJXcmnQhV?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+      default:
+        return "https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full";
+    }
+  };
 
   useEffect(() => {
     // Check if the script already exists to avoid duplicates
@@ -61,7 +81,7 @@ const HubSpotPaymentsEmbed = ({ planName, planAmount }: { planName: string, plan
       <div 
         ref={containerRef}
         className="payments-iframe-container" 
-        data-src="https://app-na3.hubspot.com/payments/hSfXrxsrrDCWwYN?referrer=PAYMENT_LINK_EMBED&layout=embed-full"
+        data-src={getPaymentLink()}
       ></div>
       
       <div className="text-center text-xs text-gray-500 mt-4">
@@ -235,7 +255,8 @@ export default function Subscribe() {
     "disability_annual" |
     "disability_document" |
     "agency_monthly" |
-    "agency_annual"
+    "agency_annual" |
+    "digital_evidence_vault"
   >("standard_monthly");
   const [planAmount, setPlanAmount] = useState(50);
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
@@ -491,6 +512,44 @@ export default function Subscribe() {
                 }}
               >
                 Buy Single Document
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Digital Evidence Vault */}
+        <div className="flex flex-wrap justify-center gap-8 mb-8">
+          {/* Digital Evidence Vault */}
+          <div 
+            className={`w-full md:w-[300px] bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-lg
+              ${selectedPlan === "digital_evidence_vault" ? "ring-2 ring-purple-500" : ""}`}
+          >
+            <div className="p-6">
+              <h3 className="text-2xl font-bold text-gray-800">Digital Evidence Vault</h3>
+              <p className="text-3xl font-bold my-2">$9.99/month</p>
+              <ul className="my-6 space-y-3">
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Encrypted storage for evidence</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Auto-attach to future disputes</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-5 w-5 text-purple-500 mr-2" />
+                  <span>Secure upload for photos & files</span>
+                </li>
+              </ul>
+              <Button 
+                variant={selectedPlan === "digital_evidence_vault" ? "default" : "outline"} 
+                className="w-full py-6 bg-purple-600 hover:bg-purple-700"
+                onClick={() => {
+                  setSelectedPlan("digital_evidence_vault");
+                  setPlanAmount(9.99);
+                }}
+              >
+                Subscribe Monthly
               </Button>
             </div>
           </div>
@@ -835,7 +894,14 @@ export default function Subscribe() {
             
             <HubSpotPaymentsEmbed 
               planName={selectedPlan.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())} 
-              planAmount={planAmount} 
+              planAmount={planAmount}
+              paymentType={
+                selectedPlan.includes('document') 
+                  ? 'file_review' 
+                  : selectedPlan === 'digital_evidence_vault' 
+                    ? 'file_review' 
+                    : 'mail_out'
+              }
             />
             
             <div className="mt-4 text-center text-xs text-gray-500">
