@@ -236,6 +236,16 @@ export default function Services() {
             <span>smartdisputesaicanada@gmail.com</span>
           </a>
           
+          <a 
+            href="https://wa.me/message/ZJNZRFZRRTLVG1" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <MessageSquare className="h-5 w-5" />
+            <span>Chat on WhatsApp</span>
+          </a>
+          
           <Link href="/subscribe">
             <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
               Subscribe to Premium Support
