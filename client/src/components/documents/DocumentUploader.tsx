@@ -9,6 +9,7 @@ import { FileText, FileCheck } from "lucide-react";
 interface DocumentUploaderProps {
   documentId?: number;
   userId?: number;
+  folderId?: number;
   title?: string;
   description?: string;
   onUploadComplete?: (files: any[]) => void;
@@ -17,6 +18,7 @@ interface DocumentUploaderProps {
 export default function DocumentUploader({
   documentId,
   userId,
+  folderId,
   title = "Upload Supporting Documents",
   description = "Upload any supporting documents for your dispute. These will be attached to your document.",
   onUploadComplete
@@ -40,10 +42,10 @@ export default function DocumentUploader({
       return;
     }
 
-    if (!documentId && !userId) {
+    if (!documentId && !userId && !folderId) {
       toast({
         title: "Upload error",
-        description: "Missing documentId or userId for upload",
+        description: "Missing documentId, userId, or folderId for upload",
         variant: "destructive",
       });
       return;
@@ -63,6 +65,10 @@ export default function DocumentUploader({
 
       if (userId) {
         formData.append('userId', userId.toString());
+      }
+      
+      if (folderId) {
+        formData.append('folderId', folderId.toString());
       }
 
       const response = await apiRequest("POST", "/api/upload-documents", formData);

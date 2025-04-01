@@ -53,9 +53,10 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon } from 'lucide-react';
+import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon, Upload } from 'lucide-react';
 import type { DocumentFolder, UserDocument, DocumentTemplate } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
+import DocumentUploader from "@/components/documents/DocumentUploader";
 
 // Schemas for form validation
 const createFolderSchema = z.object({
@@ -86,6 +87,7 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
   const [selectedDocument, setSelectedDocument] = useState<number | null>(null);
   const [isEditFolderOpen, setIsEditFolderOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<DocumentFolder | null>(null);
+  const [isUploadToFolderOpen, setIsUploadToFolderOpen] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -537,14 +539,27 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
       
       {/* Documents Area */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">
-          {selectedFolder 
-            ? `Documents in ${folders?.find(f => f.id === selectedFolder)?.name || 'Folder'}`
-            : searchQuery 
-              ? `Search Results: "${searchQuery}"`
-              : "All Documents"
-          }
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">
+            {selectedFolder 
+              ? `Documents in ${folders?.find(f => f.id === selectedFolder)?.name || 'Folder'}`
+              : searchQuery 
+                ? `Search Results: "${searchQuery}"`
+                : "All Documents"
+            }
+          </h2>
+          
+          {selectedFolder && (
+            <Button 
+              variant="outline" 
+              onClick={() => setIsUploadToFolderOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Upload Documents
+            </Button>
+          )}
+        </div>
         
         {selectedFolder 
           ? renderDocumentItems(folderDocuments, isLoadingFolderDocuments)
@@ -723,6 +738,48 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
               </DialogFooter>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Upload to Folder Dialog */}
+      <Dialog open={isUploadToFolderOpen} onOpenChange={setIsUploadToFolderOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Upload Documents to Folder</DialogTitle>
+            <DialogDescription>
+              Upload your own documents directly to this folder.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedFolder && (
+            <div className="py-4">
+              <DocumentUploader 
+                userId={userId}
+                folderId={selectedFolder} 
+                title="Upload to Folder"
+                description="Upload any documents, photos, or files to include in your folder"
+                onUploadComplete={(files: any[]) => {
+                  // Invalidate folder documents query to refresh the list
+                  queryClient.invalidateQueries({ queryKey: ['/api/document-folders', selectedFolder, 'documents'] });
+                  setIsUploadToFolderOpen(false);
+                  
+                  toast({
+                    title: "Documents uploaded",
+                    description: `Successfully added ${files.length} document${files.length !== 1 ? 's' : ''} to your folder`
+                  });
+                }}
+              />
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsUploadToFolderOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       

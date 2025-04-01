@@ -1339,10 +1339,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const files = Array.isArray(req.files) ? req.files : [req.files];
-      const { documentId, userId } = req.body;
+      const { documentId, userId, folderId } = req.body;
       
-      if (!documentId && !userId) {
-        return res.status(400).json({ message: "Either documentId or userId is required" });
+      if (!documentId && !userId && !folderId) {
+        return res.status(400).json({ message: "Either documentId, userId, or folderId is required" });
       }
       
       // Create response with file information
@@ -1364,6 +1364,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateUserDocument(docId, {
               supportingDocuments: JSON.stringify(uploadedFiles)
             });
+          }
+        }
+      }
+      
+      // If folderId is provided, add the files to the specified folder
+      if (folderId) {
+        const folderIdNum = parseInt(folderId);
+        if (!isNaN(folderIdNum)) {
+          // For each uploaded file, create a document record and assign it to the folder
+          for (const file of uploadedFiles) {
+            // Create a user document for the file
+            const newDoc = await storage.createUserDocument({
+              userId: parseInt(userId),
+              templateId: 0, // Special template ID for uploaded files
+              title: file.originalName,
+              content: JSON.stringify(file),
+              finalPrice: 0,
+              paymentStatus: 'paid', // Mark as paid since it's a direct upload
+              status: 'completed',
+              supportingDocuments: JSON.stringify([file])
+            });
+            
+            if (newDoc && newDoc.id) {
+              // Add the document to the folder
+              await storage.createDocumentFolderAssignment({
+                documentId: newDoc.id,
+                folderId: folderIdNum
+              });
+            }
           }
         }
       }
