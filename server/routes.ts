@@ -2270,7 +2270,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Evidence files API endpoints
   
-  // Get all evidence files for a user
+  // Get evidence files for the current logged-in user
+  app.get("/api/evidence-files/user/current", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Use the logged-in user's ID
+      const userId = req.user.id;
+      
+      const evidenceFiles = await storage.getEvidenceFiles(userId);
+      res.json(evidenceFiles);
+    } catch (error: any) {
+      console.error("Error fetching evidence files for current user:", error);
+      res.status(500).json({ message: `Error fetching evidence files: ${error.message}` });
+    }
+  });
+  
+  // Get all evidence files for a specific user
   app.get("/api/evidence-files/user/:userId", async (req: Request, res: Response) => {
     try {
       if (!req.isAuthenticated()) {
