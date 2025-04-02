@@ -2156,12 +2156,13 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const newReputation: ContributorReputation = {
       ...reputation,
-      id: userId, // Use userId as the id for easier lookups
+      id: this.currentContributorReputationId++,
       createdAt: now,
       updatedAt: now,
-      level: 1,
-      badges: [],
-      contributionCount: 0,
+      level: reputation.level || "Newcomer",
+      badges: reputation.badges || [],
+      contributionCount: reputation.contributionCount || 0,
+      reputationScore: reputation.reputationScore || 0
     };
     this.contributorReputations.set(userId, newReputation);
     return newReputation;
@@ -2208,34 +2209,53 @@ export class MemStorage implements IStorage {
     // Update resource vote count
     const resource = this.resources.get(vote.resourceId);
     if (resource) {
-      const voteValue = vote.value === 'upvote' ? 1 : -1;
+      const voteValue = vote.vote === 1 ? 1 : -1;
       const updatedResource = {
         ...resource,
         voteCount: (resource.voteCount || 0) + voteValue
       };
       this.resources.set(resource.id, updatedResource);
       
-      // Update contributor reputation if it's an upvote
-      if (vote.value === 'upvote') {
-        const contributorId = resource.userId;
-        const reputation = this.contributorReputations.get(contributorId);
-        if (reputation) {
-          // Add 10 points for each upvote
-          const updatedReputation = {
-            ...reputation,
-            reputationScore: reputation.reputationScore + 10,
-            updatedAt: now
-          };
-          this.contributorReputations.set(contributorId, updatedReputation);
-          
-          // Create reputation history entry
-          this.createReputationHistoryEntry({
-            userId: contributorId,
-            actionType: 'resource_upvote',
-            points: 10,
-            resourceId: resource.id
-          });
-        }
+      // Update contributor reputation
+      const contributorId = resource.userId;
+      const reputation = this.contributorReputations.get(contributorId);
+      
+      if (reputation) {
+        // Add 5 points for upvote or subtract 3 for downvote
+        const pointsChange = vote.vote === 1 ? 5 : -3;
+        const updatedReputation = {
+          ...reputation,
+          reputationScore: reputation.reputationScore + pointsChange,
+          updatedAt: now
+        };
+        this.contributorReputations.set(contributorId, updatedReputation);
+        
+        // Create reputation history entry
+        this.createReputationHistoryEntry({
+          userId: contributorId,
+          action: vote.vote === 1 ? "upvote_received" : "downvote_received",
+          points: pointsChange,
+          resourceId: resource.id,
+          description: `Your resource "${resource.title}" received a ${vote.vote === 1 ? "upvote" : "downvote"}`
+        });
+      } else {
+        // Create new reputation record for the contributor if it doesn't exist
+        this.createContributorReputation({
+          userId: contributorId,
+          reputationScore: vote.vote === 1 ? 5 : -3,
+          contributionCount: 1,
+          level: "Newcomer",
+          badges: []
+        });
+        
+        // Create reputation history entry
+        this.createReputationHistoryEntry({
+          userId: contributorId,
+          action: vote.vote === 1 ? "upvote_received" : "downvote_received",
+          points: vote.vote === 1 ? 5 : -3,
+          resourceId: resource.id,
+          description: `Your resource "${resource.title}" received a ${vote.vote === 1 ? "upvote" : "downvote"}`
+        });
       }
     }
     
@@ -2247,17 +2267,17 @@ export class MemStorage implements IStorage {
     if (!existingVote) return undefined;
     
     const now = new Date();
-    const oldValue = existingVote.value;
-    const newValue = voteUpdates.value || oldValue;
+    const oldVote = existingVote.vote;
+    const newVote = voteUpdates.vote !== undefined ? voteUpdates.vote : oldVote;
     
     // If the vote value is changing, update the resource vote count
-    if (oldValue !== newValue && (newValue === 'upvote' || newValue === 'downvote')) {
+    if (oldVote !== newVote) {
       const resource = this.resources.get(existingVote.resourceId);
       if (resource) {
-        // Determine the vote count adjustment
+        // Determine the vote count adjustment based on the change
         let adjustment = 0;
-        if (oldValue === 'upvote' && newValue === 'downvote') adjustment = -2;
-        else if (oldValue === 'downvote' && newValue === 'upvote') adjustment = 2;
+        if (oldVote === 1 && newVote === -1) adjustment = -2; // From upvote to downvote (-1 for removed upvote, -1 for new downvote)
+        else if (oldVote === -1 && newVote === 1) adjustment = 2; // From downvote to upvote (+1 for removed downvote, +1 for new upvote)
         
         const updatedResource = {
           ...resource,
@@ -2270,8 +2290,8 @@ export class MemStorage implements IStorage {
         const reputation = this.contributorReputations.get(contributorId);
         if (reputation) {
           let pointsChange = 0;
-          if (oldValue === 'upvote' && newValue === 'downvote') pointsChange = -20; // -10 for removed upvote, -10 for new downvote
-          else if (oldValue === 'downvote' && newValue === 'upvote') pointsChange = 20; // +10 for removed downvote, +10 for new upvote
+          if (oldVote === 1 && newVote === -1) pointsChange = -8; // -5 for removed upvote, -3 for new downvote
+          else if (oldVote === -1 && newVote === 1) pointsChange = 8; // +3 for removed downvote, +5 for new upvote
           
           const updatedReputation = {
             ...reputation,
@@ -2284,9 +2304,10 @@ export class MemStorage implements IStorage {
           if (pointsChange !== 0) {
             this.createReputationHistoryEntry({
               userId: contributorId,
-              actionType: 'vote_change',
+              action: 'vote_changed',
               points: pointsChange,
-              resourceId: resource.id
+              resourceId: resource.id,
+              description: `Vote changed from ${oldVote === 1 ? "upvote" : "downvote"} to ${newVote === 1 ? "upvote" : "downvote"} on your resource "${resource.title}"`
             });
           }
         }
@@ -2309,34 +2330,35 @@ export class MemStorage implements IStorage {
     // Update resource vote count
     const resource = this.resources.get(vote.resourceId);
     if (resource) {
-      const voteValue = vote.value === 'upvote' ? -1 : 1; // Opposite to remove the vote
+      // Apply opposite value to remove the vote impact
+      const voteValue = vote.vote === 1 ? -1 : 1; 
       const updatedResource = {
         ...resource,
         voteCount: (resource.voteCount || 0) + voteValue
       };
       this.resources.set(resource.id, updatedResource);
       
-      // Update contributor reputation if it was an upvote
-      if (vote.value === 'upvote') {
-        const contributorId = resource.userId;
-        const reputation = this.contributorReputations.get(contributorId);
-        if (reputation) {
-          // Remove 10 points for removed upvote
-          const updatedReputation = {
-            ...reputation,
-            reputationScore: reputation.reputationScore - 10,
-            updatedAt: new Date()
-          };
-          this.contributorReputations.set(contributorId, updatedReputation);
-          
-          // Create reputation history entry
-          this.createReputationHistoryEntry({
-            userId: contributorId,
-            actionType: 'upvote_removed',
-            points: -10,
-            resourceId: resource.id
-          });
-        }
+      // Update contributor reputation
+      const contributorId = resource.userId;
+      const reputation = this.contributorReputations.get(contributorId);
+      if (reputation) {
+        // Remove points based on vote type
+        const pointsChange = vote.vote === 1 ? -5 : 3; // Remove 5 for upvote or add back 3 for downvote
+        const updatedReputation = {
+          ...reputation,
+          reputationScore: reputation.reputationScore + pointsChange,
+          updatedAt: new Date()
+        };
+        this.contributorReputations.set(contributorId, updatedReputation);
+        
+        // Create reputation history entry
+        this.createReputationHistoryEntry({
+          userId: contributorId,
+          action: vote.vote === 1 ? 'upvote_removed' : 'downvote_removed',
+          points: pointsChange,
+          resourceId: resource.id,
+          description: `A ${vote.vote === 1 ? "upvote" : "downvote"} was removed from your resource "${resource.title}"`
+        });
       }
     }
     

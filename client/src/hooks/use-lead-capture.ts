@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-type LeadCaptureType = 'banner' | 'popup' | 'exit_intent' | 'none';
+export type LeadCaptureType = 'banner' | 'popup' | 'exit_intent' | 'none';
 
 interface LeadCaptureConfig {
   type: LeadCaptureType;

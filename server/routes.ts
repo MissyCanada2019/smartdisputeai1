@@ -4011,6 +4011,173 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // === Contributor Reputation System Endpoints ===
+  
+  // Get a user's reputation
+  app.get("/api/reputation/users/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      const reputation = await storage.getContributorReputation(userId);
+      if (!reputation) {
+        return res.status(404).json({ message: "User reputation not found" });
+      }
+      
+      res.json(reputation);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching user reputation: ${error.message}` });
+    }
+  });
+  
+  // Get top contributors
+  app.get("/api/reputation/top-contributors", async (req: Request, res: Response) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const topContributors = await storage.getTopContributors(limit);
+      
+      res.json(topContributors);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching top contributors: ${error.message}` });
+    }
+  });
+  
+  // Vote on a resource (upvote or downvote)
+  app.post("/api/reputation/resources/:id/vote", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const resourceId = parseInt(req.params.id);
+      if (isNaN(resourceId)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const { vote, reason } = req.body;
+      if (vote !== 1 && vote !== -1) {
+        return res.status(400).json({ message: "Vote must be either 1 (upvote) or -1 (downvote)" });
+      }
+      
+      const resource = await storage.getResource(resourceId);
+      if (!resource) {
+        return res.status(404).json({ message: "Resource not found" });
+      }
+      
+      // Check if user already voted for this resource
+      const existingVote = await storage.getUserResourceVote(req.user.id, resourceId);
+      
+      if (existingVote) {
+        // If the vote is the same as before, remove the vote
+        if (existingVote.vote === vote) {
+          await storage.deleteResourceVote(existingVote.id);
+          
+          // Create reputation history entry for removed vote
+          await storage.createReputationHistoryEntry({
+            userId: resource.userId,
+            action: vote === 1 ? "upvote_removed" : "downvote_removed",
+            points: vote === 1 ? -5 : 2, // -5 points for removed upvote, +2 for removed downvote
+            resourceId,
+            description: `User removed their ${vote === 1 ? "upvote" : "downvote"} on your resource "${resource.title}"`
+          });
+          
+          res.json({ message: "Vote removed", voteStatus: "none" });
+        } else {
+          // Update the vote
+          const updatedVote = await storage.updateResourceVote(existingVote.id, {
+            vote,
+            reason,
+            updatedAt: new Date()
+          });
+          
+          // Create reputation history entries
+          await storage.createReputationHistoryEntry({
+            userId: resource.userId,
+            action: "vote_changed",
+            points: vote === 1 ? 10 : -10, // +10 for upvote, -10 for downvote
+            resourceId,
+            description: `Vote changed from ${existingVote.vote === 1 ? "upvote" : "downvote"} to ${vote === 1 ? "upvote" : "downvote"} on your resource "${resource.title}"`
+          });
+          
+          res.json({ message: "Vote updated", vote: updatedVote, voteStatus: vote === 1 ? "upvote" : "downvote" });
+        }
+      } else {
+        // Create new vote
+        const newVote = await storage.createResourceVote({
+          resourceId,
+          userId: req.user.id,
+          vote,
+          reason
+        });
+        
+        // Create reputation history entry
+        await storage.createReputationHistoryEntry({
+          userId: resource.userId,
+          action: vote === 1 ? "upvote_received" : "downvote_received",
+          points: vote === 1 ? 5 : -3, // +5 points for upvote, -3 for downvote
+          resourceId,
+          description: `Your resource "${resource.title}" received a ${vote === 1 ? "upvote" : "downvote"}`
+        });
+        
+        res.json({ message: "Vote recorded", vote: newVote, voteStatus: vote === 1 ? "upvote" : "downvote" });
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: `Error voting on resource: ${error.message}` });
+    }
+  });
+  
+  // Get current user's vote status for a resource
+  app.get("/api/reputation/resources/:id/vote/me", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const resourceId = parseInt(req.params.id);
+      if (isNaN(resourceId)) {
+        return res.status(400).json({ message: "Invalid resource ID format" });
+      }
+      
+      const vote = await storage.getUserResourceVote(req.user.id, resourceId);
+      
+      if (!vote) {
+        return res.status(404).json({ message: "Vote not found", voteStatus: "none" });
+      }
+      
+      // Convert numeric vote to string status for frontend
+      const voteStatus = vote.vote === 1 ? "upvote" : vote.vote === -1 ? "downvote" : "none";
+      
+      res.json({
+        vote,
+        voteStatus
+      });
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching vote status: ${error.message}` });
+    }
+  });
+  
+  // Get a user's reputation history
+  app.get("/api/reputation/users/:userId/history", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({ message: "Invalid user ID format" });
+      }
+      
+      // Check if requesting own history or if admin
+      if (!req.isAuthenticated() || (req.user.id !== userId && req.user.role !== 'admin')) {
+        return res.status(403).json({ message: "Unauthorized to view this reputation history" });
+      }
+      
+      const history = await storage.getReputationHistory(userId);
+      res.json(history);
+    } catch (error: any) {
+      res.status(500).json({ message: `Error fetching reputation history: ${error.message}` });
+    }
+  });
+  
   // Get provinces list
   app.get("/api/provinces", (req: Request, res: Response) => {
     res.json(provinces);

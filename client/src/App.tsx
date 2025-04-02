@@ -13,7 +13,7 @@ import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
 import { trackPageView } from "@/lib/trackingService";
-import { useLeadCapture } from "@/hooks/use-lead-capture";
+import { useLeadCapture, LeadCaptureType } from "@/hooks/use-lead-capture";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -47,6 +47,7 @@ import CaseAnalysis from "@/pages/case-analysis";
 import Services from "@/pages/services";
 import LTBResourcesPage from "@/pages/ltb-resources";
 import CASResourcesPage from "@/pages/cas-resources";
+import ResourceDetail from "@/pages/resource-detail";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -79,6 +80,7 @@ function Router() {
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
       <Route path="/resource-sharing/new" component={NewResource} />
+      <Route path="/resource-sharing/:id" component={ResourceDetail} />
       
       {/* Legal Pages */}
       <Route path="/terms-of-service" component={TermsOfService} />
@@ -171,7 +173,7 @@ function App() {
     description: 'Sign up to receive a free legal letter template that can help with your dispute.',
     delay: 5000, // Show after 5 seconds
     pageViewThreshold: 1 // Show after 1 page view
-  };
+  } as const; // Use const assertion to make TypeScript infer more specific types
 
   return (
     <QueryClientProvider client={queryClient}>
