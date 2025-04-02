@@ -22,7 +22,10 @@ import {
   resourceSubcategories, type ResourceSubcategory, type InsertResourceSubcategory,
   resources, type Resource, type InsertResource,
   resourceLikes, type ResourceLike, type InsertResourceLike,
-  resourceBookmarks, type ResourceBookmark, type InsertResourceBookmark
+  resourceBookmarks, type ResourceBookmark, type InsertResourceBookmark,
+  contributorReputations, type ContributorReputation, type InsertContributorReputation,
+  resourceVotes, type ResourceVote, type InsertResourceVote,
+  reputationHistory, type ReputationHistory, type InsertReputationHistory
 } from "@shared/schema";
 
 // Storage interface
@@ -177,6 +180,23 @@ export interface IStorage {
   getResourceBookmarkByUserAndResource(userId: number, resourceId: number): Promise<ResourceBookmark | undefined>;
   createResourceBookmark(bookmark: InsertResourceBookmark): Promise<ResourceBookmark>;
   deleteResourceBookmark(id: number): Promise<boolean>;
+  
+  // Contributor reputation operations
+  getContributorReputation(userId: number): Promise<ContributorReputation | undefined>;
+  getTopContributors(limit?: number): Promise<ContributorReputation[]>;
+  createContributorReputation(reputation: InsertContributorReputation): Promise<ContributorReputation>;
+  updateContributorReputation(userId: number, updates: Partial<ContributorReputation>): Promise<ContributorReputation | undefined>;
+  
+  // Resource vote operations
+  getResourceVotes(resourceId: number): Promise<ResourceVote[]>;
+  getUserResourceVote(userId: number, resourceId: number): Promise<ResourceVote | undefined>;
+  createResourceVote(vote: InsertResourceVote): Promise<ResourceVote>;
+  updateResourceVote(id: number, vote: Partial<ResourceVote>): Promise<ResourceVote | undefined>;
+  deleteResourceVote(id: number): Promise<boolean>;
+  
+  // Reputation history operations
+  getReputationHistory(userId: number): Promise<ReputationHistory[]>;
+  createReputationHistoryEntry(entry: InsertReputationHistory): Promise<ReputationHistory>;
 }
 
 export class MemStorage implements IStorage {
@@ -215,6 +235,11 @@ export class MemStorage implements IStorage {
   private resourceLikes: Map<number, ResourceLike>;
   private resourceBookmarks: Map<number, ResourceBookmark>;
   
+  // Reputation system maps
+  private contributorReputations: Map<number, ContributorReputation>;
+  private resourceVotes: Map<number, ResourceVote>;
+  private reputationHistory: Map<number, ReputationHistory>;
+  
   private currentUserId: number;
   private currentDocumentTemplateId: number;
   private currentUserDocumentId: number;
@@ -249,6 +274,11 @@ export class MemStorage implements IStorage {
   private currentResourceId: number;
   private currentResourceLikeId: number;
   private currentResourceBookmarkId: number;
+  
+  // Reputation system counters
+  private currentContributorReputationId: number;
+  private currentResourceVoteId: number;
+  private currentReputationHistoryId: number;
 
   constructor() {
     // Initialize main collections
@@ -287,6 +317,11 @@ export class MemStorage implements IStorage {
     this.resourceLikes = new Map();
     this.resourceBookmarks = new Map();
     
+    // Initialize reputation system collections
+    this.contributorReputations = new Map();
+    this.resourceVotes = new Map();
+    this.reputationHistory = new Map();
+    
     // Initialize main IDs
     this.currentUserId = 1;
     this.currentDocumentTemplateId = 1;
@@ -322,6 +357,11 @@ export class MemStorage implements IStorage {
     this.currentResourceId = 1;
     this.currentResourceLikeId = 1;
     this.currentResourceBookmarkId = 1;
+    
+    // Initialize reputation system IDs
+    this.currentContributorReputationId = 1;
+    this.currentResourceVoteId = 1;
+    this.currentReputationHistoryId = 1;
     
     // Seed data
     this.seedDocumentTemplates();
@@ -2098,6 +2138,229 @@ export class MemStorage implements IStorage {
 
   async deleteResourceBookmark(id: number): Promise<boolean> {
     return this.resourceBookmarks.delete(id);
+  }
+  
+  // Contributor reputation operations
+  async getContributorReputation(userId: number): Promise<ContributorReputation | undefined> {
+    return this.contributorReputations.get(userId);
+  }
+  
+  async getTopContributors(limit: number = 10): Promise<ContributorReputation[]> {
+    return Array.from(this.contributorReputations.values())
+      .sort((a, b) => b.reputationScore - a.reputationScore)
+      .slice(0, limit);
+  }
+  
+  async createContributorReputation(reputation: InsertContributorReputation): Promise<ContributorReputation> {
+    const userId = reputation.userId;
+    const now = new Date();
+    const newReputation: ContributorReputation = {
+      ...reputation,
+      id: userId, // Use userId as the id for easier lookups
+      createdAt: now,
+      updatedAt: now,
+      level: 1,
+      badges: [],
+      contributionCount: 0,
+    };
+    this.contributorReputations.set(userId, newReputation);
+    return newReputation;
+  }
+  
+  async updateContributorReputation(userId: number, updates: Partial<ContributorReputation>): Promise<ContributorReputation | undefined> {
+    const existingReputation = this.contributorReputations.get(userId);
+    if (!existingReputation) return undefined;
+    
+    const now = new Date();
+    const updatedReputation = {
+      ...existingReputation,
+      ...updates,
+      updatedAt: now
+    };
+    this.contributorReputations.set(userId, updatedReputation);
+    return updatedReputation;
+  }
+  
+  // Resource vote operations
+  async getResourceVotes(resourceId: number): Promise<ResourceVote[]> {
+    return Array.from(this.resourceVotes.values()).filter(
+      (vote) => vote.resourceId === resourceId
+    );
+  }
+  
+  async getUserResourceVote(userId: number, resourceId: number): Promise<ResourceVote | undefined> {
+    return Array.from(this.resourceVotes.values()).find(
+      (vote) => vote.userId === userId && vote.resourceId === resourceId
+    );
+  }
+  
+  async createResourceVote(vote: InsertResourceVote): Promise<ResourceVote> {
+    const id = this.currentResourceVoteId++;
+    const now = new Date();
+    const newVote: ResourceVote = {
+      ...vote,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.resourceVotes.set(id, newVote);
+    
+    // Update resource vote count
+    const resource = this.resources.get(vote.resourceId);
+    if (resource) {
+      const voteValue = vote.value === 'upvote' ? 1 : -1;
+      const updatedResource = {
+        ...resource,
+        voteCount: (resource.voteCount || 0) + voteValue
+      };
+      this.resources.set(resource.id, updatedResource);
+      
+      // Update contributor reputation if it's an upvote
+      if (vote.value === 'upvote') {
+        const contributorId = resource.userId;
+        const reputation = this.contributorReputations.get(contributorId);
+        if (reputation) {
+          // Add 10 points for each upvote
+          const updatedReputation = {
+            ...reputation,
+            reputationScore: reputation.reputationScore + 10,
+            updatedAt: now
+          };
+          this.contributorReputations.set(contributorId, updatedReputation);
+          
+          // Create reputation history entry
+          this.createReputationHistoryEntry({
+            userId: contributorId,
+            actionType: 'resource_upvote',
+            points: 10,
+            resourceId: resource.id
+          });
+        }
+      }
+    }
+    
+    return newVote;
+  }
+  
+  async updateResourceVote(id: number, voteUpdates: Partial<ResourceVote>): Promise<ResourceVote | undefined> {
+    const existingVote = this.resourceVotes.get(id);
+    if (!existingVote) return undefined;
+    
+    const now = new Date();
+    const oldValue = existingVote.value;
+    const newValue = voteUpdates.value || oldValue;
+    
+    // If the vote value is changing, update the resource vote count
+    if (oldValue !== newValue && (newValue === 'upvote' || newValue === 'downvote')) {
+      const resource = this.resources.get(existingVote.resourceId);
+      if (resource) {
+        // Determine the vote count adjustment
+        let adjustment = 0;
+        if (oldValue === 'upvote' && newValue === 'downvote') adjustment = -2;
+        else if (oldValue === 'downvote' && newValue === 'upvote') adjustment = 2;
+        
+        const updatedResource = {
+          ...resource,
+          voteCount: (resource.voteCount || 0) + adjustment
+        };
+        this.resources.set(resource.id, updatedResource);
+        
+        // Update contributor reputation
+        const contributorId = resource.userId;
+        const reputation = this.contributorReputations.get(contributorId);
+        if (reputation) {
+          let pointsChange = 0;
+          if (oldValue === 'upvote' && newValue === 'downvote') pointsChange = -20; // -10 for removed upvote, -10 for new downvote
+          else if (oldValue === 'downvote' && newValue === 'upvote') pointsChange = 20; // +10 for removed downvote, +10 for new upvote
+          
+          const updatedReputation = {
+            ...reputation,
+            reputationScore: reputation.reputationScore + pointsChange,
+            updatedAt: now
+          };
+          this.contributorReputations.set(contributorId, updatedReputation);
+          
+          // Create reputation history entry
+          if (pointsChange !== 0) {
+            this.createReputationHistoryEntry({
+              userId: contributorId,
+              actionType: 'vote_change',
+              points: pointsChange,
+              resourceId: resource.id
+            });
+          }
+        }
+      }
+    }
+    
+    const updatedVote = {
+      ...existingVote,
+      ...voteUpdates,
+      updatedAt: now
+    };
+    this.resourceVotes.set(id, updatedVote);
+    return updatedVote;
+  }
+  
+  async deleteResourceVote(id: number): Promise<boolean> {
+    const vote = this.resourceVotes.get(id);
+    if (!vote) return false;
+    
+    // Update resource vote count
+    const resource = this.resources.get(vote.resourceId);
+    if (resource) {
+      const voteValue = vote.value === 'upvote' ? -1 : 1; // Opposite to remove the vote
+      const updatedResource = {
+        ...resource,
+        voteCount: (resource.voteCount || 0) + voteValue
+      };
+      this.resources.set(resource.id, updatedResource);
+      
+      // Update contributor reputation if it was an upvote
+      if (vote.value === 'upvote') {
+        const contributorId = resource.userId;
+        const reputation = this.contributorReputations.get(contributorId);
+        if (reputation) {
+          // Remove 10 points for removed upvote
+          const updatedReputation = {
+            ...reputation,
+            reputationScore: reputation.reputationScore - 10,
+            updatedAt: new Date()
+          };
+          this.contributorReputations.set(contributorId, updatedReputation);
+          
+          // Create reputation history entry
+          this.createReputationHistoryEntry({
+            userId: contributorId,
+            actionType: 'upvote_removed',
+            points: -10,
+            resourceId: resource.id
+          });
+        }
+      }
+    }
+    
+    this.resourceVotes.delete(id);
+    return true;
+  }
+  
+  // Reputation history operations
+  async getReputationHistory(userId: number): Promise<ReputationHistory[]> {
+    return Array.from(this.reputationHistory.values())
+      .filter(entry => entry.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createReputationHistoryEntry(entry: InsertReputationHistory): Promise<ReputationHistory> {
+    const id = this.currentReputationHistoryId++;
+    const now = new Date();
+    const newEntry: ReputationHistory = {
+      ...entry,
+      id,
+      createdAt: now,
+    };
+    this.reputationHistory.set(id, newEntry);
+    return newEntry;
   }
 }
 

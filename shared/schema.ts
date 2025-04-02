@@ -607,6 +607,72 @@ export const insertResourceBookmarkSchema = createInsertSchema(resourceBookmarks
 export type InsertResourceBookmark = z.infer<typeof insertResourceBookmarkSchema>;
 export type ResourceBookmark = typeof resourceBookmarks.$inferSelect;
 
+// Contributor reputation system
+export const contributorReputations = pgTable("contributor_reputations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id).unique(),
+  reputationScore: integer("reputation_score").notNull().default(0),
+  contributionCount: integer("contribution_count").notNull().default(0),
+  level: text("level").notNull().default("Newcomer"),
+  badges: text("badges").array(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertContributorReputationSchema = createInsertSchema(contributorReputations).pick({
+  userId: true,
+  reputationScore: true,
+  contributionCount: true,
+  level: true,
+  badges: true,
+});
+
+export type InsertContributorReputation = z.infer<typeof insertContributorReputationSchema>;
+export type ContributorReputation = typeof contributorReputations.$inferSelect;
+
+// Resource votes for more granular contributor reputation
+export const resourceVotes = pgTable("resource_votes", {
+  id: serial("id").primaryKey(),
+  resourceId: integer("resource_id").notNull().references(() => resources.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  vote: integer("vote").notNull(), // 1 for upvote, -1 for downvote, can be expanded
+  reason: text("reason"), // Optional reason for the vote
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertResourceVoteSchema = createInsertSchema(resourceVotes).pick({
+  resourceId: true,
+  userId: true,
+  vote: true,
+  reason: true,
+});
+
+export type InsertResourceVote = z.infer<typeof insertResourceVoteSchema>;
+export type ResourceVote = typeof resourceVotes.$inferSelect;
+
+// Reputation history to track changes
+export const reputationHistory = pgTable("reputation_history", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  action: text("action").notNull(), // "resource_created", "upvote_received", "badge_earned", etc.
+  points: integer("points").notNull(), // Points earned or lost
+  resourceId: integer("resource_id").references(() => resources.id),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertReputationHistorySchema = createInsertSchema(reputationHistory).pick({
+  userId: true,
+  action: true,
+  points: true,
+  resourceId: true,
+  description: true,
+});
+
+export type InsertReputationHistory = z.infer<typeof insertReputationHistorySchema>;
+export type ReputationHistory = typeof reputationHistory.$inferSelect;
+
 // Canadian provinces
 export const provinces = [
   { value: "AB", label: "Alberta" },
