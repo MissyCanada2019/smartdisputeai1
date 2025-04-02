@@ -486,57 +486,86 @@ export default function Home() {
         </Link>
       </div>
       
-      {/* How It Works Section - Added for SEO */}
-      <section className="py-12 border-t border-gray-200 mt-16">
+      {/* How It Works Section - Enhanced for SEO */}
+      <section className="py-12 border-t border-gray-200 mt-16" id="how-it-works">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How SmartDispute.ai Works</h2>
           <p className="text-gray-700 mb-8 text-center">
-            Fill out a simple form → Let our AI draft the documents → Download, send, or submit with confidence.
+            Our AI-powered platform simplifies legal self-advocacy for Canadians dealing with tenant disputes, Children's Aid Society interactions, and more.
           </p>
           <div className="bg-white p-6 rounded-lg border shadow-sm">
-            <h3 className="text-xl font-semibold mb-4">Our Process:</h3>
+            <h3 className="text-xl font-semibold mb-4">Our Step-by-Step Process:</h3>
             <ol className="list-decimal pl-5 space-y-3">
-              <li className="text-gray-700">Answer a few questions about your specific situation</li>
-              <li className="text-gray-700">Our AI analyzes your case and creates customized legal documents</li>
-              <li className="text-gray-700">Download your documents in PDF format ready for submission</li>
-              <li className="text-gray-700">Use our guidance for proper filing and follow-up</li>
+              <li className="text-gray-700">
+                <span className="font-medium">Describe your situation</span> — Whether it's a landlord-tenant issue or a CAS investigation, answer a few specific questions about your circumstances
+              </li>
+              <li className="text-gray-700">
+                <span className="font-medium">Upload supporting evidence</span> — Submit documents, communications, or photos that strengthen your case
+              </li>
+              <li className="text-gray-700">
+                <span className="font-medium">Review AI analysis</span> — Our system examines Canadian legal precedents and regulations applicable to your situation
+              </li>
+              <li className="text-gray-700">
+                <span className="font-medium">Generate tailored documents</span> — Receive professionally formatted, legally appropriate documents customized to your specific needs
+              </li>
+              <li className="text-gray-700">
+                <span className="font-medium">Follow guided submission</span> — Get clear instructions on how to file your documents with the right authorities
+              </li>
             </ol>
+            <p className="mt-6 text-gray-700">
+              Our unique AI analysis helps identify the strongest arguments and most relevant legal precedents specific to your province, whether you're dealing with the Landlord and Tenant Board, Children's Aid Society, or other agencies.
+            </p>
           </div>
         </div>
       </section>
       
-      {/* Why Self-Advocate Section - Added for SEO */}
-      <section className="py-12 bg-gray-50">
+      {/* Why Self-Advocate Section - Enhanced for SEO */}
+      <section className="py-12 bg-gray-50" id="why-self-advocate">
         <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Why Self-Advocate?</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Why Self-Advocate in Canada?</h2>
           <p className="text-gray-700 mb-8 text-center">
-            SmartDispute gives Canadians the power to stand up for their rights — affordably, independently, and with dignity.
+            SmartDispute.ai empowers marginalized Canadians to stand up for their rights — affordably, independently, and with dignity.
           </p>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Financial Barriers</h3>
+              <h3 className="text-lg font-semibold mb-3">Financial Barriers to Justice</h3>
               <p className="text-gray-600">
-                Legal representation is expensive. Self-advocacy tools make justice accessible regardless of income.
+                With legal aid limited and private attorneys costing $300+ per hour, self-advocacy tools make justice accessible regardless of income. Our affordable platform helps low-income Canadians assert their rights.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Power Imbalance</h3>
+              <h3 className="text-lg font-semibold mb-3">Power Imbalance in Housing</h3>
               <p className="text-gray-600">
-                When facing landlords, agencies, or corporations, our tools help level the playing field.
+                When facing corporate landlords with legal teams, tenants are at a severe disadvantage. Our tools help level the playing field by providing professional-quality documents and strategic guidance for Landlord and Tenant Board proceedings.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Knowledge Gap</h3>
+              <h3 className="text-lg font-semibold mb-3">Navigation of Complex Systems</h3>
               <p className="text-gray-600">
-                We provide educational resources to help you understand your rights and navigate the legal system.
+                The Children's Aid Society and legal systems can be overwhelming. We provide educational resources to help you understand your rights, the process ahead, and how to effectively represent yourself and protect your family.
               </p>
             </div>
             <div className="bg-white p-6 rounded-lg border shadow-sm">
-              <h3 className="text-lg font-semibold mb-3">Canadian-Specific</h3>
+              <h3 className="text-lg font-semibold mb-3">Canadian-Specific Resources</h3>
               <p className="text-gray-600">
-                Our resources are tailored to Canadian law, with province-specific guidance when needed.
+                Our resources are tailored to Canadian law, with province-specific guidance for Ontario, British Columbia, Alberta, and other provinces. We focus on Canadian legislation, court procedures, and administrative tribunals.
               </p>
             </div>
+          </div>
+          <div className="bg-white p-6 rounded-lg border shadow-sm">
+            <h3 className="text-xl font-semibold mb-4 text-center">The Reality of Self-Representation in Canada</h3>
+            <p className="text-gray-700 mb-4">
+              Over 50% of Canadians in family court and administrative tribunals represent themselves due to financial constraints. Without adequate support, many face significant disadvantages:
+            </p>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+              <li>Limited understanding of legal procedures and requirements</li>
+              <li>Difficulty articulating arguments in legally relevant terms</li>
+              <li>Inadequate documentation and evidence presentation</li>
+              <li>Overwhelm when facing experienced opposing counsel</li>
+            </ul>
+            <p className="mt-4 text-gray-700">
+              SmartDispute.ai addresses these gaps by providing accessible, technology-driven tools that empower self-represented individuals to present their cases effectively and confidently.
+            </p>
           </div>
         </div>
       </section>

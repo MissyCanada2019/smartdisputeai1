@@ -90,6 +90,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up upload directory for supporting documents - define at function scope
   const uploadsDir = path.join(__dirname, "../uploads");
   
+  // Path to the client/public directory for static files like sitemap and robots.txt
+  const publicDir = path.join(__dirname, "../client/public");
+  
   // Set up directories in a non-blocking way
   setTimeout(() => {
     // Create directories if they don't exist
@@ -101,6 +104,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
   }, 0);
+  
+  // Serve sitemap.xml and robots.txt from the client/public directory
+  app.get('/sitemap.xml', (req: Request, res: Response) => {
+    res.sendFile(path.join(publicDir, 'sitemap.xml'));
+  });
+  
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    res.sendFile(path.join(publicDir, 'robots.txt'));
+  });
   
   // Configure multer for file uploads
   const fileStorage = multer.diskStorage({
