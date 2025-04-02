@@ -16,6 +16,7 @@ import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/
 import { useToast } from "@/hooks/use-toast";
 import { trackPageView } from "@/lib/analytics";
 import { useLeadCapture, LeadCaptureType } from "@/hooks/use-lead-capture";
+import { AuthProvider } from "@/context/authContext";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -51,6 +52,7 @@ import LTBResourcesPage from "@/pages/ltb-resources";
 import CASResourcesPage from "@/pages/cas-resources";
 import ResourceDetail from "@/pages/resource-detail";
 import Login from "@/pages/login";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -60,20 +62,64 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/evidence-upload" component={EvidenceUpload} />
-      <Route path="/case-analysis" component={CaseAnalysis} />
+      <Route path="/evidence-upload">
+        <ProtectedRoute>
+          <EvidenceUpload />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/case-analysis">
+        <ProtectedRoute>
+          <CaseAnalysis />
+        </ProtectedRoute>
+      </Route>
       <Route path="/user-info" component={UserInfo} />
-      <Route path="/document-selection" component={DocumentSelection} />
-      <Route path="/document-selection-hierarchical" component={DocumentSelectionHierarchical} />
-      <Route path="/template-customization" component={TemplateCustomization} />
-      <Route path="/document-review" component={DocumentReview} />
-      <Route path="/document-review/:id" component={DocumentReview} />
-      <Route path="/document-management" component={DocumentManagement} />
-      <Route path="/payment" component={Payment} />
-      <Route path="/success" component={Success} />
+      <Route path="/document-selection">
+        <ProtectedRoute>
+          <DocumentSelection />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/document-selection-hierarchical">
+        <ProtectedRoute>
+          <DocumentSelectionHierarchical />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/template-customization">
+        <ProtectedRoute>
+          <TemplateCustomization />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/document-review">
+        <ProtectedRoute>
+          <DocumentReview />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/document-review/:id">
+        <ProtectedRoute>
+          <DocumentReview />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/document-management">
+        <ProtectedRoute>
+          <DocumentManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/payment">
+        <ProtectedRoute>
+          <Payment />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/success">
+        <ProtectedRoute>
+          <Success />
+        </ProtectedRoute>
+      </Route>
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/about" component={About} />
-      <Route path="/chat" component={Chat} />
+      <Route path="/chat">
+        <ProtectedRoute>
+          <Chat />
+        </ProtectedRoute>
+      </Route>
       <Route path="/resources" component={Resources} />
       <Route path="/resources/ltb" component={LTBResourcesPage} />
       <Route path="/resources/cas" component={CASResourcesPage} />
@@ -83,7 +129,11 @@ function Router() {
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
-      <Route path="/resource-sharing/new" component={NewResource} />
+      <Route path="/resource-sharing/new">
+        <ProtectedRoute>
+          <NewResource />
+        </ProtectedRoute>
+      </Route>
       <Route path="/resource-sharing/:id" component={ResourceDetail} />
       
       {/* Legal Pages */}
@@ -95,7 +145,11 @@ function Router() {
       
       {/* Community Routes */}
       <Route path="/community" component={Community} />
-      <Route path="/community/new-post" component={NewPost} />
+      <Route path="/community/new-post">
+        <ProtectedRoute>
+          <NewPost />
+        </ProtectedRoute>
+      </Route>
       <Route path="/community/post/:id" component={PostDetail} />
       <Route path="/community/search" component={CommunitySearch} />
       
@@ -173,24 +227,26 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <FormProvider>
-        <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
-          <AnalyticsProvider>
-            {/* RouteTracker component for automatic page view tracking */}
-            <RouteTracker />
-            <div className="flex flex-col min-h-screen bg-gray-50">
-              <Header />
-              <main className="flex-grow">
-                <Router />
-              </main>
-              <Footer />
-              <ChatBotModal />
-              <CookieConsentBanner />
-              <AutomaticUpdates />
-              <MaintenanceNotification />
-            </div>
-            <Toaster />
-          </AnalyticsProvider>
-        </LeadCaptureProvider>
+        <AuthProvider>
+          <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
+            <AnalyticsProvider>
+              {/* RouteTracker component for automatic page view tracking */}
+              <RouteTracker />
+              <div className="flex flex-col min-h-screen bg-gray-50">
+                <Header />
+                <main className="flex-grow">
+                  <Router />
+                </main>
+                <Footer />
+                <ChatBotModal />
+                <CookieConsentBanner />
+                <AutomaticUpdates />
+                <MaintenanceNotification />
+              </div>
+              <Toaster />
+            </AnalyticsProvider>
+          </LeadCaptureProvider>
+        </AuthProvider>
       </FormProvider>
     </QueryClientProvider>
   );

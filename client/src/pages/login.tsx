@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/context/authContext";
 
 // Form validation schema
 const loginSchema = z.object({
@@ -30,6 +31,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [_, navigate] = useLocation();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -55,13 +57,19 @@ export default function Login() {
       
       const userData = await response.json();
       
+      // Save user data to auth context
+      login(userData);
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${userData.firstName || userData.username}!`,
       });
       
-      // Redirect to appropriate page
-      navigate("/document-management");
+      // Redirect to appropriate page - case analysis if that's where they were headed
+      // otherwise to document management
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/document-management";
+      sessionStorage.removeItem("redirectAfterLogin");
+      navigate(redirectPath);
       
     } catch (error: any) {
       console.error("Login error:", error);

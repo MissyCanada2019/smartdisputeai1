@@ -1,7 +1,24 @@
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/context/authContext";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
   const [location] = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    // Navigate to home after logout
+    window.location.href = "/";
+  };
 
   return (
     <header className="bg-white shadow-sm">
@@ -50,10 +67,48 @@ export default function Header() {
         </nav>
         
         <div className="flex items-center space-x-4">
-          <Link href="/login" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</Link>
-          <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
-            Get Started
-          </Link>
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="flex items-center gap-2">
+                  <span>{user?.firstName || user?.username}</span>
+                  <svg 
+                    className="w-4 h-4" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/document-management">My Documents</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/case-analysis">Case Analysis</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/evidence-upload">Evidence Upload</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <>
+              <Link href="/login" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</Link>
+              <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
+                Get Started
+              </Link>
+            </>
+          )}
           <button className="md:hidden text-gray-600">
             <svg 
               className="w-6 h-6" 
