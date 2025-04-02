@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/authContext";
 import { Button } from "@/components/ui/button";
@@ -9,10 +10,17 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { 
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
 
 export default function Header() {
   const [location] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -103,23 +111,103 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <>
-              <Link href="/login" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</Link>
+              <Link href="/login" className="inline-block text-gray-600 hover:text-primary">Sign In</Link>
               <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
                 Get Started
               </Link>
             </>
           )}
-          <button className="md:hidden text-gray-600">
-            <svg 
-              className="w-6 h-6" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
-          </button>
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="md:hidden text-gray-600">
+                <svg 
+                  className="w-6 h-6" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72">
+              <div className="flex flex-col space-y-4 mt-8">
+                <SheetClose asChild>
+                  <Link href="/" className={`text-gray-600 hover:text-primary font-medium ${location === '/' ? 'text-primary' : ''}`}>
+                    Home
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/services" className={`text-gray-600 hover:text-primary font-medium ${location === '/services' ? 'text-primary' : ''}`}>
+                    Services
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
+                    My Documents
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/community" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/community') ? 'text-primary' : ''}`}>
+                    Community
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/resource-sharing" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') ? 'text-primary' : ''}`}>
+                    Resources
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
+                    Chat
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
+                    AI Assistant
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
+                    FAQ
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
+                    About
+                  </Link>
+                </SheetClose>
+                
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  {isAuthenticated ? (
+                    <SheetClose asChild>
+                      <Button 
+                        onClick={handleLogout}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        Sign Out
+                      </Button>
+                    </SheetClose>
+                  ) : (
+                    <div className="flex flex-col space-y-2">
+                      <SheetClose asChild>
+                        <Link href="/login" className="text-gray-600 hover:text-primary text-center py-2">
+                          Sign In
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 text-center">
+                          Get Started
+                        </Link>
+                      </SheetClose>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

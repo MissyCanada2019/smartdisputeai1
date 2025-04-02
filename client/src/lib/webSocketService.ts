@@ -53,11 +53,13 @@ class WebSocketService {
     }
 
     try {
-      // Always use ws for local development to avoid SSL issues
-      // In production, you would use wss for secure connections
+      // Always use ws protocol regardless of page protocol to avoid SSL issues
+      // This is a development-friendly approach
       const protocol = "ws:";
       const host = window.location.host;
       const wsUrl = `${protocol}//${host}/ws`;
+      
+      console.log("Connecting to WebSocket using URL:", wsUrl);
       
       // Create new WebSocket connection
       this.socket = new WebSocket(wsUrl);

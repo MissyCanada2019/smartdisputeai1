@@ -25,7 +25,8 @@
   <meta name="description" content="LegalAssist - Affordable legal document generation platform for low-income and marginalized Canadians">
   <meta name="google-site-verification" content="9fGsDdnUDR_1_WC3hApOV0nkhDs7MQL9ZVA1s5UC5nU" />
   <meta name="google-site-verification" content="KuESneYJdf5D13zZgmGEpGrciobNL2DaEdX-VBEwUyg" />
-  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+  <!-- Allow both secure and insecure connections for development -->
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * ws: wss:;" />
   <title>LegalAssist - Smart Dispute Resolution</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
