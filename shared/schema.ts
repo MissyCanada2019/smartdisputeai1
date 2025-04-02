@@ -431,6 +431,12 @@ export type ResourceSubcategory = typeof resourceSubcategories.$inferSelect;
 export type InsertResource = z.infer<typeof insertResourceSchema>;
 export type Resource = typeof resources.$inferSelect;
 
+// Login schema
+export const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
+
 // Form schemas for validation
 export const userInfoFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),

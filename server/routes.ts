@@ -20,6 +20,12 @@ import {
   insertResourceSchema,
   provinces
 } from "@shared/schema";
+
+// Login schema
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
 import Stripe from "stripe";
 import OpenAI from "openai";
 import PDFDocument from "pdfkit";
@@ -776,6 +782,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error: any) {
       res.status(500).json({ message: `Error updating user: ${error.message}` });
+    }
+  });
+
+  // Login endpoint
+  app.post("/api/login", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      const validationResult = loginSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid login data", 
+          errors: validationResult.error.format() 
+        });
+      }
+      
+      const { username, password } = validationResult.data;
+      
+      // Find user by username
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // In a real application, we would properly hash passwords,
+      // but for this demo, we'll do a simple comparison
+      if (user.password !== password) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      // Return user data (excluding password)
+      const { password: _, ...userData } = user;
+      res.json(userData);
+    } catch (error: any) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: `Login error: ${error.message}` });
     }
   });
   

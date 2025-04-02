@@ -61,7 +61,7 @@ export default function Login() {
       });
       
       // Redirect to appropriate page
-      navigate("/dashboard");
+      navigate("/document-management");
       
     } catch (error: any) {
       console.error("Login error:", error);

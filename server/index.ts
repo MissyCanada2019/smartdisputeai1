@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedDatabase } from "./seed";
+import { MemStorage } from "./storage";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -45,6 +47,17 @@ app.use(express.static(path.join(__dirname, '..'), {
 }));
 
 (async () => {
+  // Create storage instance
+  const storage = new MemStorage();
+  
+  // Seed the database with initial data
+  try {
+    await seedDatabase(storage);
+    log("Database seeded successfully");
+  } catch (error) {
+    log("Error seeding database:", error);
+  }
+  
   const server = await registerRoutes(app);
   
   // Global error handler

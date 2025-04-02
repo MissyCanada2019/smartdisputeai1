@@ -50,6 +50,7 @@ import Services from "@/pages/services";
 import LTBResourcesPage from "@/pages/ltb-resources";
 import CASResourcesPage from "@/pages/cas-resources";
 import ResourceDetail from "@/pages/resource-detail";
+import Login from "@/pages/login";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -78,6 +79,7 @@ function Router() {
       <Route path="/resources/cas" component={CASResourcesPage} />
       <Route path="/services" component={Services} />
       <Route path="/faq" component={FAQ} />
+      <Route path="/login" component={Login} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
