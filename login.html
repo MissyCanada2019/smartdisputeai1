@@ -130,6 +130,9 @@
       </div>
       <h1>Log in to your account</h1>
       <div class="description">Enter your username and password to access your account</div>
+      <div style="background-color: #e6f7ff; border: 1px solid #91d5ff; padding: 8px; border-radius: 4px; margin-top: 10px; font-size: 14px;">
+        For testing, use: <strong>username:</strong> testuser, <strong>password:</strong> password123
+      </div>
     </div>
 
     <div id="error-message" class="error"></div>
@@ -176,6 +179,8 @@
       loginButton.disabled = true;
       
       try {
+        console.log('Attempting login with username:', username);
+        
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
@@ -185,8 +190,11 @@
           credentials: 'include'
         });
         
+        console.log('Login response status:', response.status);
+        
         if (!response.ok) {
           const data = await response.json();
+          console.log('Login error data:', data);
           throw new Error(data.message || 'Invalid username or password');
         }
         
