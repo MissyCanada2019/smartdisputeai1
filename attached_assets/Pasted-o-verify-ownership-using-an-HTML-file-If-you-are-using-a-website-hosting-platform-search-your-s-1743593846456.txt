@@ -1,0 +1,18 @@
+o verify ownership using an HTML file:
+
+If you are using a website hosting platform, search your service's help pages for custom instructions to verify your site on Search Console. If you don't find any information, then continue on to the next steps.
+Read the requirements for this verification technique.
+Choose the HTML file upload method on the Ownership verification page for your property.
+Download the provided verification file. This file is unique to you; it cannot be used to identify anyone else, and is associated with your Gmail account.
+Upload the verification file to your website so that it will be available at the address specified in the verification details page. This is typically the root directory for your property. (That is, if you defined your property as https://example.com, and the file provided is named 1234.txt, then the file should be browsable at https://example.com/1234.txt.) Search Console does not follow redirects when looking for this file. You can add newlines at the end of the file body, if required, but do not otherwise modify the file name or content.
+Confirm that you can see the file by visiting it in your browser in the location specified by the Search Console verification wizard. If the file isn't available to your browser at that URL, Google won't be able to find for verification purposes. TIP: Use an incognito window in your browser to confirm that you don't need to log in to access it.
+Complete verification by clicking Verify in the verification details page.
+If verification fails, see Potential errors below to troubleshoot the issue.
+Troubleshooting
+The following errors can occur with HTML file upload verification:
+
+Your verification file was not found in the required location
+Search Console couldn't find your personal verification file at your property's root location. Upload the provided verification file to the specified location on your site without any modifications. If the file name or content does not match the HTML file provided, we won't be able to verify your site ownership. You can verify whether the file is present by trying to visit it in your browser.
+Your verification file has the wrong content
+The verification file that Search Console provides must be used exactly as provided, without modifying the name or content of the file. If the file name or content does not match the file provided by Search Console for the logged in user, we can't verify ownership. Please use the verification file provided by Search Console, and upload it to the specified location without any modifications.
+Hacked verification file.

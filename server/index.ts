@@ -31,12 +31,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve Google verification file directly from the root directory
+// Serve Google verification files directly from the root directory
 app.use(express.static(path.join(__dirname, '..'), {
   index: false,
   // Only allow specific files to be served from the root
   setHeaders: (res, filePath) => {
-    if (path.basename(filePath) === 'google4b945706e36a5db4.html') {
+    const filename = path.basename(filePath);
+    if (filename === 'google4b945706e36a5db4.html' || 
+        filename === 'google9fGsDdnUDR_1_WC3hApOV0nkhDs7MQL9ZVA1s5UC5nU.html') {
       res.setHeader('Content-Type', 'text/html');
     }
   }
