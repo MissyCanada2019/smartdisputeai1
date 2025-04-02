@@ -53,8 +53,9 @@ class WebSocketService {
     }
 
     try {
-      // Determine the protocol and build the URL
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      // Always use ws for local development to avoid SSL issues
+      // In production, you would use wss for secure connections
+      const protocol = "ws:";
       const host = window.location.host;
       const wsUrl = `${protocol}//${host}/ws`;
       
