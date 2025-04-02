@@ -132,7 +132,7 @@ export default function Resources() {
         </div>
         
         {/* Special LTB Resources Banner */}
-        <div className="max-w-6xl mx-auto mb-8">
+        <div className="max-w-6xl mx-auto mb-4">
           <div className="bg-gradient-to-r from-red-50 to-white dark:from-red-950/20 dark:to-gray-900/50 border border-red-200 dark:border-red-800/30 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
             <div className="flex-1 mb-4 md:mb-0">
               <h2 className="text-2xl font-bold mb-2">Ontario Tenant Rights Resources</h2>
@@ -145,6 +145,24 @@ export default function Resources() {
             </div>
             <Button size="lg" className="bg-red-600 hover:bg-red-700" asChild>
               <a href="/resources/ltb">Access Tenant Resources</a>
+            </Button>
+          </div>
+        </div>
+        
+        {/* CAS Resources Banner */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <div className="bg-gradient-to-r from-amber-50 to-white dark:from-amber-950/20 dark:to-gray-900/50 border border-amber-200 dark:border-amber-800/30 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
+            <div className="flex-1 mb-4 md:mb-0">
+              <h2 className="text-2xl font-bold mb-2">Children's Aid Society Resources</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Navigate the child welfare system with confidence using our comprehensive resources for parents across Canada.
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
+                Protecting your rights and helping you advocate effectively for your family
+              </p>
+            </div>
+            <Button size="lg" className="bg-amber-600 hover:bg-amber-700" asChild>
+              <a href="/resources/cas">Access CAS Resources</a>
             </Button>
           </div>
         </div>
