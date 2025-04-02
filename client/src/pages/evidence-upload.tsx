@@ -51,24 +51,79 @@ export default function EvidenceUpload() {
   useEffect(() => {
     const createTemporaryUser = async () => {
       try {
+        console.log("Creating temporary user...");
         // Create a temporary user for evidence uploads if not logged in
-        const response = await apiRequest("POST", "/api/users", {
-          username: `temp_${Date.now()}`,
-          password: `temp_${Math.random().toString(36).slice(2)}`,
+        const timestamp = Date.now();
+        const tempUsername = `temp_${timestamp}`;
+        const tempPassword = `temp_${Math.random().toString(36).slice(2)}`;
+        
+        console.log("Attempting to create temporary user with username:", tempUsername);
+        
+        // Prepare payload for temporary user
+        const payload = {
+          username: tempUsername,
+          password: tempPassword,
           isTemporary: true
-        });
+        };
+        console.log("Sending temporary user payload:", JSON.stringify(payload));
         
-        if (!response.ok) {
-          throw new Error("Could not create temporary user");
+        // Make the API request with detailed error handling
+        try {
+          // Use fetch directly for more control over error handling
+          const response = await fetch('/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+          });
+          
+          console.log("Temporary user API response status:", response.status);
+          
+          // Check if the response is JSON
+          const contentType = response.headers.get("content-type");
+          let responseBody;
+          
+          if (contentType && contentType.includes("application/json")) {
+            responseBody = await response.json();
+            console.log("Received JSON response:", responseBody);
+          } else {
+            const textResponse = await response.text();
+            console.log("Received text response:", textResponse);
+            try {
+              // Try to parse it as JSON anyway in case the content-type is wrong
+              responseBody = JSON.parse(textResponse);
+              console.log("Successfully parsed text as JSON:", responseBody);
+            } catch (parseError) {
+              console.error("Could not parse response as JSON:", parseError);
+              throw new Error(`Server returned non-JSON response: ${textResponse}`);
+            }
+          }
+          
+          // Handle error response
+          if (!response.ok) {
+            console.error("API error response:", responseBody);
+            throw new Error(`Server error: ${response.status} - ${JSON.stringify(responseBody)}`);
+          }
+          
+          // Handle success
+          if (responseBody && responseBody.id) {
+            console.log("Temporary user created successfully with ID:", responseBody.id);
+            setUserId(responseBody.id);
+          } else {
+            console.error("Response missing ID field:", responseBody);
+            throw new Error("Server returned success but no user ID");
+          }
+          
+        } catch (fetchError: any) {
+          console.error("Network or parsing error:", fetchError);
+          throw new Error(`API request failed: ${fetchError?.message || 'Unknown error occurred during API request'}`);
         }
-        
-        const data = await response.json();
-        setUserId(data.id);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error creating temporary user:", error);
         toast({
-          title: "Error",
-          description: "Could not initialize upload system. Please try again.",
+          title: "Upload System Error",
+          description: `Could not initialize upload system: ${error.message}. Please refresh the page and try again.`,
           variant: "destructive"
         });
       }
@@ -76,7 +131,10 @@ export default function EvidenceUpload() {
     
     // Only create temp user if we don't already have a userId in state
     if (!userId) {
+      console.log("No user ID, creating temporary user...");
       createTemporaryUser();
+    } else {
+      console.log("User ID already exists:", userId);
     }
   }, [toast, userId]);
 

@@ -614,10 +614,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a user (simplified for demo)
   app.post("/api/users", async (req: Request, res: Response) => {
     try {
+      console.log("POST /api/users - Request body:", JSON.stringify(req.body));
+      
       // Check if this is a temporary user request
       const { isTemporary } = req.body;
+      console.log("Is temporary user request:", isTemporary);
       
       if (isTemporary) {
+        console.log("Processing temporary user creation");
         // For temporary users, use a more relaxed validation
         const tempUserSchema = z.object({
           username: z.string(),
@@ -628,23 +632,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Validate temporary user data
         const validationResult = tempUserSchema.safeParse(req.body);
         if (!validationResult.success) {
+          console.error("Temporary user validation failed:", validationResult.error.format());
           return res.status(400).json({ message: "Invalid temporary user data", errors: validationResult.error.format() });
         }
         
         const tempUserData = validationResult.data;
+        console.log("Validated temporary user data:", { ...tempUserData, password: "*******" });
         
         // Temporary users get a random email to avoid conflicts
         const randomEmail = `temp_${Date.now()}@smartdispute.ai`;
+        console.log("Generated random email for temporary user:", randomEmail);
         
-        // Create the temporary user
-        const newUser = await storage.createUser({
-          ...tempUserData,
-          email: randomEmail,
-          firstName: "Temporary",
-          lastName: "User"
-        });
-        
-        return res.status(201).json(newUser);
+        try {
+          // Create the temporary user
+          const newUser = await storage.createUser({
+            ...tempUserData,
+            email: randomEmail,
+            firstName: "Temporary",
+            lastName: "User"
+          });
+          
+          console.log("Temporary user created successfully with ID:", newUser.id);
+          return res.status(201).json(newUser);
+        } catch (storageError) {
+          console.error("Error in storage.createUser:", storageError);
+          throw storageError;
+        }
       } else {
         // For regular users, use the full validation
         const userSchema = insertUserSchema.extend({
@@ -2316,56 +2329,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Upload evidence files
+  // Upload evidence files with enhanced diagnostics and error handling
   app.post("/api/evidence-files/upload", upload.array("evidence", 10), async (req: Request, res: Response) => {
     try {
+      console.log("POST /api/evidence-files/upload - Request received at", new Date().toISOString());
+      console.log("Content-Type:", req.headers['content-type']);
+      console.log("Files received:", req.files ? (req.files as Express.Multer.File[]).length : 0);
+      console.log("Request body keys:", Object.keys(req.body || {}));
+      console.log("Request body:", { 
+        userId: req.body.userId, 
+        description: req.body.description,
+        tags: req.body.tags
+      });
+      
       // Allow uploads from either authenticated users or those with a temporary userId in the request body
       let userId: number;
-      
-      if (req.isAuthenticated()) {
-        // Use the authenticated user's ID
+
+      // Check for authenticated user first
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        console.log("Request is authenticated, using authenticated user ID:", req.user.id);
         userId = req.user.id;
-      } else if (req.body.userId) {
-        // Use the userId provided in the request for temporary users
-        userId = parseInt(req.body.userId);
-        if (isNaN(userId)) {
-          return res.status(400).json({ message: "Invalid user ID format" });
+      } 
+      // If not authenticated, check for userId in request body
+      else if (req.body && req.body.userId) {
+        try {
+          userId = parseInt(req.body.userId, 10);
+          console.log("Using provided user ID from request body:", userId);
+          
+          if (isNaN(userId) || userId <= 0) {
+            console.error("Invalid user ID format provided:", req.body.userId);
+            return res.status(400).json({ 
+              message: "Invalid user ID format", 
+              details: "User ID must be a positive integer"
+            });
+          }
+          
+          // Verify this is a valid user ID in the database
+          try {
+            console.log("Verifying user exists with ID:", userId);
+            const user = await storage.getUser(userId);
+            
+            if (!user) {
+              console.error("User not found with ID:", userId);
+              return res.status(404).json({ 
+                message: "User not found", 
+                details: "The provided user ID does not exist in the system" 
+              });
+            }
+            
+            console.log("Found valid user:", { 
+              id: user.id, 
+              isTemporary: user.isTemporary,
+              username: user.username 
+            });
+          } catch (userError: any) {
+            console.error("Database error verifying user ID:", userId, userError);
+            return res.status(500).json({ 
+              message: "Error verifying user account", 
+              details: "Could not verify if the user exists in the database",
+              error: userError.message 
+            });
+          }
+        } catch (parseError: any) {
+          console.error("Error parsing user ID:", req.body.userId, parseError);
+          return res.status(400).json({ 
+            message: "Invalid user ID format", 
+            details: "User ID must be a number" 
+          });
         }
-        
-        // Verify this is a valid user ID (and optionally check if it's marked as temporary)
-        const user = await storage.getUser(userId);
-        if (!user) {
-          return res.status(404).json({ message: "User not found" });
-        }
-      } else {
-        return res.status(401).json({ message: "Authentication required or userId must be provided" });
+      } 
+      // No valid authentication or userId provided
+      else {
+        console.error("No valid authentication or userId provided in request");
+        return res.status(401).json({ 
+          message: "Authentication required or userId must be provided",
+          details: "This endpoint requires either an authenticated session or a valid userId in the request body."
+        });
       }
       
+      // Validate files array from multer
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-        return res.status(400).json({ message: "No files uploaded" });
+        console.error("No files uploaded or invalid files format");
+        return res.status(400).json({ 
+          message: "No files uploaded", 
+          details: "Ensure you are sending files with the field name 'evidence'" 
+        });
       }
       
-      const { description, tags } = req.body;
+      const files = req.files as Express.Multer.File[];
+      console.log("Processing upload for", files.length, "files for userId:", userId);
       
+      // Extract metadata from request
+      const { description, tags } = req.body;
+      const tagArray = tags ? tags.split(',').map((tag: string) => tag.trim()) : [];
+      
+      // Process and store each file
       const uploadedFiles = [];
       
-      for (const file of req.files as Express.Multer.File[]) {
-        const newFile = await storage.createEvidenceFile({
-          userId,
-          fileName: file.filename,
+      for (const file of files) {
+        console.log("Processing file:", {
           originalName: file.originalname,
-          filePath: file.path,
-          fileType: file.mimetype,
-          fileSize: file.size,
-          description: description || null,
-          tags: tags ? tags.split(',').map((tag: string) => tag.trim()) : []
+          size: file.size,
+          mimetype: file.mimetype,
+          destination: file.destination,
+          path: file.path,
+          fieldname: file.fieldname
         });
         
-        uploadedFiles.push(newFile);
+        try {
+          // Prepare evidence file data
+          const evidenceFileData = {
+            userId,
+            fileName: file.filename,
+            originalName: file.originalname,
+            filePath: file.path,
+            fileType: file.mimetype,
+            fileSize: file.size,
+            description: description || null,
+            tags: tagArray
+          };
+          
+          console.log("Saving file to database:", {
+            userId: evidenceFileData.userId,
+            fileName: evidenceFileData.fileName,
+            description: evidenceFileData.description
+          });
+          
+          // Create evidence file record in database
+          const newFile = await storage.createEvidenceFile(evidenceFileData);
+          
+          console.log("File saved successfully to database:", { 
+            id: newFile.id, 
+            fileName: newFile.fileName 
+          });
+          
+          uploadedFiles.push(newFile);
+        } catch (fileError: any) {
+          console.error("Error storing file in database:", file.originalname, fileError);
+          
+          // Continue with other files instead of failing completely
+          console.log("Continuing with remaining files");
+        }
+      }
+      
+      // Handle case where no files were successfully processed
+      if (uploadedFiles.length === 0) {
+        console.error("No files were successfully processed");
+        return res.status(500).json({
+          message: "Failed to process any of the uploaded files",
+          details: "Check server logs for more information"
+        });
       }
       
       // Send notification through WebSocket if needed
       if (app.locals.broadcastMessage) {
+        console.log("Broadcasting evidence upload notification via WebSocket");
         app.locals.broadcastMessage({
           type: 'evidence_uploaded',
           userId: userId,
@@ -2374,13 +2492,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }, { userId });
       }
       
+      console.log("Upload completed successfully for", uploadedFiles.length, "files");
       res.status(201).json({ 
         message: "Files uploaded successfully", 
-        files: uploadedFiles
+        files: uploadedFiles,
+        userId: userId,
+        count: uploadedFiles.length
       });
     } catch (error: any) {
       console.error("Error uploading evidence files:", error);
-      res.status(500).json({ message: `Error uploading evidence files: ${error.message}` });
+      console.error("Stack trace:", error.stack);
+      res.status(500).json({ 
+        message: `Server error during evidence file upload: ${error.message}`,
+        errorType: error.name,
+        errorDetails: error.stack
+      });
     }
   });
   

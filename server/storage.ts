@@ -438,10 +438,43 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    try {
+      console.log("Storage: createUser called with data:", { 
+        ...insertUser, 
+        password: '******' // Hide password in logs
+      });
+      
+      // Ensure all required fields have values
+      if (!insertUser.username) {
+        throw new Error("Username is required");
+      }
+      
+      if (!insertUser.password) {
+        throw new Error("Password is required");
+      }
+      
+      // Generate an ID for the new user
+      const id = this.currentUserId++;
+      console.log("Storage: Assigned user ID:", id);
+      
+      // Create the user object
+      const timestamp = new Date();
+      const user: User = { 
+        ...insertUser, 
+        id,
+        createdAt: timestamp,
+        updatedAt: timestamp
+      };
+      
+      // Store the user in the in-memory map
+      this.users.set(id, user);
+      console.log("Storage: User created successfully with ID:", id);
+      
+      return user;
+    } catch (error) {
+      console.error("Storage: Error creating user:", error);
+      throw error;
+    }
   }
 
   async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
@@ -1532,17 +1565,55 @@ export class MemStorage implements IStorage {
   }
   
   async createEvidenceFile(file: InsertEvidenceFile): Promise<EvidenceFile> {
-    const id = this.currentEvidenceFileId++;
-    const now = new Date().toISOString();
-    const newFile: EvidenceFile = {
-      ...file,
-      id,
-      createdAt: now,
-      updatedAt: now,
-      analyzedContent: null
-    };
-    this.evidenceFiles.set(id, newFile);
-    return newFile;
+    try {
+      console.log("Storage: createEvidenceFile called with data:", {
+        userId: file.userId,
+        fileName: file.fileName,
+        originalName: file.originalName,
+        fileType: file.fileType,
+        fileSize: file.fileSize
+      });
+      
+      // Validate essential fields
+      if (!file.userId) {
+        console.error("Storage: Missing required userId for evidence file");
+        throw new Error("User ID is required for evidence file upload");
+      }
+      
+      if (!file.fileName) {
+        console.error("Storage: Missing required fileName for evidence file");
+        throw new Error("File name is required for evidence file upload");
+      }
+      
+      // Verify the user exists
+      const user = this.users.get(file.userId);
+      if (!user) {
+        console.error(`Storage: User with ID ${file.userId} not found for evidence file upload`);
+        throw new Error(`User with ID ${file.userId} not found`);
+      }
+      console.log(`Storage: Verified user exists with ID ${file.userId}`);
+      
+      const id = this.currentEvidenceFileId++;
+      console.log("Storage: Assigned evidence file ID:", id);
+      
+      const now = new Date().toISOString();
+      const newFile: EvidenceFile = {
+        ...file,
+        id,
+        createdAt: now,
+        updatedAt: now,
+        analyzedContent: null
+      };
+      
+      // Store the file
+      this.evidenceFiles.set(id, newFile);
+      console.log("Storage: Evidence file created successfully with ID:", id);
+      
+      return newFile;
+    } catch (error) {
+      console.error("Storage: Error creating evidence file:", error);
+      throw error;
+    }
   }
   
   async updateEvidenceFile(id: number, fileData: Partial<EvidenceFile>): Promise<EvidenceFile | undefined> {
