@@ -114,9 +114,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(publicDir, 'robots.txt'));
   });
   
-  // Serve Google site verification file - direct content approach
+  // Serve Google site verification files - direct content approach
   app.get('/google4b945706e36a5db4.html', (req: Request, res: Response) => {
     res.type('text/html').send('google-site-verification: google4b945706e36a5db4.html');
+  });
+  
+  app.get('/google9fGsDdnUDR_1_WC3hApOV0nkhDs7MQL9ZVA1s5UC5nU.html', (req: Request, res: Response) => {
+    res.type('text/html').send('google-site-verification: 9fGsDdnUDR_1_WC3hApOV0nkhDs7MQL9ZVA1s5UC5nU');
   });
   
   // Configure multer for file uploads
