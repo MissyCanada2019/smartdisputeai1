@@ -20,6 +20,7 @@ import { apiRequest } from "@/lib/queryClient";
 // Form validation schema
 const evidenceFormSchema = z.object({
   // User account information
+  username: z.string().min(4, "Username must be at least 4 characters"),  // Added username field
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z.string().min(1, "First name is required"),
@@ -142,6 +143,7 @@ export default function EvidenceUpload() {
     resolver: zodResolver(evidenceFormSchema),
     defaultValues: {
       // User account info
+      username: formState.username || "",
       email: formState.email || "",
       password: "",
       firstName: formState.firstName || "",
@@ -180,6 +182,7 @@ export default function EvidenceUpload() {
     try {
       // Create the actual user account
       const newUserResponse = await apiRequest("POST", "/api/users", {
+        username: data.username,  // Adding username here
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -209,6 +212,7 @@ export default function EvidenceUpload() {
       setFormState({
         ...formState,
         // User info
+        username: data.username,  // Add username here
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -438,6 +442,27 @@ export default function EvidenceUpload() {
                   {/* Account Information Section */}
                   <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
+                    <div className="mb-4">
+                      <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <input
+                                type="text"
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                placeholder="Choose a username (min. 4 characters)"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
                     <div className="grid md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}

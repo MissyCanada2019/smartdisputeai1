@@ -9,6 +9,7 @@ interface FormState {
   documentId?: number;
   
   // User Account Information
+  username?: string;  // Add username field
   firstName?: string;
   lastName?: string;
   email?: string;
