@@ -123,6 +123,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.type('text/html').send('google-site-verification: 9fGsDdnUDR_1_WC3hApOV0nkhDs7MQL9ZVA1s5UC5nU');
   });
   
+  app.get('/googleKuESneYJdf5D13zZgmGEpGrciobNL2DaEdX-VBEwUyg.html', (req: Request, res: Response) => {
+    res.type('text/html').send('google-site-verification: KuESneYJdf5D13zZgmGEpGrciobNL2DaEdX-VBEwUyg');
+  });
+  
   // Configure multer for file uploads
   const fileStorage = multer.diskStorage({
     destination: function (req, file, cb) {
