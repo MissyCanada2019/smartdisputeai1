@@ -486,6 +486,61 @@ export default function Home() {
         </Link>
       </div>
       
+      {/* How It Works Section - Added for SEO */}
+      <section className="py-12 border-t border-gray-200 mt-16">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How It Works</h2>
+          <p className="text-gray-700 mb-8 text-center">
+            Fill out a simple form → Let our AI draft the documents → Download, send, or submit with confidence.
+          </p>
+          <div className="bg-white p-6 rounded-lg border shadow-sm">
+            <h3 className="text-xl font-semibold mb-4">Our Process:</h3>
+            <ol className="list-decimal pl-5 space-y-3">
+              <li className="text-gray-700">Answer a few questions about your specific situation</li>
+              <li className="text-gray-700">Our AI analyzes your case and creates customized legal documents</li>
+              <li className="text-gray-700">Download your documents in PDF format ready for submission</li>
+              <li className="text-gray-700">Use our guidance for proper filing and follow-up</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+      
+      {/* Why Self-Advocate Section - Added for SEO */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Why Self-Advocate?</h2>
+          <p className="text-gray-700 mb-8 text-center">
+            SmartDispute gives Canadians the power to stand up for their rights — affordably, independently, and with dignity.
+          </p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-3">Financial Barriers</h3>
+              <p className="text-gray-600">
+                Legal representation is expensive. Self-advocacy tools make justice accessible regardless of income.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-3">Power Imbalance</h3>
+              <p className="text-gray-600">
+                When facing landlords, agencies, or corporations, our tools help level the playing field.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-3">Knowledge Gap</h3>
+              <p className="text-gray-600">
+                We provide educational resources to help you understand your rights and navigate the legal system.
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-lg border shadow-sm">
+              <h3 className="text-lg font-semibold mb-3">Canadian-Specific</h3>
+              <p className="text-gray-600">
+                Our resources are tailored to Canadian law, with province-specific guidance when needed.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {/* Trust Indicators */}
       <div className="py-12">
         <Separator className="mb-12" />
