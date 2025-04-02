@@ -130,6 +130,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Serve Google Analytics verification file
+  app.get('/google-analytics-verification.html', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../google-analytics-verification.html');
+    res.sendFile(filePath);
+  });
+  
+  // Serve Google Analytics JS file
+  app.get('/ga4-analytics.js', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../ga4-analytics.js');
+    res.set('Content-Type', 'application/javascript');
+    res.sendFile(filePath);
+  });
+  
+  // Serve Google Tag Manager HTML file
+  app.get('/gtm.html', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../client/public/gtm.html');
+    res.sendFile(filePath);
+  });
+  
+  // Serve Google Tag Manager JavaScript file
+  app.get('/gtm.js', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../gtm.js');
+    res.set('Content-Type', 'application/javascript');
+    res.sendFile(filePath);
+  });
+  
+  // Serve Google Search Console verification file
+  app.get('/google-search-console-verification.html', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../client/public/google-search-console-verification.html');
+    res.sendFile(filePath);
+  });
+  
   // Configure multer for file uploads
   const fileStorage = multer.diskStorage({
     destination: function (req, file, cb) {

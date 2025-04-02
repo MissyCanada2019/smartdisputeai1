@@ -1,0 +1,75 @@
+{
+    "exportFormatVersion": 2,
+    "exportTime": "2025-04-02 12:07:06",
+    "containerVersion": {
+        "path": "accounts/6276044276/containers/210172587/versions/0",
+        "accountId": "6276044276",
+        "containerId": "210172587",
+        "containerVersionId": "0",
+        "container": {
+            "path": "accounts/6276044276/containers/210172587",
+            "accountId": "6276044276",
+            "containerId": "210172587",
+            "name": "www.smartdisputesaicanada",
+            "publicId": "GTM-5L7PTHJK",
+            "usageContext": [
+                "WEB"
+            ],
+            "fingerprint": "1743595007261",
+            "tagManagerUrl": "https://tagmanager.google.com/#/container/accounts/6276044276/containers/210172587/workspaces?apiLink=container",
+            "features": {
+                "supportUserPermissions": true,
+                "supportEnvironments": true,
+                "supportWorkspaces": true,
+                "supportGtagConfigs": false,
+                "supportBuiltInVariables": true,
+                "supportClients": false,
+                "supportFolders": true,
+                "supportTags": true,
+                "supportTemplates": true,
+                "supportTriggers": true,
+                "supportVariables": true,
+                "supportVersions": true,
+                "supportZones": true,
+                "supportTransformations": false
+            },
+            "tagIds": [
+                "GTM-5L7PTHJK"
+            ]
+        },
+        "builtInVariable": [
+            {
+                "accountId": "6276044276",
+                "containerId": "210172587",
+                "type": "PAGE_URL",
+                "name": "Page URL"
+            },
+            {
+                "accountId": "6276044276",
+                "containerId": "210172587",
+                "type": "PAGE_HOSTNAME",
+                "name": "Page Hostname"
+            },
+            {
+                "accountId": "6276044276",
+                "containerId": "210172587",
+                "type": "PAGE_PATH",
+                "name": "Page Path"
+            },
+            {
+                "accountId": "6276044276",
+                "containerId": "210172587",
+                "type": "REFERRER",
+                "name": "Referrer"
+            },
+            {
+                "accountId": "6276044276",
+                "containerId": "210172587",
+                "type": "EVENT",
+                "name": "Event"
+            }
+        ],
+        "fingerprint": "1743595626238",
+        "tagManagerUrl": "https://tagmanager.google.com/#/versions/accounts/6276044276/containers/210172587/versions/0?apiLink=version"
+    }
+}
