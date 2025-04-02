@@ -114,9 +114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(publicDir, 'robots.txt'));
   });
   
-  // Serve Google site verification file
+  // Serve Google site verification file - direct content approach
   app.get('/google4b945706e36a5db4.html', (req: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, '..', 'google4b945706e36a5db4.html'));
+    res.type('text/html').send('google-site-verification: google4b945706e36a5db4.html');
   });
   
   // Configure multer for file uploads
