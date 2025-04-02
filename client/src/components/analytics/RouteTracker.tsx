@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { trackPageView } from '@/lib/analytics';
+import { useAnalytics } from './AnalyticsProvider';
 
 /**
  * Component to track route changes and send them to analytics
@@ -8,21 +9,17 @@ import { trackPageView } from '@/lib/analytics';
  */
 export function RouteTracker() {
   const [location] = useLocation();
+  const { hasConsent, isInitialized } = useAnalytics();
 
   useEffect(() => {
-    // Track page view when location changes
-    const pageTitle = getPageTitle(location);
-    trackPageView(location, pageTitle);
-    
-    // For Google Analytics direct integration (as backup)
-    if (typeof window !== 'undefined' && 'gtag' in window) {
-      window.gtag('config', 'G-HLQJ5B43NJ', {
-        page_path: location,
-        page_title: pageTitle
-      });
+    // Only track page views if the user has given consent and analytics is initialized
+    if (hasConsent && isInitialized) {
+      const pageTitle = getPageTitle(location);
+      trackPageView(location, pageTitle);
     }
-  }, [location]);
+  }, [location, hasConsent, isInitialized]);
 
+  // The component doesn't render anything visible
   return null;
 }
 
@@ -30,26 +27,61 @@ export function RouteTracker() {
  * Helper function to determine page title based on route
  */
 function getPageTitle(path: string): string {
-  if (path === '/') return 'Home | SmartDispute.ai';
+  // Strip leading slash and split by segments
+  const routePath = path.startsWith('/') ? path.substring(1) : path;
   
-  // Extract page name from path
-  const pageName = path.split('/').filter(Boolean).pop() || '';
-  const formattedPageName = toTitleCase(pageName.replace(/-/g, ' '));
-  
-  return `${formattedPageName} | SmartDispute.ai`;
+  if (routePath === '') {
+    return 'Home';
+  }
+
+  // Handle dynamic routes with IDs
+  if (routePath.includes('/')) {
+    const segments = routePath.split('/');
+    
+    // Special case for resource detail pages
+    if (segments[0] === 'resources' && segments.length > 1) {
+      return 'Resource Detail';
+    }
+    
+    // Special case for document pages
+    if (segments[0] === 'documents' && segments.length > 1) {
+      return 'Document';
+    }
+    
+    // Default handling for other route patterns
+    return toTitleCase(segments[0]);
+  }
+
+  // Map specific routes to titles
+  const routeTitles: Record<string, string> = {
+    'login': 'Login',
+    'signup': 'Sign Up',
+    'resources': 'Resources',
+    'documents': 'Documents',
+    'dashboard': 'Dashboard',
+    'profile': 'User Profile',
+    'evidence': 'Evidence Upload',
+    'tenant-dispute': 'Tenant Dispute',
+    'cas-dispute': 'CAS Dispute',
+    'legal-resources': 'Legal Resources',
+    'community': 'Community',
+    'about': 'About Us',
+    'contact': 'Contact Us',
+    'privacy': 'Privacy Policy',
+    'terms': 'Terms of Service',
+    'faq': 'FAQ',
+    'help': 'Help Center'
+  };
+
+  return routeTitles[routePath] || toTitleCase(routePath);
 }
 
 /**
  * Converts a string to title case format
  */
 function toTitleCase(str: string): string {
-  if (!str) return 'Page';
-  
   return str
-    .split(' ')
-    .map(word => {
-      if (word.length === 0) return '';
-      return word[0].toUpperCase() + word.slice(1).toLowerCase();
-    })
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
