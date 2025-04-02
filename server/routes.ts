@@ -148,6 +148,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/ga4-analytics.js', (req: Request, res: Response) => {
     const filePath = path.join(__dirname, '../ga4-analytics.js');
     res.set('Content-Type', 'application/javascript');
+  });
+  
+  // Serve standalone login page
+  app.get('/standalone-login', (req: Request, res: Response) => {
+    const filePath = path.join(__dirname, '../login.html');
     res.sendFile(filePath);
   });
   
