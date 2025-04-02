@@ -1,6 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 app.use(express.json());
@@ -24,6 +30,17 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Serve Google verification file directly from the root directory
+app.use(express.static(path.join(__dirname, '..'), {
+  index: false,
+  // Only allow specific files to be served from the root
+  setHeaders: (res, filePath) => {
+    if (path.basename(filePath) === 'google4b945706e36a5db4.html') {
+      res.setHeader('Content-Type', 'text/html');
+    }
+  }
+}));
 
 (async () => {
   const server = await registerRoutes(app);
