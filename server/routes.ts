@@ -33,6 +33,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { dirname } from "path";
+import registerDirectEvidenceRoutes from "./directEvidence";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4014,6 +4015,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/provinces", (req: Request, res: Response) => {
     res.json(provinces);
   });
+
+  // Register direct evidence routes
+  app.use("/api/direct-evidence", registerDirectEvidenceRoutes(storage));
 
   return httpServer;
 }
