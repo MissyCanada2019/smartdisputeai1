@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useFormState } from "@/lib/formContext";
 import { useToast } from "@/hooks/use-toast";
 import ProgressTracker from "@/components/common/ProgressTracker";
@@ -320,8 +320,8 @@ export default function EvidenceUpload() {
       <ProgressTracker currentStep={1} />
 
       <div className="mb-8 text-center md:text-left">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Tell Us About Your Issue</h1>
-        <p className="text-gray-600">Upload evidence and describe your situation so we can help you create the right document</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Create Your Account</h1>
+        <p className="text-gray-600">Sign up to access personalized legal help, document generation, and evidence analysis</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -642,6 +642,13 @@ export default function EvidenceUpload() {
                     >
                       {isAnalyzing ? 'Analyzing Your Evidence...' : 'Create Account & Continue'}
                     </Button>
+                  </div>
+                  
+                  <div className="mt-6 text-center">
+                    <span className="text-sm text-gray-500">Already have an account? </span>
+                    <Link href="/login" className="text-primary hover:underline text-sm font-medium">
+                      Login Instead
+                    </Link>
                   </div>
                 </form>
               </Form>

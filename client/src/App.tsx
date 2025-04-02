@@ -8,6 +8,7 @@ import Footer from "@/components/layout/Footer";
 import ChatBotModal from "@/components/chatbot/ChatBotModal";
 import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
+import MaintenanceNotification from "@/components/common/MaintenanceNotification";
 import { LeadCaptureProvider } from "@/components/marketing/LeadCaptureProvider";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
@@ -188,6 +189,7 @@ function App() {
             <ChatBotModal />
             <CookieConsentBanner />
             <AutomaticUpdates />
+            <MaintenanceNotification />
           </div>
           <Toaster />
         </LeadCaptureProvider>
