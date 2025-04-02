@@ -105,13 +105,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }, 0);
   
-  // Serve sitemap.xml and robots.txt from the client/public directory
+  // Serve sitemap.xml and robots.txt from the root directory
   app.get('/sitemap.xml', (req: Request, res: Response) => {
-    res.sendFile(path.join(publicDir, 'sitemap.xml'));
+    const filePath = path.join(__dirname, '../sitemap.xml');
+    res.sendFile(filePath);
   });
   
   app.get('/robots.txt', (req: Request, res: Response) => {
-    res.sendFile(path.join(publicDir, 'robots.txt'));
+    const filePath = path.join(__dirname, '../robots.txt');
+    res.sendFile(filePath);
   });
   
   // Serve Google site verification files via file system

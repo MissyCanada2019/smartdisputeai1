@@ -1,8 +1,9 @@
 /**
- * Analytics utility functions for tracking user behavior
+ * Analytics utility functions for tracking user interactions
+ * This file contains all tracking methods for Google Analytics 4 (GA4) via Google Tag Manager (GTM)
  */
 
-// Extend Window interface to include Google Analytics and GTM properties
+// Extend window interface to include dataLayer and gtag
 declare global {
   interface Window {
     dataLayer: any[];
@@ -17,28 +18,25 @@ declare global {
  * @param title Page title
  */
 export function trackPageView(path: string, title: string): void {
-  if (!window.gtag) {
-    console.warn('[Analytics] gtag not available for page view tracking');
+  if (!window.dataLayer) {
+    console.warn('Analytics not initialized: dataLayer not found');
     return;
   }
-
-  window.gtag('event', 'page_view', {
-    page_path: path,
-    page_title: title,
-    page_location: window.location.origin + path,
-    send_to: 'G-HLQJ5B43NJ'
-  });
-
-  if (window.dataLayer) {
+  
+  try {
+    // Push the page view event to dataLayer
     window.dataLayer.push({
       event: 'page_view',
       page_path: path,
-      page_title: title
+      page_title: title,
+      page_location: window.location.href
     });
-  }
-
-  if (import.meta.env.DEV) {
-    console.log(`[Analytics] Page View: ${title} (${path})`);
+    
+    if (import.meta.env.DEV) {
+      console.log(`[Analytics] Page view: ${title} (${path})`);
+    }
+  } catch (error) {
+    console.error('[Analytics] Error tracking page view:', error);
   }
 }
 
@@ -54,29 +52,27 @@ export function trackEvent(
   category: string,
   properties: Record<string, any> = {}
 ): void {
-  if (!window.gtag) {
-    console.warn(`[Analytics] gtag not available for event tracking: ${eventName}`);
+  if (!window.dataLayer) {
+    console.warn('Analytics not initialized: dataLayer not found');
     return;
   }
-
-  const eventData = {
-    ...properties,
-    event_category: category,
-    send_to: 'G-HLQJ5B43NJ'
-  };
-
-  window.gtag('event', eventName, eventData);
-
-  if (window.dataLayer) {
-    window.dataLayer.push({
+  
+  try {
+    // Prepare event data with standard properties
+    const eventData = {
       event: eventName,
       event_category: category,
       ...properties
-    });
-  }
-
-  if (import.meta.env.DEV) {
-    console.log(`[Analytics] Event: ${eventName} (${category})`, properties);
+    };
+    
+    // Push the event to dataLayer
+    window.dataLayer.push(eventData);
+    
+    if (import.meta.env.DEV) {
+      console.log(`[Analytics] Event tracked: ${eventName} (${category})`, properties);
+    }
+  } catch (error) {
+    console.error('[Analytics] Error tracking event:', error);
   }
 }
 
@@ -92,32 +88,12 @@ export function trackConversion(
   value?: number,
   properties: Record<string, any> = {}
 ): void {
-  if (!window.gtag) {
-    console.warn(`[Analytics] gtag not available for conversion tracking: ${conversionName}`);
-    return;
-  }
-
-  const conversionData = {
+  const eventData = {
     ...properties,
-    event_category: 'conversion',
-    value: value,
-    send_to: 'G-HLQJ5B43NJ'
+    value
   };
-
-  window.gtag('event', conversionName, conversionData);
-
-  if (window.dataLayer) {
-    window.dataLayer.push({
-      event: 'conversion',
-      conversion_name: conversionName,
-      conversion_value: value,
-      ...properties
-    });
-  }
-
-  if (import.meta.env.DEV) {
-    console.log(`[Analytics] Conversion: ${conversionName}`, { value, ...properties });
-  }
+  
+  trackEvent('conversion', conversionName, eventData);
 }
 
 /**
@@ -128,11 +104,11 @@ export function trackConversion(
  * @param shareMethod How it was shared (e.g., 'email', 'facebook', 'twitter')
  */
 export function trackResourceShare(
-  resourceId: number | string,
+  resourceId: number,
   resourceType: string,
   shareMethod: string
 ): void {
-  trackEvent('share', 'engagement', {
+  trackEvent('resource_share', 'sharing', {
     resource_id: resourceId,
     resource_type: resourceType,
     share_method: shareMethod
@@ -146,9 +122,9 @@ export function trackResourceShare(
  * @param source Where the user signed up from (e.g., 'homepage', 'resource_page')
  */
 export function trackSignup(method: string, source: string): void {
-  trackConversion('sign_up', undefined, {
-    method,
-    source
+  trackEvent('sign_up', 'account', {
+    signup_method: method,
+    signup_source: source
   });
 }
 
@@ -180,10 +156,10 @@ export function trackFormSubmission(
  */
 export function trackDocumentGeneration(
   documentType: string,
-  templateId: number | string,
+  templateId: number,
   isCustomized: boolean
 ): void {
-  trackEvent('document_generate', 'engagement', {
+  trackEvent('generate_document', 'document', {
     document_type: documentType,
     template_id: templateId,
     customized: isCustomized
@@ -240,7 +216,7 @@ export function trackEvidenceUpload(
   fileTypes: string[],
   totalSize: number
 ): void {
-  trackEvent('evidence_upload', 'engagement', {
+  trackEvent('evidence_upload', 'evidence', {
     file_count: fileCount,
     file_types: fileTypes.join(','),
     total_size: totalSize
@@ -287,11 +263,11 @@ export function trackCASDisputeProgress(
  * @param province Related province (if applicable)
  */
 export function trackResourceInteraction(
-  resourceId: number | string,
+  resourceId: number,
   action: string,
   province?: string
 ): void {
-  trackEvent('resource_interaction', 'engagement', {
+  trackEvent('resource_interaction', 'resource', {
     resource_id: resourceId,
     action,
     province
@@ -308,9 +284,9 @@ export function trackResourceInteraction(
 export function trackCommunityEngagement(
   action: string,
   contentType: string,
-  contentId: number | string
+  contentId: number
 ): void {
-  trackEvent('community_engagement', 'engagement', {
+  trackEvent('community_engagement', 'community', {
     action,
     content_type: contentType,
     content_id: contentId
@@ -329,7 +305,7 @@ export function trackAIProcessCompletion(
   timeToComplete: number,
   successRate: number
 ): void {
-  trackEvent('ai_process_complete', 'engagement', {
+  trackEvent('ai_process_completion', 'ai', {
     process_type: processType,
     time_to_complete: timeToComplete,
     success_rate: successRate
@@ -344,11 +320,11 @@ export function trackAIProcessCompletion(
  * @param format Format of the download (e.g., 'pdf', 'docx')
  */
 export function trackDocumentDownload(
-  documentId: number | string,
+  documentId: number,
   documentType: string,
   format: string
 ): void {
-  trackEvent('document_download', 'engagement', {
+  trackEvent('document_download', 'document', {
     document_id: documentId,
     document_type: documentType,
     format
@@ -369,7 +345,8 @@ export function trackPayment(
   serviceType: string,
   paymentMethod: string
 ): void {
-  trackConversion('purchase', amount, {
+  trackEvent('payment', 'ecommerce', {
+    amount,
     currency,
     service_type: serviceType,
     payment_method: paymentMethod
@@ -383,7 +360,7 @@ export function trackPayment(
  * @param fieldsUpdated Array of fields that were updated
  */
 export function trackProfileUpdate(
-  userId: number | string,
+  userId: number,
   fieldsUpdated: string[]
 ): void {
   trackEvent('profile_update', 'account', {

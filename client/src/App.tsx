@@ -10,11 +10,11 @@ import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
 import MaintenanceNotification from "@/components/common/MaintenanceNotification";
 import { LeadCaptureProvider } from "@/components/marketing/LeadCaptureProvider";
-import { AnalyticsProvider } from "@/components/analytics";
+import { AnalyticsProvider, RouteTracker } from "@/components/analytics";
 import { useEffect } from "react";
 import { webSocketService, MessageType, useWebSocketNotifications } from "@/lib/webSocketService";
 import { useToast } from "@/hooks/use-toast";
-import { trackPageView } from "@/lib/analytics"; // Updated import from new analytics module
+import { trackPageView } from "@/lib/analytics";
 import { useLeadCapture, LeadCaptureType } from "@/hooks/use-lead-capture";
 
 import NotFound from "@/pages/not-found";
@@ -113,17 +113,6 @@ function App() {
   const { toast } = useToast();
   const [location] = useLocation();
   
-  // Track page views when location changes
-  useEffect(() => {
-    // Only track if user has consented to cookies
-    const hasConsented = localStorage.getItem('cookieConsent') === 'true';
-    if (hasConsented) {
-      // Get page title based on the current route
-      const pageTitle = location.replace(/^\//, '') || 'Home';
-      trackPageView(location, pageTitle);
-    }
-  }, [location]);
-  
   useEffect(() => {
     // Initialize WebSocket connection
     webSocketService.connect();
@@ -184,6 +173,8 @@ function App() {
       <FormProvider>
         <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
           <AnalyticsProvider>
+            {/* RouteTracker component for automatic page view tracking */}
+            <RouteTracker />
             <div className="flex flex-col min-h-screen bg-gray-50">
               <Header />
               <main className="flex-grow">
