@@ -45,6 +45,7 @@ import FileUploaderDemo from "@/pages/file-uploader-demo";
 import EvidenceUpload from "@/pages/evidence-upload";
 import CaseAnalysis from "@/pages/case-analysis";
 import Services from "@/pages/services";
+import LTBResourcesPage from "@/pages/ltb-resources";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/chat" component={Chat} />
       <Route path="/resources" component={Resources} />
+      <Route path="/resources/ltb" component={LTBResourcesPage} />
       <Route path="/services" component={Services} />
       <Route path="/faq" component={FAQ} />
       

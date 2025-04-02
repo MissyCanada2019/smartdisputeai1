@@ -130,6 +130,24 @@ export default function Resources() {
             Access free legal resources and information specific to your province and situation.
           </p>
         </div>
+        
+        {/* Special LTB Resources Banner */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <div className="bg-gradient-to-r from-red-50 to-white dark:from-red-950/20 dark:to-gray-900/50 border border-red-200 dark:border-red-800/30 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
+            <div className="flex-1 mb-4 md:mb-0">
+              <h2 className="text-2xl font-bold mb-2">Ontario Tenant Rights Resources</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">
+                Get help fighting unfair evictions and navigating the LTB process with our specialized tenant advocacy resources.
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-400 font-medium">
+                Currently 427-day average wait time for tenant applications at the Landlord and Tenant Board
+              </p>
+            </div>
+            <Button size="lg" className="bg-red-600 hover:bg-red-700" asChild>
+              <a href="/resources/ltb">Access Tenant Resources</a>
+            </Button>
+          </div>
+        </div>
 
         {/* Filters section */}
         <div className="bg-gray-50 p-4 rounded-lg mb-8 border">

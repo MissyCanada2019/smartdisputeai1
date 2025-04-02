@@ -12,9 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileCheck, FileWarning, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileCheck, FileWarning, AlertCircle, CheckCircle, Loader2, Scale } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import CanLIIAnalyzer from "@/components/evidence/CanLIIAnalyzer";
 
 interface Evidence {
   id: number;
@@ -190,8 +191,9 @@ export default function CaseAnalysis() {
       </div>
 
       <Tabs defaultValue="evidence" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
+        <TabsList className="grid w-full grid-cols-3 mb-8">
           <TabsTrigger value="evidence">Select Evidence</TabsTrigger>
+          <TabsTrigger value="canlii">CanLII Analysis</TabsTrigger>
           <TabsTrigger value="results" disabled={!analysisResult}>Analysis Results</TabsTrigger>
         </TabsList>
         
@@ -262,6 +264,20 @@ export default function CaseAnalysis() {
                 "Analyze Selected Evidence"
               )}
             </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="canlii">
+          <div className="mb-2">
+            <Card className="bg-gradient-to-r from-blue-50 to-white dark:from-blue-950/20 dark:to-gray-900/50 border border-blue-200 dark:border-blue-800/30 shadow-sm mb-6">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-400 mb-1">CanLII Legal Precedent Analysis</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Analyze your evidence against Canadian legal precedents from CanLII to strengthen your case arguments and build a more compelling legal position.
+                </p>
+              </CardContent>
+            </Card>
+            <CanLIIAnalyzer />
           </div>
         </TabsContent>
         
