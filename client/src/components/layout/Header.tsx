@@ -50,7 +50,7 @@ export default function Header() {
         </nav>
         
         <div className="flex items-center space-x-4">
-          <a href="#" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</a>
+          <Link href="/login" className="hidden md:inline-block text-gray-600 hover:text-primary">Sign In</Link>
           <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
             Get Started
           </Link>
