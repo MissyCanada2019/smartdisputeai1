@@ -1,0 +1,24 @@
+Troubleshooting
+The following verification errors can occur with Google Analytics tracking code verification:
+
+No Analytics code found ("We could not find any Google Analytics tracking codes on the index page of your site")
+No Google Analytics tracking code was found on the property's homepage.
+Did you put the Analytics snippet in the right location of the home page? Does the non-logged-in homepage contain your snippet?
+View the rendered source for your homepage and look for Google Analytics tracking code on the page. If not present, your site doesn't use (or hasn't properly administered) Google Analytics.
+Malformed code ("The Google Analytics tracking code on your site looks malformed")
+Code that seems to be Google Analytics tracking code is found on the page, but it seems to be malformed. Be sure to use the Analytics tracking code exactly as provided.
+Old Google Analytics snippet found ("The Google Analytics tracking code on your site uses the traditional snippet")
+An older version of the Analytics code is present on the homepage; Search Console supports only the latest version of the Google Analytics snippet. An older snippet contains either _gat. or _getTracker|urchin.js in the snippet.
+Google Tag Manager code found ("We found a Google Tag Manager snippet in your site")
+Search Console found a Google Tag Manager snippet on the page, but no Google Analytics snippet. Try verifying this property using the Google Analytics method.
+Wrong snippet type ("We found a third party tag manager snippet in your site")
+Be sure that you are using a Google Analytics snippet on the page.
+Snippet in wrong location ("The Google Analytics tracking code on your site is in the wrong location on the page)
+The snippet must be in the <head> section of your home page. You can verify this by viewing the rendered source for your homepage.
+You don't have a Google Analytics account ("You have not yet created an account in Google Analytics")
+You must have a valid Google Analytics account, the account must be used on the site, you must be signed in to Search Console using the Google account used to access that Google Analytics account, and you must have Edit permissions on that Google Analytics account.
+No views created ("You have not yet created any website views in Google Analytics")
+You have a Google Analytics property without any views. You must create a view in this property before you can use Google Analytics to verify site ownership.
+Insufficient permission ("You must have "edit" rights in this Analytics web property to use this verification method")
+You need to have edit rights on the Google Analytics property used in this website. Be sure that you're logged in to Search Console with an account that has edit rights in Google Analytics.
+Additional common verification problems are listed below.
