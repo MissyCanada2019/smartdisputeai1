@@ -11,6 +11,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Create a local variable to store court rules analysis
+let lastCourtRulesAnalysis: any[] = [];
+
 // Initialize router
 const router = Router();
 
@@ -287,7 +290,7 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
           messages: [
             {
               role: "system",
-              content: "You are a legal expert specializing in Canadian law. Analyze the case details, evidence, legal issues, and relevant case law to provide a comprehensive case assessment."
+              content: "You are a legal expert specializing in Canadian law. Analyze the case details, evidence, legal issues, and relevant case law to provide a comprehensive case assessment. Consider both substantive legal principles and procedural requirements from Canadian Court Rules that would impact the case."
             },
             {
               role: "user",
@@ -428,6 +431,15 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
         recommendedForms = [];
       }
       
+      // Prepare procedural assessment from court rules if available
+      let proceduralAssessment = "";
+      if (lastCourtRulesAnalysis && lastCourtRulesAnalysis.length > 0) {
+        proceduralAssessment = "Based on Canadian Court Rules, the following procedural considerations apply:\n\n" + 
+          lastCourtRulesAnalysis.map(rule => 
+            `- ${rule.rule_name} (${rule.jurisdiction}): ${rule.description}`
+          ).join("\n\n");
+      }
+      
       // Create a case analysis record
       const caseAnalysisData = {
         userId: 1, // Special user ID for anonymous analyses (admin user)
@@ -439,7 +451,8 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
         meritWeight: 0,
         meritAssessment: meritAssessment || "No detailed merit assessment available.",
         predictedOutcome: "",
-        meritFactors: { relevantCases }
+        meritFactors: { relevantCases },
+        procedural_assessment: proceduralAssessment // Added for court rules integration
       };
       
       const newCaseAnalysis = await storage.createCaseAnalysis(caseAnalysisData);
@@ -453,7 +466,8 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
           recommendedForms: recommendedForms,
           caseSummary: caseSummary,
           meritAssessment: meritAssessment,
-          meritScore: meritScore
+          meritScore: meritScore,
+          procedural_assessment: proceduralAssessment // Added for court rules integration
         }
       });
       
@@ -482,7 +496,13 @@ async function simulateCanLIISearch(searchQueries: string[], legalContext: strin
       messages: [
         {
           role: "system",
-          content: `You are an expert on Canadian legal cases. Generate 3-5 relevant case law examples from CanLII that would be relevant to the legal issues described. Format your response as a JSON array with each case having these fields: "title" (case name), "citation" (proper legal citation), "year", "jurisdiction" (e.g., "ON", "BC", "Federal"), "url" (simulated CanLII URL), and "summary" (1-2 sentence description of the case and its relevance).`
+          content: `You are an expert on Canadian legal cases and court rules. 
+          
+          Generate 3-5 relevant case law examples from CanLII that would be relevant to the legal issues described. 
+          
+          Format your response as a JSON object with:
+          1. "cases": an array with each case having these fields: "title" (case name), "citation" (proper legal citation), "year", "court" (e.g., "Ontario Superior Court", "BC Court of Appeal"), "url" (simulated CanLII URL), "relevance" (score from 1-10), and "key_points" (array of 2-3 bullet points about the case's significance).
+          2. "court_rules": an array of applicable court rules with: "rule_name", "jurisdiction", "description", and "relevance" (score from 1-10).`
         },
         {
           role: "user",
@@ -492,17 +512,24 @@ async function simulateCanLIISearch(searchQueries: string[], legalContext: strin
             Search Queries:
             ${searchQueries.join('\n')}
             
-            Please provide relevant Canadian legal cases that would show up in CanLII for these issues.
+            Please provide relevant Canadian legal cases from CanLII and applicable court rules for these issues.
           `
         }
       ],
       temperature: 0.7,
       response_format: { type: "json_object" },
-      max_tokens: 1000,
+      max_tokens: 1500,
     });
     
     const responseText = simulatedResponse.choices[0].message.content || "{}";
     const parsedResponse = JSON.parse(responseText);
+    
+    // Add court rules to the analysis for processing in the case analysis section
+    if (parsedResponse.court_rules && Array.isArray(parsedResponse.court_rules)) {
+      // We'll store this for later use in the case analysis
+      lastCourtRulesAnalysis = parsedResponse.court_rules;
+    }
+    
     return parsedResponse.cases || [];
   } catch (error) {
     console.error("Error simulating CanLII search:", error);

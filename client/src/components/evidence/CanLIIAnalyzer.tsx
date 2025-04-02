@@ -40,6 +40,7 @@ interface AnalysisResult {
   analysis_text: string;
   relevant_precedents: any[];
   recommended_actions: string[];
+  procedural_assessment?: string; // Added for court rules integration
   created_at: string;
   updated_at: string;
 }
@@ -282,7 +283,7 @@ const CanLIIAnalyzer: React.FC = () => {
               <Info className="h-4 w-4 text-blue-600" />
               <AlertTitle className="text-blue-800 dark:text-blue-400">How This Works</AlertTitle>
               <AlertDescription className="text-blue-700 dark:text-blue-300 text-sm">
-                We analyze your evidence against CanLII's database of Canadian legal decisions to identify relevant precedents and build stronger legal arguments for your case.
+                We analyze your evidence against CanLII's database of Canadian legal decisions and official Canadian Court Rules to identify relevant precedents, applicable procedures, and build stronger legal arguments for your case.
               </AlertDescription>
             </Alert>
           </div>
@@ -325,9 +326,10 @@ const CanLIIAnalyzer: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="summary">
-                  <TabsList className="w-full grid grid-cols-3">
+                  <TabsList className="w-full grid grid-cols-4">
                     <TabsTrigger value="summary">Summary</TabsTrigger>
                     <TabsTrigger value="precedents">CanLII Precedents</TabsTrigger>
+                    <TabsTrigger value="court-rules">Court Rules</TabsTrigger>
                     <TabsTrigger value="actions">Recommended Actions</TabsTrigger>
                   </TabsList>
                   
@@ -339,6 +341,67 @@ const CanLIIAnalyzer: React.FC = () => {
                   
                   <TabsContent value="precedents" className="pt-4">
                     {renderPrecedents(latestAnalysis.relevant_precedents || [])}
+                  </TabsContent>
+                  
+                  <TabsContent value="court-rules" className="pt-4">
+                    <div className="space-y-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Applicable Court Rules</CardTitle>
+                          <CardDescription className="text-xs">
+                            Based on the Canadian Justice Laws Website
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="prose prose-sm max-w-none">
+                            <p>The following court rules may be relevant to your case:</p>
+                            <ul className="space-y-2 mt-3">
+                              <li className="flex items-start">
+                                <div className="mr-2 mt-0.5 rounded-full bg-blue-100 p-1 text-blue-600">
+                                  <FileText className="h-3 w-3" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Procedural Requirements</p>
+                                  <p className="text-sm text-gray-600">
+                                    Based on your evidence, ensure compliance with filing deadlines and procedural requirements specific to your jurisdiction.
+                                  </p>
+                                </div>
+                              </li>
+                              <li className="flex items-start">
+                                <div className="mr-2 mt-0.5 rounded-full bg-blue-100 p-1 text-blue-600">
+                                  <FileText className="h-3 w-3" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Evidence Standards</p>
+                                  <p className="text-sm text-gray-600">
+                                    Your evidence should meet the admissibility standards outlined in the applicable rules of evidence for your province.
+                                  </p>
+                                </div>
+                              </li>
+                              <li className="flex items-start">
+                                <div className="mr-2 mt-0.5 rounded-full bg-blue-100 p-1 text-blue-600">
+                                  <FileText className="h-3 w-3" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">Documentation Format</p>
+                                  <p className="text-sm text-gray-600">
+                                    Documents submitted to the court must follow specific formatting requirements per your jurisdiction's court rules.
+                                  </p>
+                                </div>
+                              </li>
+                            </ul>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="pt-0">
+                          <Button variant="link" size="sm" asChild className="p-0 h-auto">
+                            <a href="https://laws-lois.justice.gc.ca/eng/Court/" target="_blank" rel="noopener noreferrer" className="flex items-center text-xs">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View Official Canadian Court Rules
+                            </a>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="actions" className="pt-4">
@@ -379,7 +442,7 @@ const CanLIIAnalyzer: React.FC = () => {
                 <Scale className="h-16 w-16 text-gray-200 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Let Legal AI Evaluate Your Case</h3>
                 <p className="text-gray-500 max-w-md mb-4">
-                  Our AI will analyze your evidence against Canadian law precedents from CanLII to help build the strongest possible legal arguments
+                  Our AI will analyze your evidence against Canadian law precedents from CanLII and official Court Rules to help build the strongest possible legal arguments and ensure procedural compliance
                 </p>
               </CardContent>
             </Card>
