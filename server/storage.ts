@@ -475,14 +475,16 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
+    // Make username lookup case-insensitive
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.username.toLowerCase() === username.toLowerCase(),
     );
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
+    // Make email lookup case-insensitive as well
     return Array.from(this.users.values()).find(
-      (user) => user.email === email,
+      (user) => user.email.toLowerCase() === email.toLowerCase(),
     );
   }
 
