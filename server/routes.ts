@@ -800,9 +800,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/login", async (req: Request, res: Response) => {
     try {
+      console.log("Login request received:", JSON.stringify(req.body));
+      
+      // Log all available users (debugging only)
+      const allUsers = Array.from((storage as any).users.values());
+      console.log(`Available users (${allUsers.length}):`, allUsers.map(u => u.username));
+      console.log("Full user data for debugging:", JSON.stringify(allUsers, (key, value) => 
+        key === 'password' ? '******' : value));
+      
       // Validate request body
       const validationResult = loginSchema.safeParse(req.body);
       if (!validationResult.success) {
+        console.log("Validation failed:", validationResult.error.format());
         return res.status(400).json({ 
           message: "Invalid login data", 
           errors: validationResult.error.format() 
@@ -810,18 +819,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { username, password } = validationResult.data;
+      console.log("Looking for user:", username);
       
       // Find user by username
       const user = await storage.getUserByUsername(username);
+      console.log("User found:", user ? "Yes" : "No");
+      
       if (!user) {
+        console.log("User not found in database");
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
-      // In a real application, we would properly hash passwords,
-      // but for this demo, we'll do a simple comparison
-      if (user.password !== password) {
-        return res.status(401).json({ message: "Invalid username or password" });
+      // Check if password is using the new hash format (salt:hash)
+      console.log("Comparing passwords, expected:", user.password.substring(0, 1) + "***");
+      
+      if (user.password.includes(':')) {
+        // New format with salt:hash
+        const [salt, storedHash] = user.password.split(':');
+        const inputHash = require('crypto').pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
+        
+        if (storedHash !== inputHash) {
+          console.log("Password hash mismatch");
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
+      } else {
+        // Legacy format with plain text comparison
+        if (user.password !== password) {
+          console.log("Password mismatch (legacy format)");
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
       }
+      
+      console.log("Login successful for user:", username);
       
       // Return user data (excluding password)
       const { password: _, ...userData } = user;

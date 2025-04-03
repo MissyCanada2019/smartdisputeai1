@@ -186,7 +186,7 @@
     </div>
 
     <div class="info message">
-      <strong>Test Account:</strong> You can use <strong>username:</strong> testuser, <strong>password:</strong> password123
+      <strong>Test Account:</strong> You can use <strong>username:</strong> demouser, <strong>password:</strong> password123
     </div>
 
     <div id="error-message" class="error message"></div>
@@ -305,9 +305,8 @@
     document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      // For testing, use fixed credentials
-      const username = "testuser"; // document.getElementById('login-username').value;
-      const password = "password123"; // document.getElementById('login-password').value;
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
       const loginButton = document.getElementById('login-button');
       
       // Reset message states
