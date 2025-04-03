@@ -992,9 +992,17 @@ export default function Subscribe() {
               }
             />
             
-            <div className="mt-4 text-center text-xs text-gray-500">
-              <p>Your payment is processed securely through HubSpot Payments.</p>
-              <p className="mt-1">You can cancel your subscription at any time.</p>
+            <div className="mt-4">
+              <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+              <stripe-buy-button
+                buy-button-id="{{BUY_BUTTON_ID}}"
+                publishable-key="pk_test_51R9jlVL0pLShFbLts1kRQ0AdUAHiksTj4oppbKqANC4SJKqjgEHzdRJ4D32U7r4PugGvBKjZEgnvFCP4C0xdXiAK00wKQgHwbe"
+              >
+              </stripe-buy-button>
+              <div className="text-center text-xs text-gray-500 mt-4">
+                <p>Your payment is processed securely through Stripe.</p>
+                <p className="mt-1">You can cancel your subscription at any time.</p>
+              </div>
             </div>
           </div>
         )}
