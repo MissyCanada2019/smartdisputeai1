@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
 import EvidenceUploader from "@/components/evidence/EvidenceUploader";
+import type { EvidenceFile } from "@/components/evidence/EvidenceUploader";
 import { apiRequest } from "@/lib/queryClient";
 
 // Form validation schema creator function
@@ -66,7 +67,7 @@ export default function EvidenceUpload() {
   const [formState, setFormState] = useFormState();
   const [_, navigate] = useLocation();
   const { toast } = useToast();
-  const [evidenceFiles, setEvidenceFiles] = useState<any[]>([]);
+  const [evidenceFiles, setEvidenceFiles] = useState<EvidenceFile[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const { user, isAuthenticated } = useAuth(); // Get authentication state
@@ -233,7 +234,7 @@ export default function EvidenceUpload() {
     }
   }, [isAuthenticated, user, form]);
 
-  const handleEvidenceUpload = (files: any[]) => {
+  const handleEvidenceUpload = (files: EvidenceFile[]) => {
     setEvidenceFiles(files);
   };
 
@@ -412,9 +413,8 @@ export default function EvidenceUpload() {
             </CardHeader>
             <CardContent>
               <EvidenceUploader 
-                onEvidenceUpload={handleEvidenceUpload} 
-                userId={userId || undefined} 
-                maxFiles={10}
+                userId={userId || 0} 
+                onUploadComplete={handleEvidenceUpload}
               />
             </CardContent>
           </Card>

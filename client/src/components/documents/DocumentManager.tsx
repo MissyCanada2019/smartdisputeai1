@@ -53,7 +53,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon, Upload, Info } from 'lucide-react';
+import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon, Upload, InfoIcon } from 'lucide-react';
 import type { DocumentFolder, UserDocument, DocumentTemplate } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import DocumentUploader from "@/components/documents/DocumentUploader";
@@ -176,7 +176,13 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
   const createFolderMutation = useMutation({
     mutationFn: async (data: CreateFolderFormValues) => {
       try {
-        const response = await apiRequest('POST', '/api/document-folders', data);
+        // First make sure the userId is a number
+        const folderData = {
+          ...data,
+          userId: Number(data.userId)
+        };
+        
+        const response = await apiRequest('POST', '/api/document-folders', folderData);
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Server error response:', errorText);
@@ -667,7 +673,7 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
               
               <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
                 <p className="flex items-center">
-                  <Info className="h-4 w-4 mr-2 text-gray-400" />
+                  <InfoIcon className="h-4 w-4 mr-2 text-gray-400" />
                   All new documents will be automatically saved to your default folder.
                 </p>
               </div>
@@ -782,7 +788,7 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
               
               <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
                 <p className="flex items-center">
-                  <Info className="h-4 w-4 mr-2 text-gray-400" />
+                  <InfoIcon className="h-4 w-4 mr-2 text-gray-400" />
                   All new documents will be automatically saved to your default folder.
                 </p>
               </div>

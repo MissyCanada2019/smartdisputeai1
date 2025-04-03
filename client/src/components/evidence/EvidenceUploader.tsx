@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, FileCheck } from "lucide-react";
 
 // Define proper type for evidence files
-interface EvidenceFile {
+export interface EvidenceFile {
   id: number;
   userId: number;
   fileName: string;
