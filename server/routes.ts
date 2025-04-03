@@ -40,6 +40,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { dirname } from "path";
 import registerDirectEvidenceRoutes from "./directEvidence";
+import registerDocumentAnalyzerRoutes from "./documentAnalyzer";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4418,6 +4419,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register direct evidence routes
   app.use("/api/direct-evidence", registerDirectEvidenceRoutes(storage));
+  
+  // Register document analyzer routes
+  app.use("/api/document-analyzer", registerDocumentAnalyzerRoutes(storage));
 
   // Form data routes
   app.get("/api/form-data/:userId/:formType", async (req: Request, res: Response) => {

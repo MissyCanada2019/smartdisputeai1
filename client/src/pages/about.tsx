@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowRight, Facebook, Instagram, Linkedin, Star, Twitter, TrendingUp, Users } from "lucide-react";
 import teresaPhoto from "@assets/IMG_0103.jpeg";
 import jadaPhoto from "@assets/IMG_0276.jpeg";
+import DocumentComplexityAnalyzer from "@/components/analyzer/DocumentComplexityAnalyzer";
 
 export default function About() {
   return (
@@ -180,6 +181,17 @@ export default function About() {
                 Developing more sophisticated AI tools to provide personalized guidance and document generation tailored to individual circumstances.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Document Complexity Analyzer */}
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+          <h2 className="text-2xl font-bold mb-4">One-Click Legal Document Complexity Analyzer</h2>
+          <p className="text-gray-700 mb-6">
+            Legal documents are often intentionally written to be confusing and difficult to understand. Our AI-powered analyzer breaks down complex legal jargon into simple, understandable language, helping you make informed decisions without expensive legal consultations.
+          </p>
+          <div className="mt-4">
+            <DocumentComplexityAnalyzer />
           </div>
         </div>
         
