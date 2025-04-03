@@ -558,7 +558,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(400).json({ message: "Invalid plan selected" });
         }
 
-        const subscription = await stripe.subscriptions.create({
+        // Create customer session for buy button
+app.post("/api/create-customer-session", async (req: Request, res: Response) => {
+  try {
+    const stripe = getStripe();
+    if (!stripe) {
+      return res.status(500).json({ message: "Stripe is not configured" });
+    }
+    
+    const { customerId } = req.body;
+    
+    if (!customerId) {
+      return res.status(400).json({ message: "Customer ID is required" });
+    }
+
+    const session = await stripe.customerSessions.create({
+      customer: customerId,
+      components: {
+        buy_button: {
+          enabled: true
+        }
+      }
+    });
+
+    res.json(session);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+const subscription = await stripe.subscriptions.create({
           customer: customerId,
           items: [{
             price: priceId, // You'll need to create these price objects in your Stripe dashboard
