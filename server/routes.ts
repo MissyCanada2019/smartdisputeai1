@@ -2496,11 +2496,20 @@ const subscription = await stripe.subscriptions.create({
   // Get form data for the current authenticated user
   app.get("/api/form-data/current/:formType", async (req: Request, res: Response) => {
     try {
-      if (!req.isAuthenticated()) {
+      // Check if authentication state exists
+      if (!req.headers.authorization && !req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
       
-      const userId = req.user.id;
+      // Use the user ID from the request object if available, otherwise try to parse from auth header
+      let userId: number;
+      if (req.user && req.user.id) {
+        userId = req.user.id;
+      } else {
+        // Handle case where we have a token but not session auth
+        return res.status(401).json({ message: "Unable to determine user identity" });
+      }
+      
       const formType = req.params.formType;
       
       const data = await storage.getFormData(userId, formType);
