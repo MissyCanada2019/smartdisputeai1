@@ -436,8 +436,8 @@ export default function EvidenceUpload() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <Form {...form}>
                   {/* Issue Description Section */}
                   <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Issue Details</h3>
@@ -640,7 +640,7 @@ export default function EvidenceUpload() {
                     <div className="space-y-4">
                       <FormField
                         control={form.control}
-                        name="phoneNumber"
+                        name="phone"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Phone Number</FormLabel>
@@ -742,8 +742,7 @@ export default function EvidenceUpload() {
                       </Link>
                     </div>
                   )}
-                </form>
-              </Form>
+                </Form>
             </CardContent>
           </Card>
         </div>

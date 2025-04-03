@@ -6,6 +6,7 @@ import { IStorage } from './storage';
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { fileURLToPath } from 'url';
+import * as anthropicService from './services/anthropic';
 
 // Get directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -72,6 +73,13 @@ const analyzeEvidenceSchema = z.object({
   evidenceIds: z.array(z.number()),
   description: z.string().optional(),
   useCanLII: z.boolean().optional().default(false)
+});
+
+// Schema for analyzing evidence with Claude
+const claudeAnalyzeSchema = z.object({
+  evidenceIds: z.array(z.number()),
+  caseContext: z.string().optional().default(''),
+  compareResults: z.boolean().optional().default(false)
 });
 
 export default function registerDirectEvidenceRoutes(storage: IStorage): Router {
@@ -475,6 +483,124 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
       console.error("Error in direct evidence analysis:", error);
       res.status(500).json({
         message: `Error analyzing evidence: ${error.message}`,
+        details: error.stack
+      });
+    }
+  });
+  
+  // Analyze evidence using Claude AI
+  router.post("/analyze-with-claude", async (req: Request, res: Response) => {
+    try {
+      console.log("POST /direct-evidence/analyze-with-claude - Request received");
+      console.log("Request body:", req.body);
+      
+      // Validate request
+      const validationResult = claudeAnalyzeSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({
+          message: "Invalid analysis request data",
+          errors: validationResult.error.format()
+        });
+      }
+      
+      const { evidenceIds, caseContext, compareResults } = validationResult.data;
+      
+      // Load all the evidence files
+      const evidenceFiles = [];
+      for (const evidenceId of evidenceIds) {
+        const evidence = await storage.getEvidenceFile(evidenceId);
+        if (evidence) {
+          evidenceFiles.push(evidence);
+        }
+      }
+      
+      if (evidenceFiles.length === 0) {
+        return res.status(400).json({
+          message: "No valid evidence provided",
+          details: "Please provide valid evidence files"
+        });
+      }
+      
+      console.log(`Found ${evidenceFiles.length} evidence files for Claude analysis`);
+      
+      // Track analyses for multiple files
+      const analyses = [];
+      let errorOccurred = false;
+      
+      // Process each evidence file based on its type
+      for (const file of evidenceFiles) {
+        try {
+          console.log(`Analyzing file: ${file.fileName} (${file.fileType})`);
+          
+          let analysis;
+          // For image-based files (PDFs are often stored as images)
+          if (file.fileType.startsWith('image/') || file.fileType === 'application/pdf') {
+            analysis = await anthropicService.analyzeImageDocument(file.filePath, caseContext);
+          } 
+          // For text-based files
+          else {
+            // If we have analyzed content, use that directly
+            const textContent = file.analyzedContent || "No content analysis available";
+            analysis = await anthropicService.analyzeLegalDocument(textContent, caseContext);
+          }
+          
+          analyses.push({
+            fileId: file.id,
+            fileName: file.originalName,
+            ...analysis
+          });
+          
+        } catch (analysisError) {
+          console.error(`Error analyzing file ${file.fileName}:`, analysisError);
+          errorOccurred = true;
+          analyses.push({
+            fileId: file.id,
+            fileName: file.originalName,
+            error: `Failed to analyze: ${analysisError.message}`,
+            summary: "Analysis failed",
+            strength: "Unable to determine",
+            weaknesses: "Unable to determine",
+            recommendations: ["Try a different file format"],
+            relevantLaws: [],
+            sentiment: "neutral",
+            confidenceScore: 0
+          });
+        }
+      }
+      
+      // If requested, also compare the evidence and provide strategy
+      let comparisonResult = null;
+      if (compareResults && analyses.length > 1) {
+        try {
+          comparisonResult = await anthropicService.compareEvidenceStrategies(
+            analyses.filter(a => !a.error), 
+            caseContext
+          );
+        } catch (comparisonError) {
+          console.error("Error comparing evidence strategies:", comparisonError);
+          comparisonResult = {
+            error: `Failed to compare evidence: ${comparisonError.message}`,
+            strategy: "Unable to generate comprehensive strategy",
+            prioritizedEvidence: [],
+            nextSteps: ["Review individual analyses instead"]
+          };
+        }
+      }
+      
+      // Return the analyses and comparison (if requested)
+      return res.status(200).json({
+        message: errorOccurred ? 
+          "Some analyses completed with errors" : 
+          "Analysis completed successfully",
+        analyses: analyses,
+        comparisonResult: comparisonResult,
+        count: analyses.length
+      });
+      
+    } catch (error: any) {
+      console.error("Error in Claude evidence analysis:", error);
+      res.status(500).json({
+        message: `Error analyzing evidence with Claude: ${error.message}`,
         details: error.stack
       });
     }
