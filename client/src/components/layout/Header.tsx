@@ -111,10 +111,10 @@ export default function Header() {
             </DropdownMenu>
           ) : (
             <>
-              <Link href="/login" className="inline-block text-gray-600 hover:text-primary">Sign In</Link>
-              <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
+              <a href="/standalone-login" className="inline-block text-gray-600 hover:text-primary">Sign In</a>
+              <a href="/standalone-login?tab=register" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90">
                 Get Started
-              </Link>
+              </a>
             </>
           )}
           <Sheet>
@@ -193,14 +193,14 @@ export default function Header() {
                   ) : (
                     <div className="flex flex-col space-y-2">
                       <SheetClose asChild>
-                        <Link href="/login" className="text-gray-600 hover:text-primary text-center py-2">
+                        <a href="/standalone-login" className="text-gray-600 hover:text-primary text-center py-2">
                           Sign In
-                        </Link>
+                        </a>
                       </SheetClose>
                       <SheetClose asChild>
-                        <Link href="/user-info" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 text-center">
+                        <a href="/standalone-login?tab=register" className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 text-center">
                           Get Started
-                        </Link>
+                        </a>
                       </SheetClose>
                     </div>
                   )}

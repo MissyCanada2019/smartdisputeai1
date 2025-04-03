@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartDispute.ai - Login</title>
+  <title>SmartDispute.ai - Authentication</title>
   <style>
     body {
       font-family: 'Open Sans', sans-serif;
@@ -17,12 +17,12 @@
       align-items: center;
       padding: 20px;
     }
-    .login-card {
+    .auth-card {
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 450px;
       padding: 30px;
     }
     .header {
@@ -44,7 +44,7 @@
     }
     .description {
       color: #6b7280;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       text-align: center;
     }
     .form-group {
@@ -81,6 +81,14 @@
     .button:hover {
       background-color: #004494;
     }
+    .button.secondary {
+      background-color: #f3f4f6;
+      color: #111827;
+      border: 1px solid #d1d5db;
+    }
+    .button.secondary:hover {
+      background-color: #e5e7eb;
+    }
     .links {
       text-align: center;
       margin-top: 16px;
@@ -88,6 +96,7 @@
     .links a {
       color: #0056b3;
       text-decoration: none;
+      cursor: pointer;
     }
     .links a:hover {
       text-decoration: underline;
@@ -108,19 +117,60 @@
       text-transform: uppercase;
       color: #6b7280;
     }
-    .error {
-      color: #ef4444;
+    .message {
       margin-bottom: 16px;
       padding: 8px;
-      border: 1px solid #ef4444;
       border-radius: 4px;
+    }
+    .error {
+      color: #ef4444;
+      border: 1px solid #ef4444;
       background-color: rgba(239, 68, 68, 0.1);
       display: none;
+    }
+    .success {
+      color: #10b981;
+      border: 1px solid #10b981;
+      background-color: rgba(16, 185, 129, 0.1);
+      display: none;
+    }
+    .info {
+      color: #3b82f6;
+      border: 1px solid #93c5fd;
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: 500;
+      color: #6b7280;
+    }
+    .tab.active {
+      color: #0056b3;
+      border-bottom: 2px solid #0056b3;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
     }
   </style>
 </head>
 <body>
-  <div class="login-card">
+  <div class="auth-card">
     <div class="header">
       <div class="logo">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -128,53 +178,142 @@
         </svg>
         <span style="margin-left: 8px;">SmartDispute.ai</span>
       </div>
-      <h1>Log in to your account</h1>
-      <div class="description">Enter your username and password to access your account</div>
-      <div style="background-color: #e6f7ff; border: 1px solid #91d5ff; padding: 8px; border-radius: 4px; margin-top: 10px; font-size: 14px;">
-        For testing, use: <strong>username:</strong> testuser, <strong>password:</strong> password123
-      </div>
     </div>
 
-    <div id="error-message" class="error"></div>
+    <div class="tabs">
+      <div class="tab active" id="login-tab">Login</div>
+      <div class="tab" id="register-tab">Create Account</div>
+    </div>
+
+    <div class="info message">
+      <strong>Test Account:</strong> You can use <strong>username:</strong> testuser, <strong>password:</strong> password123
+    </div>
+
+    <div id="error-message" class="error message"></div>
+    <div id="success-message" class="success message"></div>
     
-    <form id="login-form">
-      <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Enter your username" required>
-      </div>
+    <!-- Login Tab Content -->
+    <div id="login-content" class="tab-content active">
+      <h1>Log in to your account</h1>
+      <div class="description">Enter your username and password to access your account</div>
       
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" name="username" placeholder="Enter your username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+        </div>
+        
+        <button type="submit" class="button" id="login-button">Log in</button>
+      </form>
       
-      <button type="submit" class="button" id="login-button">Log in</button>
-    </form>
-    
-    <div class="links">
-      <a href="/forgot-password">Forgot your password?</a>
+      <div class="links">
+        <a id="forgot-link">Forgot your password?</a>
+      </div>
     </div>
     
-    <div class="divider">
-      <span class="divider-text">Or</span>
-    </div>
-    
-    <div class="links">
-      Don't have an account? <a href="/user-info">Create an account</a>
+    <!-- Register Tab Content -->
+    <div id="register-content" class="tab-content">
+      <h1>Create your account</h1>
+      <div class="description">Sign up to access SmartDispute.ai's legal tools</div>
+      
+      <form id="register-form">
+        <div class="grid">
+          <div class="form-group">
+            <label for="register-firstName">First Name</label>
+            <input type="text" id="register-firstName" name="firstName" placeholder="Enter your first name" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="register-lastName">Last Name</label>
+            <input type="text" id="register-lastName" name="lastName" placeholder="Enter your last name" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-username">Username</label>
+          <input type="text" id="register-username" name="username" placeholder="Choose a username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-password">Password</label>
+          <input type="password" id="register-password" name="password" placeholder="Create a strong password" required minlength="6">
+          <small style="color: #6b7280; font-size: 0.8rem;">Password must be at least 6 characters</small>
+        </div>
+        
+        <button type="submit" class="button" id="register-button">Create Account</button>
+      </form>
     </div>
   </div>
 
   <script>
+    // Tab handling
+    const loginTab = document.getElementById('login-tab');
+    const registerTab = document.getElementById('register-tab');
+    const loginContent = document.getElementById('login-content');
+    const registerContent = document.getElementById('register-content');
+    const forgotLink = document.getElementById('forgot-link');
+    
+    const errorMessage = document.getElementById('error-message');
+    const successMessage = document.getElementById('success-message');
+    
+    // Function to switch to login tab
+    const switchToLoginTab = () => {
+      loginTab.classList.add('active');
+      registerTab.classList.remove('active');
+      loginContent.classList.add('active');
+      registerContent.classList.remove('active');
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+    };
+    
+    // Function to switch to register tab
+    const switchToRegisterTab = () => {
+      registerTab.classList.add('active');
+      loginTab.classList.remove('active');
+      registerContent.classList.add('active');
+      loginContent.classList.remove('active');
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+    };
+    
+    // Check URL parameters to see if we should show the register tab
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'register') {
+      switchToRegisterTab();
+    }
+    
+    // Switch tabs on click
+    loginTab.addEventListener('click', switchToLoginTab);
+    registerTab.addEventListener('click', switchToRegisterTab);
+    
+    // Forgot password
+    forgotLink.addEventListener('click', () => {
+      alert('This feature is not yet implemented. Please contact support or use the test account.');
+    });
+    
+    // Login form submission
     document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
       const loginButton = document.getElementById('login-button');
-      const errorMessage = document.getElementById('error-message');
       
-      // Reset error state
+      // Reset message states
       errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      
+      // Update button state
       loginButton.textContent = 'Logging in...';
       loginButton.disabled = true;
       
@@ -199,14 +338,21 @@
         }
         
         const userData = await response.json();
+        console.log('Login successful, user data received:', userData);
         
-        // Save user data to localStorage or sessionStorage
+        // Save user data to localStorage
         localStorage.setItem('user', JSON.stringify(userData));
         
-        // Redirect to document management or previous page
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/document-management';
-        sessionStorage.removeItem('redirectAfterLogin');
-        window.location.href = redirectPath;
+        // Show success message
+        successMessage.textContent = 'Login successful! Redirecting...';
+        successMessage.style.display = 'block';
+        
+        // Redirect after a short delay
+        setTimeout(() => {
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/document-management';
+          sessionStorage.removeItem('redirectAfterLogin');
+          window.location.href = redirectPath;
+        }, 1500);
         
       } catch (error) {
         console.error('Login error:', error);
@@ -214,6 +360,72 @@
         errorMessage.style.display = 'block';
         loginButton.textContent = 'Log in';
         loginButton.disabled = false;
+      }
+    });
+    
+    // Registration form submission
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const firstName = document.getElementById('register-firstName').value;
+      const lastName = document.getElementById('register-lastName').value;
+      const email = document.getElementById('register-email').value;
+      const username = document.getElementById('register-username').value;
+      const password = document.getElementById('register-password').value;
+      const registerButton = document.getElementById('register-button');
+      
+      // Reset message states
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      
+      // Update button state
+      registerButton.textContent = 'Creating account...';
+      registerButton.disabled = true;
+      
+      try {
+        console.log('Attempting to create account for:', username);
+        
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ firstName, lastName, email, username, password }),
+          credentials: 'include'
+        });
+        
+        console.log('Registration response status:', response.status);
+        
+        if (!response.ok) {
+          const data = await response.json();
+          console.log('Registration error data:', data);
+          throw new Error(data.message || 'Failed to create account');
+        }
+        
+        const userData = await response.json();
+        console.log('Registration successful, user data:', userData);
+        
+        // Show success message
+        successMessage.textContent = 'Account created successfully! You can now log in.';
+        successMessage.style.display = 'block';
+        
+        // Clear the form
+        document.getElementById('register-form').reset();
+        
+        // Switch to the login tab after a delay
+        setTimeout(() => {
+          loginTab.click();
+          // Pre-fill the username field
+          document.getElementById('login-username').value = username;
+          document.getElementById('login-password').focus();
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Registration error:', error);
+        errorMessage.textContent = error.message || 'Failed to create account';
+        errorMessage.style.display = 'block';
+        registerButton.textContent = 'Create Account';
+        registerButton.disabled = false;
       }
     });
   </script>

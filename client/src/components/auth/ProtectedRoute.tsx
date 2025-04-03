@@ -18,9 +18,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       setIsChecking(false);
       
       if (!isAuthenticated) {
+        console.log("User not authenticated, redirecting to standalone login page");
+        
         // Store the current path to redirect back after login
         sessionStorage.setItem("redirectAfterLogin", window.location.pathname);
-        navigate("/login");
+        
+        // Use the standalone login page instead of the React route
+        window.location.href = "/standalone-login";
       }
     }, 500);
 

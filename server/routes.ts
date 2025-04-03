@@ -169,6 +169,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Serve standalone login page
+  app.get('/standalone-login', (req: Request, res: Response) => {
+    console.log('Serving standalone login page');
+    const filePath = path.join(__dirname, '../login.html');
+    res.sendFile(filePath);
+  });
+  
   // Serve Google Search Console verification file
   app.get('/google-search-console-verification.html', (req: Request, res: Response) => {
     const filePath = path.join(__dirname, '../client/public/google-search-console-verification.html');
