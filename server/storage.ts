@@ -25,7 +25,8 @@ import {
   resourceBookmarks, type ResourceBookmark, type InsertResourceBookmark,
   contributorReputations, type ContributorReputation, type InsertContributorReputation,
   resourceVotes, type ResourceVote, type InsertResourceVote,
-  reputationHistory, type ReputationHistory, type InsertReputationHistory
+  reputationHistory, type ReputationHistory, type InsertReputationHistory,
+  formData, type FormData, type InsertFormData
 } from "@shared/schema";
 
 // Storage interface
@@ -197,6 +198,12 @@ export interface IStorage {
   // Reputation history operations
   getReputationHistory(userId: number): Promise<ReputationHistory[]>;
   createReputationHistoryEntry(entry: InsertReputationHistory): Promise<ReputationHistory>;
+  
+  // Form data operations
+  getFormData(userId: number, formType: string): Promise<FormData | undefined>;
+  getFormDataById(id: number): Promise<FormData | undefined>;
+  createFormData(data: InsertFormData): Promise<FormData>;
+  updateFormData(id: number, data: Partial<FormData>): Promise<FormData | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -2383,6 +2390,58 @@ export class MemStorage implements IStorage {
     };
     this.reputationHistory.set(id, newEntry);
     return newEntry;
+  }
+
+  // Form data operations
+  private formDataMap: Map<number, FormData> = new Map();
+  private currentFormDataId: number = 1;
+
+  async getFormData(userId: number, formType: string): Promise<FormData | undefined> {
+    const userForms = Array.from(this.formDataMap.values()).filter(
+      formData => formData.userId === userId && formData.formType === formType
+    );
+    
+    // Return the most recent form data for this user and form type
+    if (userForms.length > 0) {
+      return userForms.sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )[0]; // Return the most recent one
+    }
+    
+    return undefined;
+  }
+
+  async getFormDataById(id: number): Promise<FormData | undefined> {
+    return this.formDataMap.get(id);
+  }
+
+  async createFormData(data: InsertFormData): Promise<FormData> {
+    const id = this.currentFormDataId++;
+    const now = new Date().toISOString();
+    
+    const formData: FormData = {
+      ...data,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    this.formDataMap.set(id, formData);
+    return formData;
+  }
+
+  async updateFormData(id: number, data: Partial<FormData>): Promise<FormData | undefined> {
+    const existingFormData = this.formDataMap.get(id);
+    if (!existingFormData) return undefined;
+    
+    const updatedFormData = { 
+      ...existingFormData, 
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+    
+    this.formDataMap.set(id, updatedFormData);
+    return updatedFormData;
   }
 }
 

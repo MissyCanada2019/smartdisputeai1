@@ -2383,6 +2383,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get current user data - used for prefilling forms
+  app.get("/api/users/current", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Use the logged-in user's ID
+      const userId = req.user.id;
+      
+      // Get full user data
+      const userData = await storage.getUser(userId);
+      if (!userData) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive data before sending
+      const { password, ...safeUserData } = userData;
+      
+      res.json(safeUserData);
+    } catch (error: any) {
+      console.error("Error fetching current user data:", error);
+      res.status(500).json({ message: `Error fetching user data: ${error.message}` });
+    }
+  });
+  
+  // Get form data for the current authenticated user
+  app.get("/api/form-data/current/:formType", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      const userId = req.user.id;
+      const formType = req.params.formType;
+      
+      const data = await storage.getFormData(userId, formType);
+      
+      if (!data) {
+        return res.status(404).json({ message: "Form data not found for this user and form type" });
+      }
+      
+      return res.status(200).json(data);
+    } catch (error: any) {
+      console.error("Error fetching current user form data:", error);
+      return res.status(500).json({ message: `Server error: ${error.message}` });
+    }
+  });
+
   // Evidence files API endpoints
   
   // Get evidence files for the current logged-in user
@@ -4318,6 +4367,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register direct evidence routes
   app.use("/api/direct-evidence", registerDirectEvidenceRoutes(storage));
+
+  // Form data routes
+  app.get("/api/form-data/:userId/:formType", async (req: Request, res: Response) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const formType = req.params.formType;
+      
+      if (isNaN(userId)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+      }
+      
+      const data = await storage.getFormData(userId, formType);
+      
+      if (!data) {
+        return res.status(404).json({ error: "Form data not found" });
+      }
+      
+      return res.status(200).json(data);
+    } catch (error: any) {
+      console.error("Error fetching form data:", error);
+      return res.status(500).json({ error: "Internal server error: " + error.message });
+    }
+  });
+  
+  app.post("/api/form-data", async (req: Request, res: Response) => {
+    try {
+      const { userId, formType, formData } = req.body;
+      
+      if (!userId || !formType || !formData) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      const newFormData = await storage.createFormData({
+        userId,
+        formType,
+        formData
+      });
+      
+      return res.status(201).json(newFormData);
+    } catch (error: any) {
+      console.error("Error creating form data:", error);
+      return res.status(500).json({ error: "Internal server error: " + error.message });
+    }
+  });
+  
+  app.put("/api/form-data/:id", async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { formData } = req.body;
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID" });
+      }
+      
+      if (!formData) {
+        return res.status(400).json({ error: "Missing form data" });
+      }
+      
+      const existingData = await storage.getFormDataById(id);
+      
+      if (!existingData) {
+        return res.status(404).json({ error: "Form data not found" });
+      }
+      
+      const updatedData = await storage.updateFormData(id, { formData });
+      
+      return res.status(200).json(updatedData);
+    } catch (error: any) {
+      console.error("Error updating form data:", error);
+      return res.status(500).json({ error: "Internal server error: " + error.message });
+    }
+  });
 
   return httpServer;
 }

@@ -9,14 +9,23 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useFormState } from "@/lib/formContext";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/context/authContext";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function UserInfoForm() {
   const [formState, setFormState] = useFormState();
   const { toast } = useToast();
   const [_, navigate] = useLocation();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { isAuthenticated } = useAuth();
+  const [isLoadingUserData, setIsLoadingUserData] = useState<boolean>(false);
+  const queryClient = useQueryClient();
   
+  // Create a form with default empty values
   const form = useForm<UserInfoFormValues>({
     resolver: zodResolver(userInfoFormSchema),
     defaultValues: formState.userInfo || {
@@ -34,7 +43,118 @@ export default function UserInfoForm() {
     }
   });
   
-  const onSubmit = (data: UserInfoFormValues) => {
+  // Fetch current user data if authenticated
+  const { data: userData, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/users/current'],
+    enabled: isAuthenticated, // Only run query if user is authenticated
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    onError: (error) => {
+      console.error("Error fetching user data:", error);
+      toast({
+        title: "Info",
+        description: "Couldn't load your profile data. Please fill in your information.",
+      });
+    }
+  });
+  
+  // Fetch stored form data for this user if authenticated
+  const { data: savedFormData, isLoading: isLoadingFormData } = useQuery({
+    queryKey: ['/api/form-data/current', 'userInfo'],
+    queryFn: () => apiRequest('/api/form-data/current/userInfo'),
+    enabled: isAuthenticated, // Only run query if user is authenticated
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    onError: (error) => {
+      console.error("Error fetching saved form data:", error);
+      // Don't show a toast here as we'll fallback to user profile data
+    }
+  });
+  
+  // Mutation for saving form data
+  const saveMutation = useMutation({
+    mutationFn: (formData: any) => {
+      // Check if we have existing form data that needs to be updated
+      if (savedFormData && savedFormData.id) {
+        return apiRequest(`/api/form-data/${savedFormData.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ 
+            userId: userData?.id, 
+            formType: 'userInfo', 
+            formData: formData 
+          })
+        });
+      } else {
+        // Create new form data
+        return apiRequest('/api/form-data', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            userId: userData?.id, 
+            formType: 'userInfo', 
+            formData: formData 
+          })
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/form-data/current', 'userInfo'] });
+    },
+    onError: (error) => {
+      console.error("Error saving form data:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving your form data.",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Update form with data in this priority:
+  // 1. Saved form data (from form-data endpoint)
+  // 2. User profile data (from users/current endpoint)
+  // 3. Default empty values
+  useEffect(() => {
+    const isLoading = isLoadingFormData || isLoadingUser;
+    
+    if (!isLoading) {
+      let dataToUse: Partial<UserInfoFormValues> = {};
+      
+      // First priority: use saved form data if available
+      if (savedFormData?.formData) {
+        dataToUse = savedFormData.formData;
+        console.log('Using saved form data:', dataToUse);
+      } 
+      // Second priority: use user profile data if available
+      else if (userData) {
+        dataToUse = {
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+          dob: userData.dob || "",
+          address: userData.address || "",
+          city: userData.city || "",
+          province: userData.province || "",
+          postalCode: userData.postalCode || "",
+          incomeRange: userData.incomeRange || "",
+          requestIncomeBased: userData.requestIncomeBased || false
+        };
+        console.log('Using user profile data:', dataToUse);
+      }
+      
+      // Reset form with the data
+      if (Object.keys(dataToUse).length > 0) {
+        form.reset(dataToUse);
+        
+        toast({
+          title: "Data loaded",
+          description: "Your information has been loaded automatically."
+        });
+      }
+    }
+  }, [savedFormData, userData, isLoadingFormData, isLoadingUser, form, toast]);
+  
+  const onSubmit = async (data: UserInfoFormValues) => {
     try {
       setErrorMessage(null);
 
@@ -46,6 +166,17 @@ export default function UserInfoForm() {
       };
       
       setFormState(updatedState);
+      
+      // Save form data to database if user is authenticated
+      if (isAuthenticated && userData?.id) {
+        try {
+          await saveMutation.mutateAsync(data);
+          console.log("Form data saved to database successfully");
+        } catch (saveError) {
+          console.error("Error saving form data to database:", saveError);
+          // Continue with form flow even if saving to DB fails
+        }
+      }
       
       // If we already have recommended forms from evidence analysis, go directly to them
       const nextPage = formState.recommendedForms && formState.recommendedForms.length > 0

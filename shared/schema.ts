@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, doublePrecision } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, doublePrecision, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -391,6 +391,25 @@ export type ChatConversation = typeof chatConversations.$inferSelect;
 
 export type InsertChatMessage = z.infer<typeof insertChatMessageSchema>;
 export type ChatMessage = typeof chatMessages.$inferSelect;
+
+// Form data storage
+export const formData = pgTable("form_data", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  formType: text("form_type").notNull(), // e.g., "tenancy", "landlord", "children-aid", etc.
+  formData: jsonb("form_data").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertFormDataSchema = createInsertSchema(formData).pick({
+  userId: true,
+  formType: true,
+  formData: true,
+});
+
+export type InsertFormData = z.infer<typeof insertFormDataSchema>;
+export type FormData = typeof formData.$inferSelect;
 
 // Community types
 export type InsertCommunityCategory = z.infer<typeof insertCommunityCategorySchema>;

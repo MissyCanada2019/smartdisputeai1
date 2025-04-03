@@ -182,7 +182,7 @@ export default function DocumentReview() {
       const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
       
       // Check if item is already in cart
-      if (!cartItems.some(item => item.id === formState.documentId)) {
+      if (!cartItems.some((item: { id: number }) => item.id === formState.documentId)) {
         cartItems.push({
           id: formState.documentId,
           name: template.name,
