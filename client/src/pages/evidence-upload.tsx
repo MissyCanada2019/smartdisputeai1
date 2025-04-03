@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, Link } from "wouter";
 import { useFormState } from "@/lib/formContext";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/authContext";
 import ProgressTracker from "@/components/common/ProgressTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,28 +18,50 @@ import DocumentUploader from "@/components/documents/DocumentUploader";
 import EvidenceUploader from "@/components/evidence/EvidenceUploader";
 import { apiRequest } from "@/lib/queryClient";
 
-// Form validation schema
-const evidenceFormSchema = z.object({
-  // User account information
-  username: z.string().min(4, "Username must be at least 4 characters"),  // Added username field
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
+// Form validation schema creator function
+// This allows us to create a conditional schema based on authentication status
+const createEvidenceFormSchema = (isAuthenticated: boolean) => {
+  // Base schema for authenticated and non-authenticated users
+  const baseSchema = {
+    // Case information
+    issueDescription: z.string().min(10, "Please provide a more detailed description of your issue"),
+    agency: z.string().optional(),
+    province: z.string().min(2, "Please select your province or territory"),
+    
+    // Contact information
+    phone: z.string().optional(),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    postalCode: z.string().optional()
+  };
   
-  // Case information
-  issueDescription: z.string().min(10, "Please provide a more detailed description of your issue"),
-  agency: z.string().optional(),
-  province: z.string().min(2, "Please select your province or territory"),
+  // If not authenticated, require account creation fields
+  if (!isAuthenticated) {
+    return z.object({
+      ...baseSchema,
+      // User account information (only required when not authenticated)
+      username: z.string().min(4, "Username must be at least 4 characters"),
+      email: z.string().email("Please enter a valid email address"),
+      password: z.string().min(8, "Password must be at least 8 characters"),
+      firstName: z.string().min(1, "First name is required"),
+      lastName: z.string().min(1, "Last name is required"),
+    });
+  }
   
-  // Contact information
-  phoneNumber: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  postalCode: z.string().optional()
-});
+  // For authenticated users, make account fields optional
+  return z.object({
+    ...baseSchema,
+    username: z.string().optional(),
+    email: z.string().optional(),
+    password: z.string().optional(),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+  });
+};
 
-type EvidenceFormValues = z.infer<typeof evidenceFormSchema>;
+// Create a type that includes all possible form fields
+// This ensures we have a consistent type regardless of authentication status
+type EvidenceFormValues = z.infer<ReturnType<typeof createEvidenceFormSchema>>;
 
 export default function EvidenceUpload() {
   const [formState, setFormState] = useFormState();
@@ -47,6 +70,7 @@ export default function EvidenceUpload() {
   const [evidenceFiles, setEvidenceFiles] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
+  const { user, isAuthenticated } = useAuth(); // Get authentication state
 
   // Create temporary anonymous user if needed for uploads
   useEffect(() => {
@@ -139,28 +163,76 @@ export default function EvidenceUpload() {
     }
   }, [toast, userId]);
 
+  // Create the form schema based on authenticated status
+  const evidenceFormSchema = useMemo(() => createEvidenceFormSchema(isAuthenticated), [isAuthenticated]);
+  
   const form = useForm<EvidenceFormValues>({
     resolver: zodResolver(evidenceFormSchema),
     defaultValues: {
       // User account info
-      username: formState.username || "",
-      email: formState.email || "",
+      username: isAuthenticated && user ? user.username : formState.username || "",
+      email: isAuthenticated && user ? user.email : formState.email || "",
       password: "",
-      firstName: formState.firstName || "",
-      lastName: formState.lastName || "",
+      firstName: isAuthenticated && user ? user.firstName : formState.firstName || "",
+      lastName: isAuthenticated && user ? user.lastName : formState.lastName || "",
       
       // Case information
       issueDescription: formState.issueDescription || "",
       agency: formState.agency || "",
-      province: formState.province || "",
+      province: isAuthenticated && user ? user.province : formState.province || "",
       
       // Contact information
-      phoneNumber: formState.phoneNumber || "",
-      address: formState.address || "",
-      city: formState.city || "",
-      postalCode: formState.postalCode || ""
+      phone: isAuthenticated && user ? user.phone : formState.phone || "",
+      address: isAuthenticated && user ? user.address : formState.address || "",
+      city: isAuthenticated && user ? user.city : formState.city || "",
+      postalCode: isAuthenticated && user ? user.postalCode : formState.postalCode || ""
     }
   });
+
+  // Load saved form data if user is authenticated
+  useEffect(() => {
+    const loadUserFormData = async () => {
+      if (isAuthenticated && user) {
+        try {
+          // Fetch existing form data from the server
+          const response = await fetch('/api/form-data/current/evidence');
+          if (response.ok) {
+            const formData = await response.json();
+            
+            // If we have existing form data, update the form with it
+            if (formData) {
+              console.log('Loaded existing form data for authenticated user:', formData);
+              
+              // Update form with fetched values
+              form.reset({
+                ...form.getValues(),
+                // Contact information from user profile
+                username: user.username || form.getValues().username,
+                email: user.email || form.getValues().email,
+                firstName: user.firstName || form.getValues().firstName,
+                lastName: user.lastName || form.getValues().lastName,
+                phone: user.phone || formData.phone || form.getValues().phone,
+                address: user.address || formData.address || form.getValues().address,
+                city: user.city || formData.city || form.getValues().city,
+                postalCode: user.postalCode || formData.postalCode || form.getValues().postalCode,
+                province: user.province || formData.province || form.getValues().province,
+                
+                // Evidence-specific fields
+                issueDescription: formData.issueDescription || form.getValues().issueDescription,
+                agency: formData.agency || form.getValues().agency
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user form data:', error);
+        }
+      }
+    };
+    
+    if (isAuthenticated && user) {
+      loadUserFormData();
+    }
+  }, [isAuthenticated, user, form]);
 
   const handleEvidenceUpload = (files: any[]) => {
     setEvidenceFiles(files);
@@ -191,7 +263,7 @@ export default function EvidenceUpload() {
         address: data.address,
         city: data.city,
         postalCode: data.postalCode,
-        phoneNumber: data.phoneNumber,
+        phone: data.phone,
         isTemporary: false
       });
       
@@ -216,7 +288,7 @@ export default function EvidenceUpload() {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
-        phoneNumber: data.phoneNumber,
+        phone: data.phone,
         address: data.address,
         city: data.city,
         postalCode: data.postalCode,
@@ -320,8 +392,15 @@ export default function EvidenceUpload() {
       <ProgressTracker currentStep={1} />
 
       <div className="mb-8 text-center md:text-left">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Create Your Account</h1>
-        <p className="text-gray-600">Sign up to access personalized legal help, document generation, and evidence analysis</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+          {isAuthenticated ? 'Upload Your Evidence' : 'Create Your Account'}
+        </h1>
+        <p className="text-gray-600">
+          {isAuthenticated 
+            ? 'Upload and analyze your evidence to receive personalized legal recommendations'
+            : 'Sign up to access personalized legal help, document generation, and evidence analysis'
+          }
+        </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -439,29 +518,30 @@ export default function EvidenceUpload() {
                     </div>
                   </div>
                   
-                  {/* Account Information Section */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
-                    <div className="mb-4">
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <input
-                                type="text"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Choose a username (min. 4 characters)"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  {/* Account Information Section - Only shown if not authenticated */}
+                  {!isAuthenticated ? (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
+                      <div className="mb-4">
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <input
+                                  type="text"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="Choose a username (min. 4 characters)"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     
                     <div className="grid md:grid-cols-2 gap-4">
                       <FormField
@@ -542,7 +622,17 @@ export default function EvidenceUpload() {
                         )}
                       />
                     </div>
-                  </div>
+                    
+                  ) : (
+                    // If user is authenticated, display a welcome message
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <h3 className="text-lg font-medium mb-2">Welcome Back, {user?.firstName || 'User'}</h3>
+                      <p className="text-sm text-gray-600">
+                        You're signed in as <span className="font-semibold">{user?.email}</span>. 
+                        Any evidence you upload will be associated with your account.
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Contact Information Section */}
                   <div className="mb-6">
@@ -640,16 +730,18 @@ export default function EvidenceUpload() {
                       type="submit"
                       disabled={isAnalyzing}
                     >
-                      {isAnalyzing ? 'Analyzing Your Evidence...' : 'Create Account & Continue'}
+                      {isAnalyzing ? 'Analyzing Your Evidence...' : isAuthenticated ? 'Analyze Evidence & Continue' : 'Create Account & Continue'}
                     </Button>
                   </div>
                   
-                  <div className="mt-6 text-center">
-                    <span className="text-sm text-gray-500">Already have an account? </span>
-                    <Link href="/login" className="text-primary hover:underline text-sm font-medium">
-                      Login Instead
-                    </Link>
-                  </div>
+                  {!isAuthenticated && (
+                    <div className="mt-6 text-center">
+                      <span className="text-sm text-gray-500">Already have an account? </span>
+                      <Link href="/login" className="text-primary hover:underline text-sm font-medium">
+                        Login Instead
+                      </Link>
+                    </div>
+                  )}
                 </form>
               </Form>
             </CardContent>
