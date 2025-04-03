@@ -437,9 +437,8 @@ export default function EvidenceUpload() {
             </CardHeader>
             <CardContent>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <Form {...form}>
-                  {/* Issue Description Section */}
-                  <div className="mb-6">
+                {/* Issue Description Section */}
+                <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Issue Details</h3>
                     <FormField
                       control={form.control}
@@ -516,11 +515,11 @@ export default function EvidenceUpload() {
                         )}
                       />
                     </div>
-                  </div>
-                  
-                  {/* Account Information Section - Only shown if not authenticated */}
-                  {!isAuthenticated ? (
-                    <div className="mb-6">
+                </div>
+                
+                {/* Account Information Section - Only shown if not authenticated */}
+                {!isAuthenticated ? (
+                  <div className="mb-6">
                       <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
                       <div className="mb-4">
                         <FormField
@@ -624,18 +623,18 @@ export default function EvidenceUpload() {
                     </div>
                     
                   ) : (
-                    // If user is authenticated, display a welcome message
-                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <h3 className="text-lg font-medium mb-2">Welcome Back, {user?.firstName || 'User'}</h3>
-                      <p className="text-sm text-gray-600">
-                        You're signed in as <span className="font-semibold">{user?.email}</span>. 
-                        Any evidence you upload will be associated with your account.
-                      </p>
-                    </div>
-                  )}
+                  // If user is authenticated, display a welcome message
+                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h3 className="text-lg font-medium mb-2">Welcome Back, {user?.firstName || 'User'}</h3>
+                    <p className="text-sm text-gray-600">
+                      You're signed in as <span className="font-semibold">{user?.email}</span>. 
+                      Any evidence you upload will be associated with your account.
+                    </p>
+                  </div>
+                )}
                   
-                  {/* Contact Information Section */}
-                  <div className="mb-6">
+                {/* Contact Information Section */}
+                <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Contact Information</h3>
                     <div className="space-y-4">
                       <FormField
@@ -718,31 +717,31 @@ export default function EvidenceUpload() {
                     </div>
                   </div>
 
-                  <div className="flex justify-between mt-8">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => navigate("/")}
-                    >
-                      Back to Home
-                    </Button>
-                    <Button 
-                      type="submit"
-                      disabled={isAnalyzing}
-                    >
-                      {isAnalyzing ? 'Analyzing Your Evidence...' : isAuthenticated ? 'Analyze Evidence & Continue' : 'Create Account & Continue'}
-                    </Button>
+                <div className="flex justify-between mt-8">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => navigate("/")}
+                  >
+                    Back to Home
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isAnalyzing}
+                  >
+                    {isAnalyzing ? 'Analyzing Your Evidence...' : isAuthenticated ? 'Analyze Evidence & Continue' : 'Create Account & Continue'}
+                  </Button>
+                </div>
+                
+                {!isAuthenticated && (
+                  <div className="mt-6 text-center">
+                    <span className="text-sm text-gray-500">Already have an account? </span>
+                    <Link href="/login" className="text-primary hover:underline text-sm font-medium">
+                      Login Instead
+                    </Link>
                   </div>
-                  
-                  {!isAuthenticated && (
-                    <div className="mt-6 text-center">
-                      <span className="text-sm text-gray-500">Already have an account? </span>
-                      <Link href="/login" className="text-primary hover:underline text-sm font-medium">
-                        Login Instead
-                      </Link>
-                    </div>
-                  )}
-                </Form>
+                )}
+              </form>
             </CardContent>
           </Card>
         </div>

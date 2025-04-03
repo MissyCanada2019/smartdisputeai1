@@ -14,7 +14,7 @@ interface FormState {
   lastName?: string;
   email?: string;
   password?: string;
-  phoneNumber?: string;
+  phone?: string;
   address?: string;
   city?: string;
   postalCode?: string;

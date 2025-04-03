@@ -6,6 +6,14 @@ type User = {
   firstName?: string;
   lastName?: string;
   email?: string;
+  phone?: string;
+  dob?: string;
+  address?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  incomeRange?: string;
+  requestIncomeBased?: boolean;
 };
 
 interface AuthContextType {
