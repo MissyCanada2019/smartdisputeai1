@@ -53,7 +53,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon, Upload } from 'lucide-react';
+import { Folder, FilePlus, File, FileSearch, Search, FolderPlus, Edit, Trash2, MoveIcon, Upload, Info } from 'lucide-react';
 import type { DocumentFolder, UserDocument, DocumentTemplate } from '@shared/schema';
 import { useToast } from '@/hooks/use-toast';
 import DocumentUploader from "@/components/documents/DocumentUploader";
@@ -175,8 +175,18 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
   // Create folder mutation
   const createFolderMutation = useMutation({
     mutationFn: async (data: CreateFolderFormValues) => {
-      const response = await apiRequest('POST', '/api/document-folders', data);
-      return await response.json();
+      try {
+        const response = await apiRequest('POST', '/api/document-folders', data);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error response:', errorText);
+          throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        return await response.json();
+      } catch (error: any) {
+        console.error('Folder creation error:', error);
+        throw new Error(error.message || 'Error creating folder');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/document-folders/user', userId] });
@@ -192,10 +202,11 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
         isDefault: false
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Create folder mutation error:', error);
       toast({
         title: "Error creating folder",
-        description: String(error),
+        description: error.message || "Could not create folder. Please try again.",
         variant: "destructive"
       });
     }
@@ -575,7 +586,7 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
       
       {/* Create Folder Dialog */}
       <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
             <DialogDescription>
@@ -583,16 +594,32 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
             </DialogDescription>
           </DialogHeader>
           
+          {createFolderMutation.isError && (
+            <Alert variant="destructive" className="my-2">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {createFolderMutation.error instanceof Error 
+                  ? createFolderMutation.error.message 
+                  : "There was an error creating your folder. Please try again."}
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <Form {...createFolderForm}>
             <form onSubmit={createFolderForm.handleSubmit(onCreateFolderSubmit)} className="space-y-4">
               <FormField
                 control={createFolderForm.control}
                 name="name"
-                render={({ field }: { field: any }) => (
+                render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Folder Name</FormLabel>
+                    <FormLabel>Folder Name <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input placeholder="My Documents" {...field} />
+                      <Input 
+                        placeholder="My Documents" 
+                        {...field} 
+                        autoFocus 
+                        className="focus:border-primary"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -606,7 +633,10 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Folder description" {...field} />
+                      <Input 
+                        placeholder="Folder description" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -621,12 +651,13 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                     <FormControl>
                       <input
                         type="checkbox"
-                        className="form-checkbox h-4 w-4"
+                        className="form-checkbox h-5 w-5 rounded text-primary"
                         checked={field.value}
                         onChange={field.onChange}
+                        id="default-folder-checkbox"
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-normal">
+                    <FormLabel className="text-sm font-normal cursor-pointer" htmlFor="default-folder-checkbox">
                       Make this my default folder
                     </FormLabel>
                     <FormMessage />
@@ -634,17 +665,26 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                 )}
               />
               
-              <DialogFooter>
+              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                <p className="flex items-center">
+                  <Info className="h-4 w-4 mr-2 text-gray-400" />
+                  All new documents will be automatically saved to your default folder.
+                </p>
+              </div>
+              
+              <DialogFooter className="pt-2">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsCreateFolderOpen(false)}
+                  disabled={createFolderMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
                   disabled={createFolderMutation.isPending}
+                  className="min-w-[100px]"
                 >
                   {createFolderMutation.isPending ? (
                     <>
@@ -661,13 +701,24 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
       
       {/* Edit Folder Dialog */}
       <Dialog open={isEditFolderOpen} onOpenChange={setIsEditFolderOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Folder</DialogTitle>
             <DialogDescription>
               Update your folder details.
             </DialogDescription>
           </DialogHeader>
+          
+          {updateFolderMutation.isError && (
+            <Alert variant="destructive" className="my-2">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {updateFolderMutation.error instanceof Error 
+                  ? updateFolderMutation.error.message 
+                  : "There was an error updating your folder. Please try again."}
+              </AlertDescription>
+            </Alert>
+          )}
           
           <Form {...editFolderForm}>
             <form onSubmit={editFolderForm.handleSubmit(onEditFolderSubmit)} className="space-y-4">
@@ -676,9 +727,14 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Folder Name</FormLabel>
+                    <FormLabel>Folder Name <span className="text-red-500">*</span></FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        placeholder="My Documents" 
+                        {...field} 
+                        autoFocus 
+                        className="focus:border-primary"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -692,7 +748,10 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                   <FormItem>
                     <FormLabel>Description (Optional)</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input 
+                        placeholder="Folder description" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -707,12 +766,13 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                     <FormControl>
                       <input
                         type="checkbox"
-                        className="form-checkbox h-4 w-4"
+                        className="form-checkbox h-5 w-5 rounded text-primary"
                         checked={field.value}
                         onChange={field.onChange}
+                        id="edit-default-folder-checkbox"
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-normal">
+                    <FormLabel className="text-sm font-normal cursor-pointer" htmlFor="edit-default-folder-checkbox">
                       Make this my default folder
                     </FormLabel>
                     <FormMessage />
@@ -720,7 +780,14 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                 )}
               />
               
-              <DialogFooter>
+              <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                <p className="flex items-center">
+                  <Info className="h-4 w-4 mr-2 text-gray-400" />
+                  All new documents will be automatically saved to your default folder.
+                </p>
+              </div>
+              
+              <DialogFooter className="pt-2">
                 <Button 
                   type="button" 
                   variant="outline" 
@@ -728,12 +795,14 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
                     setIsEditFolderOpen(false);
                     setEditingFolder(null);
                   }}
+                  disabled={updateFolderMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
                   disabled={updateFolderMutation.isPending}
+                  className="min-w-[100px]"
                 >
                   {updateFolderMutation.isPending ? (
                     <>
