@@ -23,16 +23,16 @@ app.use((req, res, next) => {
   } else {
     res.header('Access-Control-Allow-Origin', '*');
   }
-  
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
-  
+
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(204).send();
   }
-  
+
   next();
 });
 
@@ -63,7 +63,7 @@ app.use(express.static(path.join(__dirname, '..'), {
 (async () => {
   // Create storage instance
   const storage = new MemStorage();
-  
+
   // Seed the database with initial data
   try {
     await seedDatabase(storage);
@@ -71,9 +71,9 @@ app.use(express.static(path.join(__dirname, '..'), {
   } catch (error) {
     log("Error seeding database:", error);
   }
-  
+
   const server = await registerRoutes(app);
-  
+
   // Global error handler
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
