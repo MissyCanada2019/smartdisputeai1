@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { trackPageView } from "@/lib/analytics";
 import { useLeadCapture, LeadCaptureType } from "@/hooks/use-lead-capture";
 import { AuthProvider } from "@/context/authContext";
+import { OnboardingProvider } from "@/context/onboardingContext";
+import { TutorialModal } from "@/components/onboarding";
 
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
@@ -52,6 +54,7 @@ import LTBResourcesPage from "@/pages/ltb-resources";
 import CASResourcesPage from "@/pages/cas-resources";
 import ResourceDetail from "@/pages/resource-detail";
 import Login from "@/pages/login";
+import Onboarding from "@/pages/onboarding";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
@@ -126,6 +129,7 @@ function Router() {
       <Route path="/services" component={Services} />
       <Route path="/faq" component={FAQ} />
       <Route path="/login" component={Login} />
+      <Route path="/onboarding" component={Onboarding} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
@@ -228,24 +232,27 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <FormProvider>
         <AuthProvider>
-          <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
-            <AnalyticsProvider>
-              {/* RouteTracker component for automatic page view tracking */}
-              <RouteTracker />
-              <div className="flex flex-col min-h-screen bg-gray-50">
-                <Header />
-                <main className="flex-grow">
-                  <Router />
-                </main>
-                <Footer />
-                <ChatBotModal />
-                <CookieConsentBanner />
-                <AutomaticUpdates />
-                <MaintenanceNotification />
-              </div>
-              <Toaster />
-            </AnalyticsProvider>
-          </LeadCaptureProvider>
+          <OnboardingProvider>
+            <LeadCaptureProvider initialConfig={initialLeadCaptureConfig}>
+              <AnalyticsProvider>
+                {/* RouteTracker component for automatic page view tracking */}
+                <RouteTracker />
+                <div className="flex flex-col min-h-screen bg-gray-50">
+                  <Header />
+                  <main className="flex-grow">
+                    <Router />
+                  </main>
+                  <Footer />
+                  <ChatBotModal />
+                  <CookieConsentBanner />
+                  <AutomaticUpdates />
+                  <MaintenanceNotification />
+                  <TutorialModal />
+                </div>
+                <Toaster />
+              </AnalyticsProvider>
+            </LeadCaptureProvider>
+          </OnboardingProvider>
         </AuthProvider>
       </FormProvider>
     </QueryClientProvider>

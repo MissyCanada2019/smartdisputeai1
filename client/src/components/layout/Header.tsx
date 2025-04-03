@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/authContext";
+import { useOnboarding } from "@/context/onboardingContext";
 import { Button } from "@/components/ui/button";
+import { TutorialButton } from "@/components/onboarding";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -16,16 +18,27 @@ import {
   SheetTrigger,
   SheetClose
 } from "@/components/ui/sheet";
+import { HelpCircle } from "lucide-react";
 
 export default function Header() {
   const [location] = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const { startOnboarding } = useOnboarding();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     // Navigate to home after logout
     window.location.href = "/";
+  };
+  
+  const handleTutorialStart = (journeyType: 'tenant' | 'cas' | 'general') => {
+    const tutorialId = journeyType === 'tenant' 
+      ? 'tenant-journey' 
+      : journeyType === 'cas' 
+        ? 'cas-journey' 
+        : 'general-journey';
+    startOnboarding(tutorialId);
   };
 
   return (
@@ -75,6 +88,33 @@ export default function Header() {
         </nav>
         
         <div className="flex items-center space-x-4">
+          {/* Tutorial Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-1">
+                <HelpCircle size={16} />
+                <span>Tutorials</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuLabel>Interactive Tutorials</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleTutorialStart('general')}>
+                Platform Overview
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleTutorialStart('tenant')}>
+                Tenant Dispute Guide
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleTutorialStart('cas')}>
+                CAS Navigation Guide
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/onboarding">All Tutorials</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        
           {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -178,8 +218,50 @@ export default function Header() {
                     About
                   </Link>
                 </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/onboarding" className={`text-gray-600 hover:text-primary font-medium ${location === '/onboarding' ? 'text-primary' : ''}`}>
+                    Tutorials
+                  </Link>
+                </SheetClose>
                 
                 <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="flex flex-col space-y-2 mb-4">
+                    <p className="text-sm text-gray-500">Quick Tutorials:</p>
+                    <SheetClose asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="justify-start"
+                        onClick={() => handleTutorialStart('general')}
+                      >
+                        <HelpCircle size={14} className="mr-2" />
+                        Platform Overview
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="justify-start"
+                        onClick={() => handleTutorialStart('tenant')}
+                      >
+                        <HelpCircle size={14} className="mr-2" />
+                        Tenant Dispute Guide
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="justify-start"
+                        onClick={() => handleTutorialStart('cas')}
+                      >
+                        <HelpCircle size={14} className="mr-2" />
+                        CAS Navigation Guide
+                      </Button>
+                    </SheetClose>
+                  </div>
+                
                   {isAuthenticated ? (
                     <SheetClose asChild>
                       <Button 
