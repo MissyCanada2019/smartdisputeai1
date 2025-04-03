@@ -998,6 +998,7 @@ export default function Subscribe() {
                 buy-button-id="buy_btn_1R9jlVL0pLShFbLts1kRQ0AdU"
                 publishable-key="pk_test_51R9jlVL0pLShFbLts1kRQ0AdUAHiksTj4oppbKqANC4SJKqjgEHzdRJ4D32U7r4PugGvBKjZEgnvFCP4C0xdXiAK00wKQgHwbe"
                 client-reference-id={`plan_${selectedPlan}_${Date.now()}`}
+                customer-session-client-secret={clientSecret}
               >
               </stripe-buy-button>
               <div className="text-center text-xs text-gray-500 mt-4">
