@@ -378,7 +378,7 @@ export class MemStorage implements IStorage {
     const demoUser = {
       id: 999,
       username: "demouser",
-      password: "password",
+      password: "password123", // Updated to match the correct password used elsewhere
       firstName: "Demo",
       lastName: "User",
       email: "demo@example.com",
@@ -389,7 +389,9 @@ export class MemStorage implements IStorage {
       postalCode: null,
       incomeBased: null,
       stripeCustomerId: null,
-      stripeSubscriptionId: null
+      stripeSubscriptionId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     // Save demo user
