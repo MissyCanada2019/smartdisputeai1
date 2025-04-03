@@ -6,7 +6,7 @@ import { useAuth } from "@/context/authContext";
 import ProgressTracker from "@/components/common/ProgressTracker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FormProvider, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,7 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
-import DocumentUploader from "@/components/documents/DocumentUploader";
 import EvidenceUploader from "@/components/evidence/EvidenceUploader";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -179,13 +178,13 @@ export default function EvidenceUpload() {
       // Case information
       issueDescription: formState.issueDescription || "",
       agency: formState.agency || "",
-      province: isAuthenticated && user ? user.province : formState.province || "",
+      province: isAuthenticated && user ? user.province || "" : formState.province || "",
       
       // Contact information
-      phone: isAuthenticated && user ? user.phone : formState.phone || "",
-      address: isAuthenticated && user ? user.address : formState.address || "",
-      city: isAuthenticated && user ? user.city : formState.city || "",
-      postalCode: isAuthenticated && user ? user.postalCode : formState.postalCode || ""
+      phone: isAuthenticated && user ? user.phone || "" : formState.phone || "",
+      address: isAuthenticated && user ? user.address || "" : formState.address || "",
+      city: isAuthenticated && user ? user.city || "" : formState.city || "",
+      postalCode: isAuthenticated && user ? user.postalCode || "" : formState.postalCode || ""
     }
   });
 
@@ -398,47 +397,40 @@ export default function EvidenceUpload() {
         <p className="text-gray-600">
           {isAuthenticated 
             ? 'Upload and analyze your evidence to receive personalized legal recommendations'
-            : 'Sign up to access personalized legal help, document generation, and evidence analysis'
-          }
+            : 'Sign up to access personalized legal assistance and document recommendations'}
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <Card className="mb-6">
+          <Card>
             <CardHeader>
-              <CardTitle>Upload Evidence Documents</CardTitle>
+              <CardTitle>Upload Evidence</CardTitle>
               <CardDescription>
-                Upload any documents, photos, or files related to your issue. This helps us recommend the most effective legal documents.
+                Upload documents, photos, or any relevant evidence
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {userId ? (
-                <EvidenceUploader
-                  userId={userId}
-                  title="Evidence Documents"
-                  description="Upload documents, photos, messages or any other evidence related to your dispute"
-                  onUploadComplete={handleEvidenceUpload}
-                />
-              ) : (
-                <div className="p-4 bg-gray-100 rounded-md text-center">
-                  <p>Initializing upload system...</p>
-                </div>
-              )}
+              <EvidenceUploader 
+                onEvidenceUpload={handleEvidenceUpload} 
+                userId={userId || undefined} 
+                maxFiles={10}
+              />
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="mt-6">
             <CardHeader>
-              <CardTitle>Describe Your Issue</CardTitle>
+              <CardTitle>Case Information</CardTitle>
               <CardDescription>
                 Tell us more about the situation you're facing
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {/* Issue Description Section */}
-                <div className="mb-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Issue Description Section */}
+                  <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Issue Details</h3>
                     <FormField
                       control={form.control}
@@ -448,9 +440,9 @@ export default function EvidenceUpload() {
                           <FormLabel>What issue are you facing? <span className="text-red-500">*</span></FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Please be as specific as possible. For example: 'My landlord hasn't fixed my leaking roof for 3 months despite multiple requests' or 'I received a notice from CAS and I'm not sure how to respond'"
-                              className="min-h-[150px]"
-                              {...field}
+                              placeholder="Please describe your situation in detail. What happened? When did it happen? Who was involved?" 
+                              className="min-h-[150px]" 
+                              {...field} 
                             />
                           </FormControl>
                           <FormMessage />
@@ -458,24 +450,24 @@ export default function EvidenceUpload() {
                       )}
                     />
 
-                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <FormField
                         control={form.control}
                         name="agency"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Which agency or organization are you dealing with?</FormLabel>
+                            <FormLabel>Which agency or entity are you dealing with?</FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
-                              value={field.value || ""}
+                              defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select an agency (optional)" />
+                                  <SelectValue placeholder="Select agency or entity" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {agencies.map(agency => (
+                                {agencies.map((agency) => (
                                   <SelectItem key={agency.value} value={agency.value}>
                                     {agency.label}
                                   </SelectItem>
@@ -492,18 +484,18 @@ export default function EvidenceUpload() {
                         name="province"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Your Province or Territory <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>Province/Territory <span className="text-red-500">*</span></FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
-                              value={field.value || ""}
+                              defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
-                                  <SelectValue placeholder="Select your location" />
+                                  <SelectValue placeholder="Select your province/territory" />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {provinces.map(province => (
+                                {provinces.map((province) => (
                                   <SelectItem key={province.value} value={province.value}>
                                     {province.label}
                                   </SelectItem>
@@ -515,126 +507,20 @@ export default function EvidenceUpload() {
                         )}
                       />
                     </div>
-                </div>
-                
-                {/* Account Information Section - Only shown if not authenticated */}
-                {!isAuthenticated ? (
-                  <div className="mb-6">
-                      <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
-                      <div className="mb-4">
-                        <FormField
-                          control={form.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username <span className="text-red-500">*</span></FormLabel>
-                              <FormControl>
-                                <input
-                                  type="text"
-                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Choose a username (min. 4 characters)"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <input
-                                type="text"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your first name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <input
-                                type="text"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your last name"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <div className="grid md:grid-cols-2 gap-4 mt-4">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <input
-                                type="email"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your email address"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
-                            <FormControl>
-                              <input
-                                type="password"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Create a password (min. 8 characters)"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                  ) : (
-                  // If user is authenticated, display a welcome message
-                  <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <h3 className="text-lg font-medium mb-2">Welcome Back, {user?.firstName || 'User'}</h3>
-                    <p className="text-sm text-gray-600">
-                      You're signed in as <span className="font-semibold">{user?.email}</span>. 
-                      Any evidence you upload will be associated with your account.
-                    </p>
                   </div>
-                )}
+
+                  {/* Display existing user information if authenticated */}
+                  {isAuthenticated && user && (
+                    <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                      <p className="text-sm text-blue-800">
+                        You're signed in as <span className="font-semibold">{user.email}</span>. 
+                        Any evidence you upload will be associated with your account.
+                      </p>
+                    </div>
+                  )}
                   
-                {/* Contact Information Section */}
-                <div className="mb-6">
+                  {/* Contact Information Section */}
+                  <div className="mb-6">
                     <h3 className="text-lg font-medium border-b pb-2 mb-4">Contact Information</h3>
                     <div className="space-y-4">
                       <FormField
@@ -647,7 +533,7 @@ export default function EvidenceUpload() {
                               <input
                                 type="tel"
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your phone number (optional)"
+                                placeholder="(555) 555-5555"
                                 {...field}
                               />
                             </FormControl>
@@ -655,18 +541,18 @@ export default function EvidenceUpload() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address</FormLabel>
+                            <FormLabel>Street Address</FormLabel>
                             <FormControl>
                               <input
                                 type="text"
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your street address (optional)"
+                                placeholder="123 Main St"
                                 {...field}
                               />
                             </FormControl>
@@ -674,8 +560,8 @@ export default function EvidenceUpload() {
                           </FormItem>
                         )}
                       />
-                      
-                      <div className="grid md:grid-cols-2 gap-4">
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="city"
@@ -686,7 +572,7 @@ export default function EvidenceUpload() {
                                 <input
                                   type="text"
                                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Enter your city (optional)"
+                                  placeholder="Toronto"
                                   {...field}
                                 />
                               </FormControl>
@@ -694,7 +580,7 @@ export default function EvidenceUpload() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="postalCode"
@@ -705,7 +591,7 @@ export default function EvidenceUpload() {
                                 <input
                                   type="text"
                                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                  placeholder="Enter your postal code (optional)"
+                                  placeholder="A1A 1A1"
                                   {...field}
                                 />
                               </FormControl>
@@ -717,31 +603,132 @@ export default function EvidenceUpload() {
                     </div>
                   </div>
 
-                <div className="flex justify-between mt-8">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => navigate("/")}
-                  >
-                    Back to Home
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={isAnalyzing}
-                  >
-                    {isAnalyzing ? 'Analyzing Your Evidence...' : isAuthenticated ? 'Analyze Evidence & Continue' : 'Create Account & Continue'}
-                  </Button>
-                </div>
-                
-                {!isAuthenticated && (
-                  <div className="mt-6 text-center">
-                    <span className="text-sm text-gray-500">Already have an account? </span>
-                    <Link href="/login" className="text-primary hover:underline text-sm font-medium">
-                      Login Instead
-                    </Link>
+                  {/* New Account Form Section - Only show if not logged in */}
+                  {!isAuthenticated && (
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium border-b pb-2 mb-4">Create Your Account</h3>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="firstName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>First Name <span className="text-red-500">*</span></FormLabel>
+                                <FormControl>
+                                  <input
+                                    type="text"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="John"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="lastName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Last Name <span className="text-red-500">*</span></FormLabel>
+                                <FormControl>
+                                  <input
+                                    type="text"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="Doe"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Username <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <input
+                                  type="text"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="johndoe123"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <input
+                                  type="email"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="john.doe@example.com"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="password"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Password <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <input
+                                  type="password"
+                                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                  placeholder="••••••••"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <div className="mt-6">
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      disabled={isAnalyzing}
+                    >
+                      {isAnalyzing ? 'Analyzing Your Evidence...' : isAuthenticated ? 'Analyze Evidence & Continue' : 'Create Account & Continue'}
+                    </Button>
                   </div>
-                )}
-              </form>
+                  
+                  {!isAuthenticated && (
+                    <div className="mt-6 text-center">
+                      <span className="text-sm text-gray-500">Already have an account? </span>
+                      <Link href="/login" className="text-primary hover:underline text-sm font-medium">
+                        Login Instead
+                      </Link>
+                    </div>
+                  )}
+                </form>
+              </Form>
             </CardContent>
           </Card>
         </div>
