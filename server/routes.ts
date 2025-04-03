@@ -176,6 +176,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Serve login diagnostics page
+  app.get('/login-diagnostics', (req: Request, res: Response) => {
+    console.log('Serving login diagnostics page');
+    const filePath = path.join(__dirname, '../login-diagnostics.html');
+    res.sendFile(filePath);
+  });
+  
   // Serve Google Search Console verification file
   app.get('/google-search-console-verification.html', (req: Request, res: Response) => {
     const filePath = path.join(__dirname, '../client/public/google-search-console-verification.html');
@@ -800,18 +807,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/login", async (req: Request, res: Response) => {
     try {
-      console.log("Login request received:", JSON.stringify(req.body));
+      console.log("LOGIN - Request received:", JSON.stringify(req.body));
       
-      // Log all available users (debugging only)
+      // Import the auth module functions
+      const { authenticateUser, getSafeUser } = await import('./auth');
+      
+      // Log all available users for debugging
       const allUsers = Array.from((storage as any).users.values());
-      console.log(`Available users (${allUsers.length}):`, allUsers.map(u => u.username));
-      console.log("Full user data for debugging:", JSON.stringify(allUsers, (key, value) => 
-        key === 'password' ? '******' : value));
+      console.log(`DEBUG - Available users (${allUsers.length}):`, allUsers.map(u => u.username));
+      console.log("DEBUG - User IDs in storage:", Array.from((storage as any).users.keys()));
       
-      // Validate request body
+      // Debug dump of the first user
+      if (allUsers.length > 0) {
+        console.log("DEBUG - First user:", JSON.stringify({
+          ...allUsers[0],
+          password: '******' // Hide password in logs
+        }));
+      }
+      
+      // Validate request body using Zod schema
       const validationResult = loginSchema.safeParse(req.body);
       if (!validationResult.success) {
-        console.log("Validation failed:", validationResult.error.format());
+        console.log("LOGIN FAILED - Validation error:", validationResult.error.format());
         return res.status(400).json({ 
           message: "Invalid login data", 
           errors: validationResult.error.format() 
@@ -819,44 +836,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { username, password } = validationResult.data;
-      console.log("Looking for user:", username);
+      console.log("LOGIN ATTEMPT - User:", username);
       
-      // Find user by username
-      const user = await storage.getUserByUsername(username);
-      console.log("User found:", user ? "Yes" : "No");
+      // Try to authenticate the user with our new auth module
+      const user = await authenticateUser(storage, username, password);
       
       if (!user) {
-        console.log("User not found in database");
+        console.log("LOGIN FAILED - Invalid credentials for user:", username);
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
-      // Check if password is using the new hash format (salt:hash)
-      console.log("Comparing passwords, expected:", user.password.substring(0, 1) + "***");
+      console.log("LOGIN SUCCESS - User authenticated:", username, "(ID:", user.id, ")");
       
-      if (user.password.includes(':')) {
-        // New format with salt:hash
-        const [salt, storedHash] = user.password.split(':');
-        const inputHash = require('crypto').pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-        
-        if (storedHash !== inputHash) {
-          console.log("Password hash mismatch");
-          return res.status(401).json({ message: "Invalid username or password" });
-        }
-      } else {
-        // Legacy format with plain text comparison
-        if (user.password !== password) {
-          console.log("Password mismatch (legacy format)");
-          return res.status(401).json({ message: "Invalid username or password" });
-        }
-      }
+      // Get safe user data (without password) 
+      const userData = getSafeUser(user);
       
-      console.log("Login successful for user:", username);
-      
-      // Return user data (excluding password)
-      const { password: _, ...userData } = user;
+      // Return the user data to the client
+      console.log("LOGIN RESPONSE - Sending user data to client");
       res.json(userData);
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("LOGIN ERROR:", error);
       res.status(500).json({ message: `Login error: ${error.message}` });
     }
   });
@@ -2435,6 +2434,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching current user data:", error);
       res.status(500).json({ message: `Error fetching user data: ${error.message}` });
+    }
+  });
+  
+  // API endpoint to verify if a user exists in the system
+  app.get("/api/users/verify/:username", async (req: Request, res: Response) => {
+    try {
+      const { username } = req.params;
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+      
+      const user = await storage.getUserByUsername(username);
+      res.json({ 
+        exists: !!user,
+        username,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('[SERVER] Error verifying user existence:', error);
+      res.status(500).json({ 
+        message: `Error verifying user: ${error.message}`,
+        timestamp: new Date().toISOString()
+      });
     }
   });
   

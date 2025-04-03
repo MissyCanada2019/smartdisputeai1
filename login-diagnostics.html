@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartDispute.ai - Login Diagnostics</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f7f9fc;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #1a73e8;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      margin-bottom: 25px;
+    }
+    
+    h2 {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-top: 0;
+      color: #333;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    input, button, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button {
+      background-color: #1a73e8;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      border: none;
+    }
+    
+    button:hover {
+      background-color: #155cbd;
+    }
+    
+    .result-container {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    
+    .result-container.error {
+      background-color: #ffebee;
+      border-left: 3px solid #f44336;
+    }
+    
+    .result-container.success {
+      background-color: #e8f5e9;
+      border-left: 3px solid #4caf50;
+    }
+    
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    code {
+      font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+    }
+    
+    .navigation {
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .navigation a {
+      color: #1a73e8;
+      text-decoration: none;
+    }
+    
+    .navigation a:hover {
+      text-decoration: underline;
+    }
+    
+    .tool-section {
+      margin-bottom: 20px;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .button-group button {
+      flex: 1;
+    }
+    
+    .warning {
+      background-color: #fff8e1;
+      border-left: 3px solid #ffc107;
+      padding: 10px 15px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    .cookie-info {
+      font-size: 12px;
+      color: #757575;
+      margin-top: 5px;
+    }
+    
+    .system-info {
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    
+    #session-content {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SmartDispute.ai Login Diagnostics</h1>
+    
+    <div class="card">
+      <h2>Login Test Tool</h2>
+      <p>This tool helps diagnose login issues by testing the API directly.</p>
+      
+      <div class="warning">
+        <strong>Important:</strong> This tool is only for troubleshooting login issues. Your credentials are not stored but will be sent to the server to attempt authentication.
+      </div>
+      
+      <div>
+        <label for="test-username">Username:</label>
+        <input type="text" id="test-username" placeholder="Enter your username">
+        
+        <label for="test-password">Password:</label>
+        <input type="password" id="test-password" placeholder="Enter your password">
+        
+        <button id="test-login-button">Test Login</button>
+      </div>
+      
+      <div id="login-result" class="result-container" style="display: none;">
+        <pre><code id="login-result-content"></code></pre>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>User Account Verification</h2>
+      <p>Check if a user exists in the system.</p>
+      
+      <div>
+        <label for="verify-username">Username:</label>
+        <input type="text" id="verify-username" placeholder="Enter username to verify">
+        
+        <button id="verify-button">Verify User Exists</button>
+      </div>
+      
+      <div id="verify-result" class="result-container" style="display: none;">
+        <pre><code id="verify-result-content"></code></pre>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Session & Cookie Diagnostics</h2>
+      <p>Check browser session and cookie state.</p>
+      
+      <div class="button-group">
+        <button id="check-session-button">Check Session State</button>
+        <button id="clear-session-button">Clear Session Data</button>
+      </div>
+      
+      <div id="session-result" class="result-container" style="display: none;">
+        <pre><code id="session-content"></code></pre>
+      </div>
+      
+      <div class="system-info">
+        <p>
+          <strong>Browser:</strong> <span id="browser-info"></span><br>
+          <strong>Platform:</strong> <span id="platform-info"></span><br>
+          <strong>Cookies Enabled:</strong> <span id="cookies-enabled"></span><br>
+          <strong>User Agent:</strong> <span id="user-agent"></span>
+        </p>
+      </div>
+    </div>
+    
+    <div class="navigation">
+      <a href="/standalone-login">Return to Login Page</a> | 
+      <a href="/">Return to Home Page</a>
+    </div>
+  </div>
+  
+  <script>
+    // Display system information
+    document.getElementById('browser-info').textContent = navigator.userAgent.match(/(firefox|chrome|safari|edge|msie|trident)/i)?.[0] || 'Unknown';
+    document.getElementById('platform-info').textContent = navigator.platform;
+    document.getElementById('cookies-enabled').textContent = navigator.cookieEnabled ? 'Yes' : 'No';
+    document.getElementById('user-agent').textContent = navigator.userAgent;
+    
+    // Test login function
+    document.getElementById('test-login-button').addEventListener('click', async function() {
+      const username = document.getElementById('test-username').value;
+      const password = document.getElementById('test-password').value;
+      const resultContainer = document.getElementById('login-result');
+      const resultContent = document.getElementById('login-result-content');
+      const loginButton = this;
+      
+      if (!username || !password) {
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'result-container error';
+        resultContent.textContent = 'Please enter both username and password';
+        return;
+      }
+      
+      try {
+        loginButton.textContent = 'Testing...';
+        loginButton.disabled = true;
+        resultContainer.style.display = 'block';
+        resultContent.textContent = 'Sending request to server...';
+        
+        const startTime = Date.now();
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+          credentials: 'include'
+        });
+        const duration = Date.now() - startTime;
+        
+        const responseText = await response.text();
+        let responseData;
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          responseData = { error: 'Failed to parse JSON response', raw: responseText };
+        }
+        
+        const resultObj = {
+          success: response.ok,
+          status: response.status,
+          statusText: response.status + ' ' + response.statusText,
+          responseTime: duration + 'ms',
+          headers: Object.fromEntries([...response.headers]),
+          data: responseData
+        };
+        
+        if (response.ok) {
+          resultContainer.className = 'result-container success';
+          resultContent.textContent = 'Login successful!\n\n' + JSON.stringify(resultObj, null, 2);
+        } else {
+          resultContainer.className = 'result-container error';
+          resultContent.textContent = 'Login failed.\n\n' + JSON.stringify(resultObj, null, 2);
+        }
+      } catch (error) {
+        resultContainer.className = 'result-container error';
+        resultContent.textContent = 'Connection error: ' + error.message;
+      } finally {
+        loginButton.textContent = 'Test Login';
+        loginButton.disabled = false;
+      }
+    });
+    
+    // Verify user exists function
+    document.getElementById('verify-button').addEventListener('click', async function() {
+      const username = document.getElementById('verify-username').value;
+      const resultContainer = document.getElementById('verify-result');
+      const resultContent = document.getElementById('verify-result-content');
+      const verifyButton = this;
+      
+      if (!username) {
+        resultContainer.style.display = 'block';
+        resultContainer.className = 'result-container error';
+        resultContent.textContent = 'Please enter a username';
+        return;
+      }
+      
+      try {
+        verifyButton.textContent = 'Checking...';
+        verifyButton.disabled = true;
+        resultContainer.style.display = 'block';
+        resultContent.textContent = 'Checking if user exists...';
+        
+        const response = await fetch(`/api/users/verify/${encodeURIComponent(username)}`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        const responseText = await response.text();
+        let responseData;
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          responseData = { error: 'Failed to parse JSON response', raw: responseText };
+        }
+        
+        if (response.ok && responseData.exists) {
+          resultContainer.className = 'result-container success';
+          resultContent.textContent = `User '${username}' exists in the system.\n\n${JSON.stringify(responseData, null, 2)}`;
+        } else if (response.ok) {
+          resultContainer.className = 'result-container error';
+          resultContent.textContent = `User '${username}' does not exist in the system.\n\n${JSON.stringify(responseData, null, 2)}`;
+        } else {
+          resultContainer.className = 'result-container error';
+          resultContent.textContent = `Error checking user: ${responseData.message || 'Unknown error'}\n\n${JSON.stringify(responseData, null, 2)}`;
+        }
+      } catch (error) {
+        resultContainer.className = 'result-container error';
+        resultContent.textContent = 'Connection error: ' + error.message;
+      } finally {
+        verifyButton.textContent = 'Verify User Exists';
+        verifyButton.disabled = false;
+      }
+    });
+    
+    // Check session state
+    document.getElementById('check-session-button').addEventListener('click', function() {
+      const resultContainer = document.getElementById('session-result');
+      const resultContent = document.getElementById('session-content');
+      resultContainer.style.display = 'block';
+      
+      try {
+        // Get all cookies
+        const cookies = document.cookie.split(';').map(cookie => {
+          const [name, value] = cookie.trim().split('=');
+          return { name, value: value || '(empty)' };
+        });
+        
+        // Get localStorage
+        const localStorage = Object.keys(window.localStorage).map(key => {
+          let value = window.localStorage.getItem(key);
+          
+          // Detect if value is JSON and try to parse it
+          if (value && (value.startsWith('{') || value.startsWith('['))) {
+            try {
+              value = JSON.parse(value);
+            } catch (e) {
+              // Keep as string if parse fails
+            }
+          }
+          
+          // Mask sensitive data
+          if (key === 'user' && typeof value === 'object') {
+            if (value.password) value.password = '******';
+          }
+          
+          return { key, value };
+        });
+        
+        // Get sessionStorage
+        const sessionStorage = Object.keys(window.sessionStorage).map(key => {
+          let value = window.sessionStorage.getItem(key);
+          
+          // Detect if value is JSON
+          if (value && (value.startsWith('{') || value.startsWith('['))) {
+            try {
+              value = JSON.parse(value);
+            } catch (e) {
+              // Keep as string if parse fails
+            }
+          }
+          
+          return { key, value };
+        });
+        
+        const sessionState = {
+          cookies: cookies,
+          localStorage: localStorage,
+          sessionStorage: sessionStorage,
+          timestamp: new Date().toISOString()
+        };
+        
+        resultContent.textContent = JSON.stringify(sessionState, null, 2);
+      } catch (error) {
+        resultContent.textContent = 'Error retrieving session data: ' + error.message;
+      }
+    });
+    
+    // Clear session data
+    document.getElementById('clear-session-button').addEventListener('click', function() {
+      if (confirm('This will clear all stored session data. Continue?')) {
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear cookies
+        document.cookie.split(";").forEach(function(c) {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        const resultContainer = document.getElementById('session-result');
+        const resultContent = document.getElementById('session-content');
+        resultContainer.style.display = 'block';
+        resultContent.textContent = 'All session data cleared. You are now logged out.';
+        
+        // Refresh session info
+        document.getElementById('check-session-button').click();
+      }
+    });
+  </script>
+</body>
+</html>

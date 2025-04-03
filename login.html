@@ -213,6 +213,8 @@
       
       <div class="links">
         <a id="forgot-link">Forgot your password?</a>
+        <span style="padding: 0 5px;">•</span>
+        <a id="debug-mode-toggle" style="color: #999;">Debug Mode</a>
       </div>
     </div>
     
@@ -301,6 +303,34 @@
       alert('This feature is not yet implemented. Please contact support or use the test account.');
     });
     
+    // Debug mode toggle
+    const debugModeToggle = document.getElementById('debug-mode-toggle');
+    debugModeToggle.addEventListener('click', () => {
+      const isCurrentlyDebugMode = localStorage.getItem('debugMode') === 'true';
+      const newDebugMode = !isCurrentlyDebugMode;
+      
+      localStorage.setItem('debugMode', newDebugMode.toString());
+      
+      // Update UI
+      if (newDebugMode) {
+        debugModeToggle.style.color = '#ff6b6b';
+        debugModeToggle.innerHTML = 'Debug Mode: ON';
+        alert('Debug mode activated. Login and registration errors will show detailed debugging information.');
+      } else {
+        debugModeToggle.style.color = '#999';
+        debugModeToggle.innerHTML = 'Debug Mode';
+        alert('Debug mode deactivated.');
+      }
+      
+      console.log('[CLIENT] Debug mode set to:', newDebugMode);
+    });
+    
+    // Initialize debug mode state
+    if (localStorage.getItem('debugMode') === 'true') {
+      debugModeToggle.style.color = '#ff6b6b';
+      debugModeToggle.innerHTML = 'Debug Mode: ON';
+    }
+    
     // Login form submission
     document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -318,34 +348,80 @@
       loginButton.disabled = true;
       
       try {
-        console.log('Attempting login with username:', username);
+        console.log('[CLIENT] Attempting login with username:', username);
         
+        // Show debug info in the page if username is "debug"
+        let debugMode = username.toLowerCase() === "debug" || localStorage.getItem('debugMode') === 'true';
+        if (debugMode) {
+          console.log('[CLIENT] Debug mode activated');
+          localStorage.setItem('debugMode', 'true');
+          
+          // Add debug info
+          errorMessage.innerHTML = '<strong>DEBUG MODE</strong><br>Sending request to /api/login...';
+          errorMessage.style.display = 'block';
+        }
+        
+        const requestBody = JSON.stringify({ username, password });
+        if (debugMode) {
+          console.log('[CLIENT] Request body:', requestBody);
+          errorMessage.innerHTML += `<br>Request body: ${requestBody}`;
+        }
+        
+        // Make the login request
+        const startTime = Date.now();
         const response = await fetch('/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, password }),
+          body: requestBody,
           credentials: 'include'
         });
+        const duration = Date.now() - startTime;
         
-        console.log('Login response status:', response.status);
+        console.log('[CLIENT] Login response status:', response.status, 'in', duration, 'ms');
+        
+        if (debugMode) {
+          errorMessage.innerHTML += `<br>Response status: ${response.status} (${duration}ms)`;
+        }
+        
+        // Parse the response JSON
+        const responseText = await response.text();
+        
+        if (debugMode) {
+          errorMessage.innerHTML += `<br>Response text: ${responseText.substring(0, 150)}${responseText.length > 150 ? '...' : ''}`;
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log('[CLIENT] Response data:', data);
+        } catch (e) {
+          console.error('[CLIENT] Failed to parse response as JSON:', e);
+          if (debugMode) {
+            errorMessage.innerHTML += `<br>ERROR parsing JSON: ${e.message}`;
+          }
+          throw new Error('Server returned invalid response format');
+        }
         
         if (!response.ok) {
-          const data = await response.json();
-          console.log('Login error data:', data);
+          console.log('[CLIENT] Login error data:', data);
           throw new Error(data.message || 'Invalid username or password');
         }
         
-        const userData = await response.json();
-        console.log('Login successful, user data received:', userData);
+        // Login successful
+        console.log('[CLIENT] Login successful, user data:', data);
         
         // Save user data to localStorage
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(data));
         
         // Show success message
         successMessage.textContent = 'Login successful! Redirecting...';
         successMessage.style.display = 'block';
+        
+        if (debugMode) {
+          errorMessage.style.display = 'none';
+        }
         
         // Redirect after a short delay
         setTimeout(() => {
@@ -355,8 +431,15 @@
         }, 1500);
         
       } catch (error) {
-        console.error('Login error:', error);
-        errorMessage.textContent = error.message || 'Invalid username or password';
+        console.error('[CLIENT] Login error:', error);
+        const errorMsg = error.message || 'Invalid username or password';
+        
+        if (localStorage.getItem('debugMode') === 'true') {
+          errorMessage.innerHTML += `<br><strong>ERROR:</strong> ${errorMsg}`;
+        } else {
+          errorMessage.textContent = errorMsg;
+        }
+        
         errorMessage.style.display = 'block';
         loginButton.textContent = 'Log in';
         loginButton.disabled = false;
@@ -383,31 +466,83 @@
       registerButton.disabled = true;
       
       try {
-        console.log('Attempting to create account for:', username);
+        console.log('[CLIENT] Attempting to create account for:', username);
         
+        // Show debug info in the page if debug mode is enabled
+        let debugMode = localStorage.getItem('debugMode') === 'true';
+        if (debugMode) {
+          console.log('[CLIENT] Debug mode activated for registration');
+          
+          // Add debug info
+          errorMessage.innerHTML = '<strong>DEBUG MODE</strong><br>Sending registration request to /api/users...';
+          errorMessage.style.display = 'block';
+        }
+        
+        const requestBody = JSON.stringify({ 
+          firstName, 
+          lastName, 
+          email, 
+          username, 
+          password 
+        });
+        
+        if (debugMode) {
+          console.log('[CLIENT] Registration request body:', requestBody);
+          errorMessage.innerHTML += `<br>Request body: ${requestBody.replace(/"password":"[^"]+"/g, '"password":"******"')}`;
+        }
+        
+        // Make the registration request
+        const startTime = Date.now();
         const response = await fetch('/api/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ firstName, lastName, email, username, password }),
+          body: requestBody,
           credentials: 'include'
         });
+        const duration = Date.now() - startTime;
         
-        console.log('Registration response status:', response.status);
+        console.log('[CLIENT] Registration response status:', response.status, 'in', duration, 'ms');
+        
+        if (debugMode) {
+          errorMessage.innerHTML += `<br>Response status: ${response.status} (${duration}ms)`;
+        }
+        
+        // Parse the response JSON
+        const responseText = await response.text();
+        
+        if (debugMode) {
+          errorMessage.innerHTML += `<br>Response text: ${responseText.substring(0, 150)}${responseText.length > 150 ? '...' : ''}`;
+        }
+        
+        let data;
+        try {
+          data = JSON.parse(responseText);
+          console.log('[CLIENT] Registration response data:', data);
+        } catch (e) {
+          console.error('[CLIENT] Failed to parse registration response as JSON:', e);
+          if (debugMode) {
+            errorMessage.innerHTML += `<br>ERROR parsing JSON: ${e.message}`;
+          }
+          throw new Error('Server returned invalid response format');
+        }
         
         if (!response.ok) {
-          const data = await response.json();
-          console.log('Registration error data:', data);
+          console.log('[CLIENT] Registration error data:', data);
           throw new Error(data.message || 'Failed to create account');
         }
         
-        const userData = await response.json();
-        console.log('Registration successful, user data:', userData);
+        // Registration successful
+        console.log('[CLIENT] Registration successful, user data:', data);
         
         // Show success message
         successMessage.textContent = 'Account created successfully! You can now log in.';
         successMessage.style.display = 'block';
+        
+        if (debugMode) {
+          errorMessage.style.display = 'none';
+        }
         
         // Clear the form
         document.getElementById('register-form').reset();
@@ -421,8 +556,15 @@
         }, 2000);
         
       } catch (error) {
-        console.error('Registration error:', error);
-        errorMessage.textContent = error.message || 'Failed to create account';
+        console.error('[CLIENT] Registration error:', error);
+        const errorMsg = error.message || 'Failed to create account';
+        
+        if (localStorage.getItem('debugMode') === 'true') {
+          errorMessage.innerHTML += `<br><strong>ERROR:</strong> ${errorMsg}`;
+        } else {
+          errorMessage.textContent = errorMsg;
+        }
+        
         errorMessage.style.display = 'block';
         registerButton.textContent = 'Create Account';
         registerButton.disabled = false;
