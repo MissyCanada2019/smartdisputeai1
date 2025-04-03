@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { FileText, FileCheck } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { FileText, FileCheck, UploadCloud } from "lucide-react";
 
 // Define proper type for evidence files
 export interface EvidenceFile {
@@ -39,6 +40,7 @@ export default function EvidenceUploader({
 }: EvidenceUploaderProps) {
   const [files, setFiles] = React.useState<File[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   const [uploadedFiles, setUploadedFiles] = React.useState<EvidenceFile[]>([]);
   const { toast } = useToast();
 
@@ -95,9 +97,20 @@ export default function EvidenceUploader({
       console.log(`Uploading ${files.length} files to /api/evidence-files/upload for userId: ${userId}`);
 
       try {
-        // Send the upload request
-        const response = await apiRequest("POST", "/api/evidence-files/upload", formData);
+        // Reset progress
+        setUploadProgress(0);
+        
+        // Send the upload request with progress tracking
+        const response = await apiRequest("POST", "/api/evidence-files/upload", formData, {
+          onProgress: (progress) => {
+            console.log(`Upload progress: ${progress}%`);
+            setUploadProgress(progress);
+          }
+        });
         console.log('Upload response received - Status:', response.status, response.statusText);
+        
+        // Set progress to 100% when upload is complete
+        setUploadProgress(100);
         
         // Try to parse the response as JSON
         let data;
@@ -166,13 +179,13 @@ export default function EvidenceUploader({
         <FileUpload 
           onUpload={handleFilesSelected}
           multiple={true}
-          acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.csv,.mp3,.mp4"
-          maxFileSizeMB={10}
+          acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.csv,.mp3,.mp4,.wav,.xlsx,.xls,.ppt,.pptx"
+          maxFileSizeMB={50}
           label="Evidence Files"
-          helpText="Upload any documents, photos, or files that support your case (PDF, DOC, JPG, PNG, etc.)"
+          helpText="Upload any documents, photos, videos or audio files that support your case. We support large files up to 50MB."
         />
         
-        <div className="mt-4">
+        <div className="mt-4 space-y-2">
           <Button 
             onClick={handleUpload} 
             disabled={files.length === 0 || isUploading}
@@ -180,7 +193,7 @@ export default function EvidenceUploader({
           >
             {isUploading ? (
               <>
-                <span className="animate-spin mr-2">⟳</span> 
+                <UploadCloud className="h-4 w-4 mr-2 animate-pulse" /> 
                 Uploading...
               </>
             ) : (
@@ -190,6 +203,15 @@ export default function EvidenceUploader({
               </>
             )}
           </Button>
+          
+          {isUploading && (
+            <div className="space-y-1">
+              <Progress value={uploadProgress} className="h-2 w-full" />
+              <p className="text-xs text-center text-gray-500">
+                {uploadProgress < 100 ? 'Uploading...' : 'Processing...'} {uploadProgress}%
+              </p>
+            </div>
+          )}
         </div>
         
         {uploadedFiles.length > 0 && (

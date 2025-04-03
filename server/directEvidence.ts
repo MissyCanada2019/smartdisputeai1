@@ -51,13 +51,31 @@ const upload = multer({
   fileFilter: function (req, file, cb) {
     // Check accepted file types
     const allowedMimeTypes = [
+      // Images
       'image/jpeg',
       'image/png',
       'image/gif',
+      // Documents
       'application/pdf',
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'text/plain',
+      'text/csv',
+      // Spreadsheets
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      // Presentations
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      // Audio
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/wav',
+      'audio/x-wav',
+      // Video
+      'video/mp4',
+      'video/mpeg',
+      'video/quicktime'
     ];
 
     if (allowedMimeTypes.includes(file.mimetype)) {
@@ -84,7 +102,7 @@ const claudeAnalyzeSchema = z.object({
 
 export default function registerDirectEvidenceRoutes(storage: IStorage): Router {
   // Upload evidence files without requiring authentication
-  router.post("/upload", upload.array("evidence", 10), async (req: Request, res: Response) => {
+  router.post("/upload", upload.array("evidence", 20), async (req: Request, res: Response) => {
     try {
       console.log("POST /direct-evidence/upload - Request received");
       console.log("Files received:", req.files ? (req.files as Express.Multer.File[]).length : 0);
@@ -432,7 +450,7 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
         }
         
         console.log("Extracted case summary and recommendations");
-      } catch (analysisError) {
+      } catch (analysisError: any) {
         console.error("Error generating final case analysis:", analysisError);
         caseSummary = "Unable to generate a complete case analysis due to an error.";
         meritAssessment = "Unable to assess the merit of this case.";
@@ -550,13 +568,14 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
             ...analysis
           });
           
-        } catch (analysisError) {
+        } catch (analysisError: any) {
           console.error(`Error analyzing file ${file.fileName}:`, analysisError);
           errorOccurred = true;
+          const errorMessage = analysisError instanceof Error ? analysisError.message : String(analysisError);
           analyses.push({
             fileId: file.id,
             fileName: file.originalName,
-            error: `Failed to analyze: ${analysisError.message}`,
+            error: `Failed to analyze: ${errorMessage}`,
             summary: "Analysis failed",
             strength: "Unable to determine",
             weaknesses: "Unable to determine",
@@ -576,10 +595,11 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
             analyses.filter(a => !a.error), 
             caseContext
           );
-        } catch (comparisonError) {
+        } catch (comparisonError: any) {
           console.error("Error comparing evidence strategies:", comparisonError);
+          const errorMessage = comparisonError instanceof Error ? comparisonError.message : String(comparisonError);
           comparisonResult = {
-            error: `Failed to compare evidence: ${comparisonError.message}`,
+            error: `Failed to compare evidence: ${errorMessage}`,
             strategy: "Unable to generate comprehensive strategy",
             prioritizedEvidence: [],
             nextSteps: ["Review individual analyses instead"]

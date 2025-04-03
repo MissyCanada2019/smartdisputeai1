@@ -11,6 +11,9 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  options?: {
+    onProgress?: (progress: number) => void;
+  }
 ): Promise<Response> {
   // Check if data is FormData and handle it differently
   const isFormData = data instanceof FormData;
@@ -23,6 +26,53 @@ export async function apiRequest(
     apiUrl = `http://${host}${url}`;
   }
   
+  // If we have FormData and a progress handler, use XMLHttpRequest instead of fetch
+  if (isFormData && options?.onProgress && typeof options.onProgress === 'function') {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      // Handle progress events
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          options.onProgress?.(percentComplete);
+        }
+      });
+      
+      // Setup completion handlers
+      xhr.addEventListener('load', () => {
+        const response = new Response(xhr.response, {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          headers: new Headers({
+            'Content-Type': xhr.getResponseHeader('Content-Type') || 'application/json'
+          })
+        });
+        
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(response);
+        } else {
+          reject(new Error(`Request failed with status ${xhr.status}`));
+        }
+      });
+      
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error occurred'));
+      });
+      
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Request was aborted'));
+      });
+      
+      // Open and send the request
+      xhr.open(method, apiUrl);
+      xhr.responseType = 'blob';
+      xhr.withCredentials = true;
+      xhr.send(data as FormData);
+    });
+  }
+  
+  // Use standard fetch API for non-FormData or when no progress tracking is needed
   const res = await fetch(apiUrl, {
     method,
     // Don't set Content-Type for FormData; browser will set it automatically with the boundary

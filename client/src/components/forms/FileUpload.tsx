@@ -20,7 +20,7 @@ export default function FileUpload({
   onUpload,
   multiple = false,
   acceptedFileTypes = ".pdf,.doc,.docx,.jpg,.jpeg,.png",
-  maxFileSizeMB = 5,
+  maxFileSizeMB = 50,
   label = "Upload Documents",
   helpText = "Upload any supporting documents for your dispute (PDF, DOC, JPG)",
   showPreview = true,
