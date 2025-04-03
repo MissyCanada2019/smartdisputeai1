@@ -19,11 +19,30 @@ export async function authenticateUser(
     console.log('AUTH: Authenticating user:', username);
     
     // Get the user by username
-    const user = await storage.getUserByUsername(username);
+    let user = await storage.getUserByUsername(username);
     
-    // If no user found, return undefined
+    // If no user found, try with different case variations
     if (!user) {
-      console.log('AUTH: User not found:', username);
+      console.log('AUTH: User not found with exact username, trying case variations');
+      
+      // Try with first letter capitalized (like "Demouser")
+      if (username.length > 0) {
+        const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+        console.log('AUTH: Trying capitalized username:', capitalizedUsername);
+        user = await storage.getUserByUsername(capitalizedUsername);
+      }
+      
+      // If still not found and using capitalized version, try lowercase
+      if (!user && username.charAt(0) === username.charAt(0).toUpperCase()) {
+        const lowercaseUsername = username.toLowerCase();
+        console.log('AUTH: Trying lowercase username:', lowercaseUsername);
+        user = await storage.getUserByUsername(lowercaseUsername);
+      }
+    }
+    
+    // If no user found after trying variations, return undefined
+    if (!user) {
+      console.log('AUTH: User not found with any case variation:', username);
       return undefined;
     }
     

@@ -844,7 +844,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         console.log("LOGIN FAILED - Invalid credentials for user:", username);
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ 
+          message: "Invalid username or password", 
+          details: "If you're having trouble logging in, try the following: 1) Check your capitalization, 2) Make sure you're using the correct password, 3) Try the Demouser/password123 demo account, or 4) Visit /login-diagnostics for troubleshooting tools."
+        });
       }
       
       console.log("LOGIN SUCCESS - User authenticated:", username, "(ID:", user.id, ")");

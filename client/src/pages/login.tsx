@@ -34,6 +34,7 @@ export default function Login() {
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [loginErrorDetails, setLoginErrorDetails] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -46,6 +47,7 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     setLoginError(null);
+    setLoginErrorDetails(null);
     
     try {
       const response = await apiRequest("POST", "/api/login", data);
@@ -73,10 +75,28 @@ export default function Login() {
       
     } catch (error: any) {
       console.error("Login error:", error);
-      setLoginError(error.message || "Invalid username or password");
+      
+      // Check if we have a response with detailed error information
+      let errorMessage = error.message || "Invalid username or password";
+      let errorDetails = null;
+      
+      try {
+        // If the error contains response details, try to extract them
+        if (error.response) {
+          const errorData = await error.response.json();
+          if (errorData.details) {
+            errorDetails = errorData.details;
+            setLoginErrorDetails(errorData.details);
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing error details:", e);
+      }
+      
+      setLoginError(errorMessage);
       toast({
         title: "Login failed",
-        description: error.message || "Invalid username or password",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -99,7 +119,17 @@ export default function Login() {
             {loginError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{loginError}</AlertDescription>
+                <AlertDescription>
+                  <div className="flex flex-col gap-2">
+                    <span>{loginError}</span>
+                    {loginErrorDetails && (
+                      <div className="text-sm mt-2 p-2 bg-red-100 rounded border border-red-200">
+                        <h4 className="font-semibold mb-1">Help:</h4>
+                        <p>{loginErrorDetails}</p>
+                      </div>
+                    )}
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
             

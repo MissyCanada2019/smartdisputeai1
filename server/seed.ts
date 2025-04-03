@@ -18,7 +18,12 @@ export const seedDatabase = async (storage: IStorage): Promise<void> => {
   
   // If no user with ID 999 was found, check by username
   if (!existingDemoUser) {
-    existingDemoUser = await storage.getUserByUsername("demouser");
+    // Check for either capitalized or lowercase username since we're updating to capitalized
+    existingDemoUser = await storage.getUserByUsername("Demouser");
+    if (!existingDemoUser) {
+      existingDemoUser = await storage.getUserByUsername("demouser");
+    }
+    
     if (existingDemoUser) {
       console.log("Found demo user by username:", existingDemoUser.id);
       
@@ -77,7 +82,7 @@ const createDemoUser = async (storage: IStorage) => {
     const now = new Date();
     const demoUser = {
       id: 999,
-      username: "demouser",
+      username: "Demouser",  // Changed to capitalized to match what the user is entering
       password: "password123",  // This is the correct password
       firstName: "Demo",
       lastName: "User",
@@ -101,7 +106,7 @@ const createDemoUser = async (storage: IStorage) => {
     // Fallback to regular createUser - note this won't have ID 999 but will use auto-increment
     console.log("WARNING: Using fallback createUser that won't have ID 999!");
     return await storage.createUser({
-      username: "demouser",
+      username: "Demouser",  // Changed to capitalized to match what the user is entering
       password: "password123",
       firstName: "Demo",
       lastName: "User",
