@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubscriptionButton from '@/components/checkout/SubscriptionButton';
 import LowIncomeSubscriptionButton from '@/components/checkout/LowIncomeSubscriptionButton';
 import AddOnOptions from '@/components/checkout/AddOnOptions';
+import AdvocacyGroupSubscription from '@/components/checkout/AdvocacyGroupSubscription';
 import { loadSubscriptionScript } from '@/utils/paypal-loader';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/use-query-params';
@@ -226,6 +227,19 @@ export default function SubscriptionsPage() {
       {/* Add-on Services section */}
       <div className="mb-12">
         <AddOnOptions />
+      </div>
+      
+      {/* Advocacy group subscription */}
+      <div className="mb-12">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold">For Advocacy Organizations</h2>
+          <p className="text-gray-600 mt-2">
+            Help other advocacy groups provide legal support to those in need
+          </p>
+        </div>
+        <div className="max-w-md mx-auto">
+          <AdvocacyGroupSubscription />
+        </div>
       </div>
       
       {/* Enterprise plans */}
