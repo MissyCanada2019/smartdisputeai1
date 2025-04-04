@@ -80,9 +80,9 @@ export default function LowIncomeSubscriptionButton({
           </DialogTrigger>
           <DialogContent className="sm:max-w-[525px]">
             <DialogHeader>
-              <DialogTitle>Request Low-Income Access</DialogTitle>
+              <DialogTitle>Income Verification for $25/Year Plan</DialogTitle>
               <DialogDescription>
-                Please complete this form to request access to our low-income plan. We'll review your application and respond within 1-2 business days.
+                To access our discounted low-income plan, please submit income verification below. We use Formspree for secure document handling.
               </DialogDescription>
             </DialogHeader>
             <RequestAccessForm onSuccess={handleRequestSuccess} />
