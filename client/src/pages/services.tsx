@@ -252,6 +252,16 @@ export default function Services() {
             </Button>
           </Link>
         </div>
+        
+        <div className="mt-8 text-center">
+          <h3 className="text-xl font-semibold mb-3">Ready to pay for a service?</h3>
+          <p className="text-gray-600 mb-4">Securely pay for document analysis, case strategy reports, and more using PayPal.</p>
+          <Link href="/paypal-checkout">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+              View Payment Options
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );

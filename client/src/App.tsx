@@ -55,6 +55,7 @@ import CASResourcesPage from "@/pages/cas-resources";
 import ResourceDetail from "@/pages/resource-detail";
 import Login from "@/pages/login";
 import Onboarding from "@/pages/onboarding";
+import PayPalCheckout from "@/pages/paypal-checkout";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
@@ -130,6 +131,7 @@ function Router() {
       <Route path="/faq" component={FAQ} />
       <Route path="/login" component={Login} />
       <Route path="/onboarding" component={Onboarding} />
+      <Route path="/paypal-checkout" component={PayPalCheckout} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
