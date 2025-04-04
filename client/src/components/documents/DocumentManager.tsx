@@ -60,7 +60,7 @@ import DocumentUploader from "@/components/documents/DocumentUploader";
 
 // Schemas for form validation
 const createFolderSchema = z.object({
-  userId: z.number(),
+  userId: z.coerce.number(), // Use coerce to ensure it's converted to a number
   name: z.string().min(1, "Folder name is required"),
   description: z.string().optional(),
   isDefault: z.boolean().optional()
@@ -229,7 +229,12 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
   const updateFolderMutation = useMutation({
     mutationFn: async (data: CreateFolderFormValues & { id: number }) => {
       const { id, ...folderData } = data;
-      const response = await apiRequest('PATCH', `/api/document-folders/${id}`, folderData);
+      // Make sure the userId is always a number
+      const processedData = {
+        ...folderData,
+        userId: Number(folderData.userId)
+      };
+      const response = await apiRequest('PATCH', `/api/document-folders/${id}`, processedData);
       return await response.json();
     },
     onSuccess: () => {
