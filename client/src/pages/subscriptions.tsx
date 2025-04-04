@@ -5,6 +5,7 @@ import { useAuth } from '@/context/authContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SubscriptionButton from '@/components/checkout/SubscriptionButton';
+import LowIncomeSubscriptionButton from '@/components/checkout/LowIncomeSubscriptionButton';
 import { loadSubscriptionScript } from '@/utils/paypal-loader';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/use-query-params';
@@ -62,22 +63,22 @@ export default function SubscriptionsPage() {
     return true;
   };
 
-  // Subscription plans data
+  // Low income plan
+  const lowIncomePlan = {
+    title: "Low Income Plan",
+    price: "$19.99",
+    frequency: "/month",
+    features: [
+      "Full access to document templates",
+      "Basic evidence analysis",
+      "Email support",
+      "1 case review per month",
+      "Access to basic resources"
+    ]
+  };
+  
+  // Regular subscription plans data (non-low-income)
   const subscriptionPlans = [
-    {
-      planId: "P-3GR81923U1762090JM7XY23A",
-      title: "Low Income Plan",
-      price: "$19.99",
-      frequency: "/month",
-      features: [
-        "Full access to document templates",
-        "Basic evidence analysis",
-        "Email support",
-        "1 case review per month",
-        "Access to basic resources"
-      ],
-      popular: false
-    },
     {
       planId: "P-08038987C9239303UM7XUMQY",
       title: "Standard Plan",
@@ -162,8 +163,8 @@ export default function SubscriptionsPage() {
           <div>
             <h3 className="font-semibold text-blue-800 mb-1">Income-Based Pricing Available</h3>
             <p className="text-blue-700">
-              We offer income-based pricing for those in need. If you qualify for our low-income plan, select the Low Income Plan option.
-              Documentation may be required for verification.
+              We believe legal assistance should be accessible to everyone. Our low-income plan requires pre-approval through a simple application process. 
+              Select the "Request Access" option and provide the required documentation to apply.
             </p>
           </div>
         </div>
@@ -171,6 +172,17 @@ export default function SubscriptionsPage() {
       
       {/* Subscription plans grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {/* Low Income Plan with Request Access form */}
+        <div className="flex" onClick={() => handleSubscriptionClick()}>
+          <LowIncomeSubscriptionButton
+            title={lowIncomePlan.title}
+            price={lowIncomePlan.price}
+            frequency={lowIncomePlan.frequency}
+            features={lowIncomePlan.features}
+          />
+        </div>
+        
+        {/* Standard Subscription Plans */}
         {subscriptionPlans.map((plan) => (
           <div key={plan.planId} className="flex" onClick={() => handleSubscriptionClick()}>
             <SubscriptionButton
@@ -187,19 +199,25 @@ export default function SubscriptionsPage() {
       
       {/* Low-income verification notice */}
       <div className="bg-gray-50 rounded-lg p-6 mb-8 max-w-3xl mx-auto">
-        <h3 className="text-xl font-semibold mb-2">Low-Income Verification</h3>
+        <h3 className="text-xl font-semibold mb-2">Low-Income Verification Process</h3>
         <p className="text-gray-700 mb-4">
-          To qualify for our low-income plan, you may need to provide documentation. We accept various forms of proof including:
+          Our low-income plan requires pre-approval to ensure it reaches those who truly need it. To qualify, you'll need to submit documentation such as:
         </p>
         <ul className="list-disc pl-6 mb-4 text-gray-700">
           <li>Proof of government assistance (EI, disability, etc.)</li>
           <li>Income tax assessment notice</li>
           <li>Social assistance benefit statement</li>
           <li>Income verification letter from employer</li>
+          <li>Student ID with financial aid documentation</li>
         </ul>
-        <p className="text-gray-700">
-          After subscribing, you'll be prompted to upload verification documents if you selected the Low Income Plan.
+        <p className="text-gray-700 mb-4">
+          After submitting your request via the form, our team will review your information and send you payment instructions if approved, typically within 1-2 business days.
         </p>
+        <div className="bg-blue-50 p-3 rounded-md">
+          <p className="text-blue-800 font-medium">
+            We're committed to making legal assistance accessible to all Canadians, regardless of financial situation.
+          </p>
+        </div>
       </div>
       
       {/* Enterprise plans */}

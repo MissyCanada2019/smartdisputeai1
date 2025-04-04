@@ -108,10 +108,11 @@ export function renderSubscriptionButton() {
   
   // List of subscription plan IDs to render
   const subscriptionPlans = [
-    'P-08038987C9239303UM7XUMQY',
-    'P-9AX658241M042612XM7XYWQA',
-    'P-7JM446383R159705KM7XYYGI',
-    'P-3GR81923U1762090JM7XY23A'  // Low income plan
+    'P-08038987C9239303UM7XUMQY',  // Standard plan
+    'P-9AX658241M042612XM7XYWQA',  // Professional plan
+    'P-7JM446383R159705KM7XYYGI',  // Enterprise plan
+    'P-3GR81923U1762090JM7XY23A',  // Low income plan (old)
+    'P-5RD04151SE166720WM7XY4JA'   // Low income plan (new)
   ];
   
   // Render each subscription button
