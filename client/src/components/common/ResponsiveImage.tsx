@@ -42,7 +42,7 @@ export default function ResponsiveImage({
   
   // Common image styles to ensure faces aren't cropped
   const imgClasses = `${className || ''} object-contain`;
-  const imgStyle = { maxWidth: '100%', objectFit: 'contain' };
+  const imgStyle = { maxWidth: '100%', objectFit: 'contain' as const };
 
   // If the image is already WebP, use it directly
   if (isWebpSupported) {

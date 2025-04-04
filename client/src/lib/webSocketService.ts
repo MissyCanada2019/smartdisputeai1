@@ -53,9 +53,8 @@ class WebSocketService {
     }
 
     try {
-      // Always use ws protocol regardless of page protocol to avoid SSL issues
-      // This is a development-friendly approach
-      const protocol = "ws:";
+      // Match the WebSocket protocol to the page protocol
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.host;
       const wsUrl = `${protocol}//${host}/ws`;
       

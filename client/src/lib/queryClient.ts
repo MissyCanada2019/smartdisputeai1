@@ -18,12 +18,12 @@ export async function apiRequest(
   // Check if data is FormData and handle it differently
   const isFormData = data instanceof FormData;
   
-  // Force HTTP protocol for all API requests in development (avoids SSL issues)
+  // Make sure API requests use the same protocol as the current page
+  // to avoid mixed content issues
   let apiUrl = url;
-  if (window.location.protocol === 'https:' && url.startsWith('/')) {
-    // Convert to absolute HTTP URL if needed
-    const host = window.location.host;
-    apiUrl = `http://${host}${url}`;
+  if (url.startsWith('/')) {
+    // Always use relative URLs for API calls to match the current protocol
+    apiUrl = url;
   }
   
   // If we have FormData and a progress handler, use XMLHttpRequest instead of fetch
@@ -97,11 +97,10 @@ export const getQueryFn: <T>(options: {
     // Get the URL from the queryKey
     let url = queryKey[0] as string;
     
-    // Force HTTP protocol for all API requests in development (avoids SSL issues)
-    if (window.location.protocol === 'https:' && url.startsWith('/')) {
-      // Convert to absolute HTTP URL if needed
-      const host = window.location.host;
-      url = `http://${host}${url}`;
+    // Use relative URLs to ensure we stay on the same protocol
+    if (url.startsWith('/')) {
+      // Leave URL as is to maintain current protocol
+      url = url; 
     }
     
     const res = await fetch(url, {
