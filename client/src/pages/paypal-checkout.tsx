@@ -4,139 +4,28 @@ import { PayPalOptions } from '@/components/checkout/PayPalOptions';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from 'lucide-react';
-
-// Define PayPal buttons config interface for local use
-interface PayPalButtonsConfig {
-  style?: {
-    shape?: 'rect' | 'pill';
-    color?: 'gold' | 'blue' | 'silver' | 'white' | 'black';
-    layout?: 'vertical' | 'horizontal';
-    label?: 'paypal' | 'checkout' | 'buynow' | 'pay' | 'installment' | 'subscribe';
-  };
-  createSubscription?: (data: any, actions: any) => Promise<any>;
-  onApprove?: (data: any, actions: any) => void;
-  [key: string]: any;
-}
+import { 
+  loadHostedButtonsScript, 
+  loadSubscriptionScript, 
+  renderHostedButtons, 
+  renderSubscriptionButton, 
+  unloadPayPalScripts 
+} from '../utils/paypal-loader';
 
 export default function PayPalCheckout() {
   useEffect(() => {
-    // This function loads both types of PayPal SDK scripts and renders all buttons
+    // Load the PayPal scripts and render buttons
     const loadAllPayPalScripts = () => {
-      // Function to load hosted buttons SDK
-      const loadHostedButtonsScript = () => {
-        if (document.querySelector('script[src*="components=hosted-buttons"]')) {
-          renderHostedButtons();
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = "https://www.paypal.com/sdk/js?client-id=BAAX70lJFewN5Sur8CW1Za_Q0USFYAZErHKuZtZ9zEqJ9uncHMycZe2W0IeO5ZPk04uV-59Fm3mNP7nXkE&components=hosted-buttons&disable-funding=venmo&currency=CAD";
-        script.async = true;
-        
-        script.onload = () => {
-          renderHostedButtons();
-        };
-        
-        document.body.appendChild(script);
-      };
+      // Load subscription script first
+      loadSubscriptionScript(renderSubscriptionButton);
       
-      // Function to load subscription buttons SDK
-      const loadSubscriptionScript = () => {
-        if (document.querySelector('script[src*="intent=subscription"]')) {
-          renderSubscriptionButton();
-          return;
-        }
-        
-        const script = document.createElement('script');
-        script.src = "https://www.paypal.com/sdk/js?client-id=AaDPFtb7F82jtldZNnVrUjagsqDsiOahIHBARcI_dqyg45XyNt_qeSGdsp_5XO_15AnEUKy7srJVX7_F&vault=true&intent=subscription";
-        script.async = true;
-        script.setAttribute('data-sdk-integration-source', 'button-factory');
-        
-        script.onload = () => {
-          renderSubscriptionButton();
-        };
-        
-        document.body.appendChild(script);
-      };
-      
-      // Load both scripts in sequence (subscription first, then hosted buttons)
-      loadSubscriptionScript();
-      
-      // Wait a short time before loading the second script to avoid conflicts
+      // Wait a short time before loading the hosted buttons script to avoid conflicts
       setTimeout(() => {
-        loadHostedButtonsScript();
+        loadHostedButtonsScript(renderHostedButtons);
       }, 500);
       
-      return () => {
-        // Cleanup function if component unmounts
-        const scripts = document.querySelectorAll('script[src*="paypal.com/sdk/js"]');
-        scripts.forEach(script => {
-          if (script.parentNode) {
-            script.parentNode.removeChild(script);
-          }
-        });
-      };
-    };
-    
-    // Function to render hosted PayPal buttons
-    const renderHostedButtons = () => {
-      if (!window.paypal || !window.paypal.HostedButtons) return;
-      
-      // Render document analysis button
-      try {
-        const container = document.getElementById("paypal-container-QD2XW5BJCKQGU");
-        if (container) {
-          window.paypal.HostedButtons({
-            hostedButtonId: "QD2XW5BJCKQGU",
-          }).render("#paypal-container-QD2XW5BJCKQGU");
-        }
-      } catch (err) {
-        console.error("Error rendering document analysis button:", err);
-      }
-      
-      // Render monthly subscription hosted button
-      try {
-        const container = document.getElementById("paypal-container-VPHYTYJQB32Y6");
-        if (container) {
-          window.paypal.HostedButtons({
-            hostedButtonId: "VPHYTYJQB32Y6",
-          }).render("#paypal-container-VPHYTYJQB32Y6");
-        }
-      } catch (err) {
-        console.error("Error rendering subscription button:", err);
-      }
-    };
-    
-    // Function to render subscription button
-    const renderSubscriptionButton = () => {
-      if (!window.paypal || !window.paypal.Buttons) return;
-      
-      try {
-        const container = document.getElementById("paypal-button-container-P-08038987C9239303UM7XUMQY");
-        if (container) {
-          window.paypal.Buttons({
-            style: {
-              shape: 'rect',
-              color: 'gold',
-              layout: 'vertical',
-              label: 'subscribe'
-            },
-            createSubscription: function(data: any, actions: any) {
-              return actions.subscription.create({
-                /* Creates the subscription */
-                plan_id: 'P-08038987C9239303UM7XUMQY'
-              });
-            },
-            onApprove: function(data: any, actions: any) {
-              alert('Subscription successful! Subscription ID: ' + data.subscriptionID);
-              // Here you would typically handle this server-side
-              // For example, send the subscription ID to your server
-            }
-          }).render('#paypal-button-container-P-08038987C9239303UM7XUMQY');
-        }
-      } catch (err) {
-        console.error("Error rendering plan subscription button:", err);
-      }
+      // Return cleanup function
+      return unloadPayPalScripts;
     };
     
     return loadAllPayPalScripts();
@@ -211,9 +100,17 @@ export default function PayPalCheckout() {
         </div>
       </div>
       
-      {/* PayPal Subscription Button */}
-      <div className="mt-12 max-w-xl mx-auto">
-        <div className="p-8 border rounded-lg shadow-md w-full">
+      <div className="mt-8 grid md:grid-cols-2 gap-8">
+        <div className="p-8 border rounded-lg shadow-md mx-auto w-full">
+          <h3 className="text-xl font-bold mb-4 text-center">Legal Case Review</h3>
+          <p className="text-gray-600 mb-6 text-center">
+            In-depth legal case review with strategic recommendations by AI
+          </p>
+          <div id="paypal-container-R4FJL8GB7FRNN"></div>
+        </div>
+        
+        {/* PayPal Subscription Button */}
+        <div className="p-8 border rounded-lg shadow-md mx-auto w-full">
           <h3 className="text-xl font-bold mb-4 text-center">Premium Subscription</h3>
           <p className="text-gray-600 mb-6 text-center">
             Unlimited document analysis, priority support, and exclusive legal resources

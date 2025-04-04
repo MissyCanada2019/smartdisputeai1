@@ -74,6 +74,18 @@ export function renderHostedButtons() {
   } catch (err) {
     console.error("Error rendering subscription button:", err);
   }
+  
+  // Render case review button
+  try {
+    const container = document.getElementById("paypal-container-R4FJL8GB7FRNN");
+    if (container) {
+      window.paypal.HostedButtons({
+        hostedButtonId: "R4FJL8GB7FRNN",
+      }).render("#paypal-container-R4FJL8GB7FRNN");
+    }
+  } catch (err) {
+    console.error("Error rendering case review button:", err);
+  }
 }
 
 /**
