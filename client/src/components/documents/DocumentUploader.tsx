@@ -42,10 +42,10 @@ export default function DocumentUploader({
       return;
     }
 
-    if (!documentId && !userId && !folderId) {
+    if (!documentId && !userId) {
       toast({
         title: "Upload error",
-        description: "Missing documentId, userId, or folderId for upload",
+        description: "Missing documentId or userId for upload",
         variant: "destructive",
       });
       return;
@@ -114,10 +114,10 @@ export default function DocumentUploader({
         <FileUpload 
           onUpload={handleFilesSelected}
           multiple={true}
-          acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-          maxFileSizeMB={5}
+          acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.csv,.mp3,.mp4,.wav,.xlsx,.xls,.ppt,.pptx"
+          maxFileSizeMB={200}
           label="Supporting Documents"
-          helpText="Upload any documents that support your dispute (PDF, DOC, JPG, PNG)"
+          helpText="Upload any documents that support your dispute. We support large files up to 200MB."
         />
         
         <div className="mt-4">
