@@ -1587,7 +1587,7 @@ const subscription = await stripe.subscriptions.create({
   });
 
   // File upload endpoint for supporting documents
-  app.post("/api/upload-documents", upload.array('documents', 5), async (req: Request, res: Response) => {
+  app.post("/api/upload-documents", upload.array('documents', 20), async (req: Request, res: Response) => {
     try {
       // Check if files were uploaded
       if (!req.files || (Array.isArray(req.files) && req.files.length === 0)) {
@@ -1595,11 +1595,14 @@ const subscription = await stripe.subscriptions.create({
       }
       
       const files = Array.isArray(req.files) ? req.files : [req.files];
-      const { documentId, userId, folderId } = req.body;
+      const { documentId, userId } = req.body;
       
-      if (!documentId && !userId && !folderId) {
-        return res.status(400).json({ message: "Either documentId, userId, or folderId is required" });
+      if (!documentId && !userId) {
+        return res.status(400).json({ message: "Either documentId or userId is required" });
       }
+      
+      console.log(`Document upload request received - documentId: ${documentId}, userId: ${userId}`);
+      console.log(`Received ${files.length} files for upload`);
       
       // Create response with file information
       const uploadedFiles = files.map(file => ({
@@ -1625,15 +1628,15 @@ const subscription = await stripe.subscriptions.create({
         }
       }
       
-      // If folderId is provided, add the files to the specified folder
-      if (folderId) {
-        const folderIdNum = parseInt(folderId);
-        if (!isNaN(folderIdNum)) {
-          // For each uploaded file, create a document record and assign it to the folder
+      // If userId is provided but no documentId, create standalone documents without folder assignment
+      if (userId && !documentId) {
+        const userIdNum = parseInt(userId);
+        if (!isNaN(userIdNum)) {
+          // For each uploaded file, create a document record without folder assignment
           for (const file of uploadedFiles) {
             // Create a user document for the file
-            const newDoc = await storage.createUserDocument({
-              userId: parseInt(userId),
+            await storage.createUserDocument({
+              userId: userIdNum,
               templateId: 0, // Special template ID for uploaded files
               documentData: JSON.stringify({
                 title: file.originalName,
@@ -1644,14 +1647,6 @@ const subscription = await stripe.subscriptions.create({
               status: 'completed',
               supportingDocuments: JSON.stringify([file])
             });
-            
-            if (newDoc && newDoc.id) {
-              // Add the document to the folder
-              await storage.createDocumentFolderAssignment({
-                documentId: newDoc.id,
-                folderId: folderIdNum
-              });
-            }
           }
         }
       }
