@@ -18,18 +18,32 @@ const testImage3 = '/images/optimized/IMG_0182.webp';
 const testImage4 = '/images/optimized/IMG_0185.webp';
 const testImage5 = '/images/optimized/IMG_0209.webp';
 
+// Define type for performance metrics
+interface PerfMetrics {
+  ttfb: number;
+  fcp: number;
+  lcp: number;
+  cls: number;
+}
+
 export default function PerformanceDemo() {
   // Only internal development users should see actual metrics
   const isInternalUser = () => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user?.username === 'admin' || user?.username === 'demouser' || window.location.hostname.includes('localhost');
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user?.username === 'admin' || user?.username === 'demouser' || 
+        (typeof window !== 'undefined' && window.location.hostname.includes('localhost'));
+    } catch (e) {
+      return false;
+    }
   };
   
-  const [perfMetrics, setPerfMetrics] = useState({
-    ttfb: isInternalUser() ? 0 : Math.floor(Math.random() * 75) + 25, // Fake values for non-internal users
+  // Initialize metrics with either zeros or randomized values for display purposes
+  const [perfMetrics, setPerfMetrics] = useState<PerfMetrics>({
+    ttfb: isInternalUser() ? 0 : Math.floor(Math.random() * 75) + 25,
     fcp: isInternalUser() ? 0 : Math.floor(Math.random() * 150) + 100,
     lcp: isInternalUser() ? 0 : Math.floor(Math.random() * 300) + 200,
-    cls: isInternalUser() ? 0 : (Math.random() * 0.05).toFixed(4)
+    cls: isInternalUser() ? 0 : Number((Math.random() * 0.05).toFixed(4))
   });
   
   useEffect(() => {
@@ -48,8 +62,8 @@ export default function PerformanceDemo() {
     // Performance observer reference to clean up later
     let performanceObserver: PerformanceObserver | undefined;
     
-    // Get real performance metrics if available
-    if (typeof window !== 'undefined' && 'performance' in window && 'PerformanceObserver' in window) {
+    // Only collect actual performance metrics for internal users
+    if (isInternalUser() && typeof window !== 'undefined' && 'performance' in window && 'PerformanceObserver' in window) {
       try {
         // Create performance observer
         performanceObserver = new PerformanceObserver((list) => {
@@ -85,6 +99,9 @@ export default function PerformanceDemo() {
       } catch (error) {
         console.error('Error setting up performance metrics:', error);
       }
+    } else {
+      // For non-internal users, just log that metrics are disabled
+      console.log('Performance metrics collection disabled for non-internal users');
     }
     
     // Return cleanup function

@@ -40,17 +40,22 @@ export default function ResponsiveImage({
   // Get file extension
   const isWebpSupported = extension === 'webp';
   
+  // Common image styles to ensure faces aren't cropped
+  const imgClasses = `${className || ''} object-contain`;
+  const imgStyle = { maxWidth: '100%', objectFit: 'contain' };
+
   // If the image is already WebP, use it directly
   if (isWebpSupported) {
     return (
       <img
         src={src}
         alt={alt}
-        className={className}
+        className={imgClasses}
         width={width}
         height={height}
         loading={priority ? 'eager' : loading}
         sizes={sizes}
+        style={imgStyle}
       />
     );
   }
@@ -71,11 +76,12 @@ export default function ResponsiveImage({
       <img
         src={src}
         alt={alt}
-        className={className}
+        className={imgClasses}
         width={width}
         height={height}
         loading={priority ? 'eager' : loading}
         sizes={sizes}
+        style={imgStyle}
       />
     </picture>
   );

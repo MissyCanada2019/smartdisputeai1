@@ -72,9 +72,13 @@ export default function LazyLoadImage({
       className={`relative ${className || ''}`}
       style={{
         width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : 'auto',
+        // Remove fixed height constraint to avoid face cropping issues
+        // Use aspect-ratio instead when available
+        maxHeight: height ? `${height}px` : 'none',
+        aspectRatio: width && height ? `${width} / ${height}` : 'auto',
         backgroundColor: placeholderColor,
-        transition: 'opacity 0.3s ease-in-out'
+        transition: 'opacity 0.3s ease-in-out',
+        overflow: 'hidden'
       }}
     >
       {isVisible && (
@@ -86,7 +90,7 @@ export default function LazyLoadImage({
           <OptimizedImage
             src={src}
             alt={alt}
-            className={`${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+            className={`${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 w-full h-auto object-contain`}
             width={width}
             height={height}
             loading="lazy"

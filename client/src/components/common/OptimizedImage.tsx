@@ -39,16 +39,20 @@ export default function OptimizedImage({
   const webpPath = `/images/optimized/${baseUrl.split('/').pop()}.webp`;
   const originalPath = src;
   
+  // Common image styles to prevent face cropping issues
+  const imgClasses = `${className || ''} object-contain`;
+  
   // If the source is already WebP, use it directly
   if (extension === 'webp') {
     return (
       <img
         src={src}
         alt={alt}
-        className={className}
+        className={imgClasses}
         width={width}
         height={height}
         loading={priority ? 'eager' : loading}
+        style={{ maxWidth: '100%', objectFit: 'contain' }}
       />
     );
   }
@@ -60,10 +64,11 @@ export default function OptimizedImage({
       <img
         src={originalPath}
         alt={alt}
-        className={className}
+        className={imgClasses}
         width={width}
         height={height}
         loading={priority ? 'eager' : loading}
+        style={{ maxWidth: '100%', objectFit: 'contain' }}
       />
     </picture>
   );
