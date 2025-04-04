@@ -2,7 +2,14 @@ import React, { useEffect, useState } from 'react';
 import OptimizedImage from '@/components/common/OptimizedImage';
 import LazyLoadImage from '@/components/common/LazyLoadImage';
 import ResponsiveImage from '@/components/common/ResponsiveImage';
-import { addPreloadHint, preloadImage, loadScript, lazyLoadCSS } from '@/lib/resourceLoader';
+import { 
+  addPreloadHint, 
+  preloadImage, 
+  loadScript, 
+  lazyLoadCSS, 
+  isResourceLoaded,
+  injectCriticalCSS 
+} from '@/lib/resourceLoader';
 
 // Demo images (we'll use some from our optimized directory)
 const testImage1 = '/images/optimized/IMG_0102.webp';
@@ -32,42 +39,57 @@ export default function PerformanceDemo() {
       console.log('Analytics script loaded');
     });
     
+    // Performance observer reference to clean up later
+    let performanceObserver: PerformanceObserver | undefined;
+    
     // Get real performance metrics if available
-    if ('performance' in window && 'getEntriesByType' in performance) {
-      const observer = new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          // Capture important performance metrics
-          if (entry.name === 'first-contentful-paint') {
-            setPerfMetrics(prev => ({ ...prev, fcp: entry.startTime }));
+    if (typeof window !== 'undefined' && 'performance' in window && 'PerformanceObserver' in window) {
+      try {
+        // Create performance observer
+        performanceObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            // Capture important performance metrics
+            if (entry.name === 'first-contentful-paint') {
+              setPerfMetrics(prev => ({ ...prev, fcp: entry.startTime }));
+            }
+            if (entry.name === 'largest-contentful-paint') {
+              setPerfMetrics(prev => ({ ...prev, lcp: entry.startTime }));
+            }
+            if (entry.name === 'layout-shift') {
+              // Layout shift entry has a 'value' property that's not in the base type
+              const layoutShiftEntry = entry as PerformanceEntry & { value: number };
+              setPerfMetrics(prev => ({ ...prev, cls: prev.cls + layoutShiftEntry.value }));
+            }
           }
-          if (entry.name === 'largest-contentful-paint') {
-            setPerfMetrics(prev => ({ ...prev, lcp: entry.startTime }));
-          }
-          if (entry.name === 'layout-shift') {
-            // Layout shift entry has a 'value' property that's not in the base type
-            const layoutShiftEntry = entry as PerformanceEntry & { value: number };
-            setPerfMetrics(prev => ({ ...prev, cls: prev.cls + layoutShiftEntry.value }));
+        });
+        
+        // Observe performance metrics
+        performanceObserver.observe({ entryTypes: ['paint', 'layout-shift'] });
+        
+        // Get TTFB
+        if ('getEntriesByType' in performance) {
+          const navigationEntries = performance.getEntriesByType('navigation');
+          if (navigationEntries.length > 0) {
+            setPerfMetrics(prev => ({ 
+              ...prev, 
+              ttfb: (navigationEntries[0] as PerformanceNavigationTiming).responseStart 
+            }));
           }
         }
-      });
-      
-      // Observe performance metrics
-      observer.observe({ entryTypes: ['paint', 'layout-shift'] });
-      
-      // Get TTFB
-      const navigationEntries = performance.getEntriesByType('navigation');
-      if (navigationEntries.length > 0) {
-        setPerfMetrics(prev => ({ 
-          ...prev, 
-          ttfb: (navigationEntries[0] as PerformanceNavigationTiming).responseStart 
-        }));
+      } catch (error) {
+        console.error('Error setting up performance metrics:', error);
       }
     }
     
+    // Return cleanup function
     return () => {
       // Clean up performance observer if it exists
-      if (observer) {
-        observer.disconnect();
+      if (performanceObserver) {
+        try {
+          performanceObserver.disconnect();
+        } catch (error) {
+          console.error('Error disconnecting performance observer:', error);
+        }
       }
     };
   }, []);
@@ -184,23 +206,25 @@ export default function PerformanceDemo() {
             <div className="h-64 bg-gray-100 p-4 rounded overflow-auto">
               <pre className="text-xs">
 {`// Preload critical resources
-addPreloadHint('/images/hero.webp', 'image');
+addPreloadHint('/images/hero.webp', 'image', 'image/webp');
 
 // Lazy load non-critical CSS
 lazyLoadCSS('/styles/non-critical.css');
 
 // Load scripts with proper attributes
-loadScript('/scripts/analytics.js', true, true);
+loadScript('/scripts/analytics.js', true, true, () => {
+  console.log('Analytics script loaded');
+});
 
 // Detect if resources are already loaded
-if (!isResourceLoaded('/scripts/widget.js')) {
-  loadScript('/scripts/widget.js');
+if (!isResourceLoaded('/scripts/widget.js', 'script')) {
+  loadScript('/scripts/widget.js', true, false);
 }
 
 // Inject critical CSS inline
 injectCriticalCSS(\`
-  .header { /* Styles */ }
-  .hero { /* Styles */ }
+  .header { padding: 1rem; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .hero { height: 60vh; display: flex; align-items: center; justify-content: center; }
 \`);`}
               </pre>
             </div>
