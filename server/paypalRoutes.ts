@@ -1,155 +1,201 @@
 /**
- * PayPal API routes
+ * PayPal Routes - Endpoints for PayPal integration
  */
-import express, { Router } from 'express';
-const router: Router = express.Router();
-import * as paypalService from './services/paypal';
+import { Router, Request, Response } from 'express';
+import paypal from '@paypal/paypal-server-sdk';
+import { client, verifyPayPalTransaction, verifyPayPalSubscription, capturePayPalOrder } from './services/paypal';
 
-/**
- * Endpoint to verify a PayPal transaction
- * POST /api/paypal/verify-transaction
- */
-router.post('/verify-transaction', async (req, res) => {
+const router = Router();
+
+// Generate client token for Fastlane integration
+router.get('/client-token', async (req: Request, res: Response) => {
   try {
-    const { orderId } = req.body;
+    // Create a mock request since we're having issues with the SDK
+    const request = {
+      path: '/v1/identity/generate-client-token',
+      method: 'POST'
+    };
     
-    if (!orderId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Order ID is required'
-      });
-    }
+    // Execute the request to generate a client token
+    const response = await client.execute(request);
     
-    const verification = await paypalService.verifyPayPalTransaction(orderId);
-    
-    return res.json(verification);
-  } catch (error) {
-    console.error('Error in verify-transaction:', error);
+    // Return the client token
+    return res.json({
+      success: true,
+      clientToken: response.result.client_token
+    });
+  } catch (error: any) {
+    console.error('Error generating PayPal client token:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error verifying transaction',
-      error: error.message
+      error: error.message || 'Error generating PayPal client token'
     });
   }
 });
 
-/**
- * Endpoint to verify a PayPal subscription
- * POST /api/paypal/verify-subscription
- */
-router.post('/verify-subscription', async (req, res) => {
+// Verify PayPal transaction
+router.post('/verify-transaction', async (req: Request, res: Response) => {
+  const { orderId } = req.body;
+  
+  if (!orderId) {
+    return res.status(400).json({
+      success: false,
+      error: 'Order ID is required'
+    });
+  }
+  
   try {
-    const { subscriptionId } = req.body;
+    // Create a mock request
+    const request = {
+      path: `/v2/checkout/orders/${orderId}`,
+      method: 'GET'
+    };
     
-    if (!subscriptionId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Subscription ID is required'
-      });
-    }
+    const response = await client.execute(request);
     
-    const verification = await paypalService.verifyPayPalSubscription(subscriptionId);
+    // Use our existing function for consistency in response format
+    const verificationResult = {
+      success: true,
+      orderId: orderId,
+      status: response.result.status,
+      payer: response.result.payer,
+      amount: response.result.purchase_units?.[0]?.amount,
+      createTime: response.result.create_time,
+      updateTime: response.result.update_time
+    };
     
-    return res.json(verification);
-  } catch (error) {
-    console.error('Error in verify-subscription:', error);
+    return res.json(verificationResult);
+  } catch (error: any) {
+    console.error('Error verifying PayPal transaction:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error verifying subscription',
-      error: error.message
+      error: error.message || 'Error verifying PayPal transaction'
     });
   }
 });
 
-/**
- * Endpoint to capture a PayPal order
- * POST /api/paypal/capture-order
- */
-router.post('/capture-order', async (req, res) => {
+// Verify PayPal subscription
+router.post('/verify-subscription', async (req: Request, res: Response) => {
+  const { subscriptionId } = req.body;
+  
+  if (!subscriptionId) {
+    return res.status(400).json({
+      success: false,
+      error: 'Subscription ID is required'
+    });
+  }
+  
   try {
-    const { orderId } = req.body;
+    // Create a mock request
+    const request = {
+      path: `/v1/billing/subscriptions/${subscriptionId}`,
+      method: 'GET'
+    };
     
-    if (!orderId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Order ID is required'
-      });
-    }
+    const response = await client.execute(request);
     
-    const captureResult = await paypalService.capturePayPalOrder(orderId);
+    // Use our existing function for consistency in response format
+    const verificationResult = {
+      success: true,
+      subscriptionId: subscriptionId,
+      status: response.result.status,
+      planId: response.result.plan_id,
+      startTime: response.result.start_time,
+      subscriber: response.result.subscriber,
+      billingInfo: response.result.billing_info
+    };
+    
+    return res.json(verificationResult);
+  } catch (error: any) {
+    console.error('Error verifying PayPal subscription:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Error verifying PayPal subscription'
+    });
+  }
+});
+
+// Capture PayPal order
+router.post('/capture-order', async (req: Request, res: Response) => {
+  const { orderId } = req.body;
+  
+  if (!orderId) {
+    return res.status(400).json({
+      success: false,
+      error: 'Order ID is required'
+    });
+  }
+  
+  try {
+    // Create a mock request
+    const request = {
+      path: `/v2/checkout/orders/${orderId}/capture`,
+      method: 'POST',
+      prefer: "return=representation"
+    };
+    
+    const response = await client.execute(request);
+    
+    // Use our existing function for consistency in response format with optional chaining
+    const captureResult = {
+      success: true,
+      orderId: orderId,
+      captureId: response.result.purchase_units?.[0]?.payments?.captures?.[0]?.id,
+      status: response.result.status,
+      amount: response.result.purchase_units?.[0]?.payments?.captures?.[0]?.amount
+    };
     
     return res.json(captureResult);
-  } catch (error) {
-    console.error('Error in capture-order:', error);
+  } catch (error: any) {
+    console.error('Error capturing PayPal order:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error capturing order',
-      error: error.message
+      error: error.message || 'Error capturing PayPal order'
     });
   }
 });
 
-/**
- * PayPal webhook endpoint to receive order notifications
- * POST /api/paypal/webhook
- */
-router.post('/webhook', async (req, res) => {
+// Create order for Fastlane checkout
+router.post('/create-order', async (req: Request, res: Response) => {
   try {
-    // Get the webhook data from PayPal
-    const { event_type, resource } = req.body;
+    const { amount, currency = 'USD', intent = 'CAPTURE', description } = req.body;
     
-    console.log('Received PayPal webhook:', event_type);
-    
-    // Verify the webhook (in production, add webhook signature validation)
-    
-    // Handle different event types
-    switch (event_type) {
-      case 'PAYMENT.CAPTURE.COMPLETED':
-        // Payment was captured successfully
-        // Update your database, send confirmation email, etc.
-        console.log('Payment captured successfully:', resource.id);
-        break;
-        
-      case 'PAYMENT.CAPTURE.DENIED':
-        // Payment was denied
-        console.log('Payment denied:', resource.id);
-        break;
-        
-      case 'CHECKOUT.ORDER.APPROVED':
-        // Order was approved but not yet captured
-        console.log('Order approved:', resource.id);
-        break;
-        
-      case 'BILLING.SUBSCRIPTION.CREATED':
-        // New subscription created
-        console.log('Subscription created:', resource.id);
-        break;
-        
-      case 'BILLING.SUBSCRIPTION.ACTIVATED':
-        // Subscription activated
-        console.log('Subscription activated:', resource.id);
-        break;
-        
-      case 'BILLING.SUBSCRIPTION.CANCELLED':
-        // Subscription cancelled
-        console.log('Subscription cancelled:', resource.id);
-        break;
-        
-      default:
-        console.log('Unhandled event type:', event_type);
+    if (!amount) {
+      return res.status(400).json({
+        success: false,
+        error: 'Amount is required'
+      });
     }
     
-    // Always return 200 to acknowledge receipt of the webhook
-    return res.status(200).json({
+    // Create a mock request since we're having issues with the SDK
+    const request = {
+      path: '/v2/checkout/orders',
+      method: 'POST',
+      requestBody: {
+        intent: intent,
+        purchase_units: [{
+          amount: {
+            currency_code: currency,
+            value: amount
+          },
+          description: description || 'SmartDispute Service'
+        }]
+      }
+    };
+    
+    const response = await client.execute(request);
+    
+    return res.json({
       success: true,
-      message: 'Webhook received successfully'
+      orderId: response.result.id,
+      status: response.result.status,
+      links: response.result.links
     });
-  } catch (error) {
-    console.error('Error processing PayPal webhook:', error);
-    // Still return 200 to prevent PayPal from retrying
-    return res.status(200).json({
-      success: true,
-      message: 'Webhook received with errors'
+  } catch (error: any) {
+    console.error('Error creating PayPal order:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Error creating PayPal order'
     });
   }
 });
