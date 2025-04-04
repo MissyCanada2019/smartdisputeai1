@@ -139,6 +139,7 @@ function Router() {
       <Route path="/fastlane-checkout" component={FastlaneCheckout} />
       <Route path="/payment-success" component={PaymentSuccess} />
       <Route path="/subscriptions" component={Subscriptions} />
+      <Route path="/ai-document-analysis" component={AiDocumentAnalysis} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />
