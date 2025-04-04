@@ -41,6 +41,8 @@ const __dirname = dirname(__filename);
 import { dirname } from "path";
 import registerDirectEvidenceRoutes from "./directEvidence";
 import registerDocumentAnalyzerRoutes from "./documentAnalyzer";
+// Import PayPal routes
+import paypalRoutes from "./paypalRoutes";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4463,6 +4465,9 @@ const subscription = await stripe.subscriptions.create({
   
   // Register document analyzer routes
   app.use("/api/document-analyzer", registerDocumentAnalyzerRoutes(storage));
+  
+  // Register PayPal routes
+  app.use("/api/paypal", paypalRoutes);
 
   // Form data routes
   app.get("/api/form-data/:userId/:formType", async (req: Request, res: Response) => {
