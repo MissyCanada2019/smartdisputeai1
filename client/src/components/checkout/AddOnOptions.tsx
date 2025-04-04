@@ -16,7 +16,7 @@ const addOns = [
       "Document complexity assessment",
       "24-hour turnaround"
     ],
-    paypalButtonId: "JV8988GUCPJ3Q", // Hosted button ID
+    paypalButtonId: "FXTGUMBUX2HJG", // Updated hosted button ID
     paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   },
   {
@@ -29,7 +29,7 @@ const addOns = [
       "Fillable PDF format",
       "Unlimited revisions"
     ],
-    paypalButtonId: "JV8988GUCPJ3Q", // Using the same hosted button ID for demo
+    paypalButtonId: "FXTGUMBUX2HJG", // Updated hosted button ID
     paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   },
   {
@@ -42,7 +42,7 @@ const addOns = [
       "Personalized legal strategy",
       "Expert recommendations"
     ],
-    paypalButtonId: "JV8988GUCPJ3Q", // Using the same hosted button ID for demo
+    paypalButtonId: "FXTGUMBUX2HJG", // Updated hosted button ID
     paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   }
 ];
