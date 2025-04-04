@@ -967,12 +967,15 @@ const subscription = await stripe.subscriptions.create({
   app.post("/api/document-folders", async (req: Request, res: Response) => {
     try {
       console.log('Creating document folder with data:', JSON.stringify(req.body));
-      const folderData = req.body;
+      const folderData = {
+        ...req.body,
+        userId: Number(req.body.userId) // Ensure userId is converted to a number
+      };
       
       // Validate required fields match the schema
-      if (!folderData.userId || typeof folderData.userId !== 'number') {
-        console.error('Invalid userId in folder creation:', folderData.userId);
-        return res.status(400).json({ message: 'userId must be a number' });
+      if (isNaN(folderData.userId) || folderData.userId <= 0) {
+        console.error('Invalid userId in folder creation:', req.body.userId);
+        return res.status(400).json({ message: 'userId must be a valid number' });
       }
       
       if (!folderData.name || typeof folderData.name !== 'string') {
@@ -996,7 +999,12 @@ const subscription = await stripe.subscriptions.create({
         return res.status(400).json({ message: "Invalid folder ID format" });
       }
       
-      const folderData = req.body;
+      // Convert userId to a number if present in the update data
+      const folderData = req.body.userId 
+        ? { ...req.body, userId: Number(req.body.userId) }
+        : req.body;
+        
+      console.log('Updating folder with data:', JSON.stringify(folderData));
       const updatedFolder = await storage.updateDocumentFolder(folderId, folderData);
       
       if (!updatedFolder) {
@@ -1044,7 +1052,14 @@ const subscription = await stripe.subscriptions.create({
   
   app.post("/api/document-folder-assignments", async (req: Request, res: Response) => {
     try {
-      const assignmentData = req.body;
+      // Ensure documentId and folderId are numbers
+      const assignmentData = {
+        ...req.body,
+        documentId: Number(req.body.documentId),
+        folderId: Number(req.body.folderId)
+      };
+      
+      console.log('Creating folder assignment with data:', JSON.stringify(assignmentData));
       const assignment = await storage.createDocumentFolderAssignment(assignmentData);
       res.status(201).json(assignment);
     } catch (error: any) {
