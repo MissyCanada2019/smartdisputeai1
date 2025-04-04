@@ -172,9 +172,19 @@ function Router() {
       <Route path="/marketing" component={MarketingIndex} />
       <Route path="/marketing/children-aid" component={ChildrenAidLandingPage} />
       
-      {/* Component Demos */}
-      <Route path="/demos/file-uploader" component={FileUploaderDemo} />
-      <Route path="/demos/performance" component={PerformanceDemo} />
+      {/* Component Demos - Admin Access Only */}
+      <Route path="/demos/file-uploader">
+        <ProtectedRoute>
+          <FileUploaderDemo />
+        </ProtectedRoute>
+      </Route>
+      
+      {/* Admin-only route not visible to regular users */}
+      <Route path="/internal/admin/performance-tools">
+        <ProtectedRoute>
+          <PerformanceDemo />
+        </ProtectedRoute>
+      </Route>
       
       <Route component={NotFound} />
     </Switch>
