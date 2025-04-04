@@ -2,7 +2,7 @@ import { useLocation } from 'wouter';
 
 /**
  * A hook to get and parse query parameters from the URL
- * @returns An object with the query parameters
+ * @returns Object with query parameter helpers
  */
 export function useQueryParams() {
   const [location] = useLocation();
@@ -17,5 +17,17 @@ export function useQueryParams() {
     queryParams[key] = value;
   });
   
-  return queryParams;
+  /**
+   * Get a specific query parameter by its key
+   * @param key The parameter key to look for
+   * @returns The parameter value or undefined if not found
+   */
+  const getParam = (key: string): string | undefined => {
+    return queryParams[key];
+  };
+  
+  return {
+    queryParams,
+    getParam,
+  };
 }

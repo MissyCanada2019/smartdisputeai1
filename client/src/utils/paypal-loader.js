@@ -110,7 +110,8 @@ export function renderSubscriptionButton() {
   const subscriptionPlans = [
     'P-08038987C9239303UM7XUMQY',
     'P-9AX658241M042612XM7XYWQA',
-    'P-7JM446383R159705KM7XYYGI'
+    'P-7JM446383R159705KM7XYYGI',
+    'P-3GR81923U1762090JM7XY23A'  // Low income plan
   ];
   
   // Render each subscription button

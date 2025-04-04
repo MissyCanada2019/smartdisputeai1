@@ -1,162 +1,223 @@
-import React, { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoIcon, CheckIcon, ShieldCheck } from 'lucide-react';
-import { SubscriptionButton } from '@/components/checkout/SubscriptionButton';
-import { loadSubscriptionScript, unloadPayPalScripts } from '@/utils/paypal-loader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAnalytics } from '@/hooks/use-analytics';
-
-const subscriptionPlans = [
-  {
-    id: "premium-monthly",
-    title: "Premium Monthly",
-    price: "$49.99/month",
-    description: "Full access to all professional legal tools",
-    features: [
-      "Unlimited document analysis",
-      "Priority case review",
-      "Evidence analysis assistance",
-      "Legal precedent search",
-      "Document generation",
-      "Priority support"
-    ],
-    planId: "P-9AX658241M042612XM7XYWQA",
-    badge: "Most Popular"
-  },
-  {
-    id: "premium-quarterly",
-    title: "Premium Quarterly",
-    price: "$129.99/quarter",
-    description: "Save 13% with quarterly billing",
-    features: [
-      "All Premium Monthly features",
-      "Advanced analytics dashboard",
-      "Batch document processing",
-      "Extended document storage",
-      "Priority queue for all services",
-      "Quarterly strategy consultation"
-    ],
-    planId: "P-7JM446383R159705KM7XYYGI",
-    badge: "Best Value"
-  }
-];
+import { useEffect, useState } from 'react';
+import { useLocation } from 'wouter';
+import { Helmet } from 'react-helmet';
+import { useAuth } from '@/context/authContext';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import SubscriptionButton from '@/components/checkout/SubscriptionButton';
+import { loadSubscriptionScript } from '@/utils/paypal-loader';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryParams } from '@/hooks/use-query-params';
 
 export default function SubscriptionsPage() {
-  const { trackEvent } = useAnalytics();
+  const { isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const { getParam } = useQueryParams();
+  const [scriptLoaded, setScriptLoaded] = useState(false);
   
+  const successParam = getParam('success') || '';
+  const errorParam = getParam('error') || '';
+
   useEffect(() => {
-    // Track page view
-    trackEvent('page_view', { page: 'subscriptions' });
-    
-    // Load subscription script
-    loadSubscriptionScript();
-    
-    // Clean up on unmount
-    return () => {
-      unloadPayPalScripts();
-    };
-  }, [trackEvent]);
-  
-  const handleSubscriptionSuccess = (planId: string, subscriptionId: string) => {
-    // Track successful subscription
-    trackEvent('subscription_success', { 
-      planId, 
-      subscriptionId 
+    // Load the PayPal subscription script
+    loadSubscriptionScript(() => {
+      setScriptLoaded(true);
     });
+
+    // Show toast messages based on URL parameters
+    if (successParam === 'true') {
+      toast({
+        title: "Subscription Successfully Activated",
+        description: "Thank you for subscribing to SmartDispute.ai!",
+        variant: "default",
+      });
+    } else if (errorParam) {
+      toast({
+        title: "Subscription Error",
+        description: errorParam || "There was an error processing your subscription.",
+        variant: "destructive",
+      });
+    }
+    
+    // Cleanup function
+    return () => {
+      // No need to unload the script here as it might be needed on other pages
+    };
+  }, [successParam, errorParam, toast]);
+
+  // Handle login redirect for unauthenticated users
+  const handleSubscriptionClick = () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login Required",
+        description: "Please log in to subscribe to our services.",
+        variant: "default",
+      });
+      
+      // Redirect to login page
+      setLocation('/standalone-login?redirect=/subscriptions');
+      return false;
+    }
+    return true;
   };
 
+  // Subscription plans data
+  const subscriptionPlans = [
+    {
+      planId: "P-3GR81923U1762090JM7XY23A",
+      title: "Low Income Plan",
+      price: "$19.99",
+      frequency: "/month",
+      features: [
+        "Full access to document templates",
+        "Basic evidence analysis",
+        "Email support",
+        "1 case review per month",
+        "Access to basic resources"
+      ],
+      popular: false
+    },
+    {
+      planId: "P-08038987C9239303UM7XUMQY",
+      title: "Standard Plan",
+      price: "$49.99",
+      frequency: "/month",
+      features: [
+        "Full access to all document templates",
+        "Advanced evidence analysis",
+        "Priority email support",
+        "3 case reviews per month",
+        "Access to all resources",
+        "Chat support"
+      ],
+      popular: true
+    },
+    {
+      planId: "P-9AX658241M042612XM7XYWQA",
+      title: "Professional Plan",
+      price: "$89.99",
+      frequency: "/month",
+      features: [
+        "Full access to all document templates",
+        "Advanced AI evidence analysis",
+        "Priority email and phone support",
+        "Unlimited case reviews",
+        "Access to all resources",
+        "24/7 chat support",
+        "Dedicated case manager"
+      ],
+      popular: false
+    },
+    {
+      planId: "P-7JM446383R159705KM7XYYGI",
+      title: "Enterprise Plan",
+      price: "$199.99",
+      frequency: "/month",
+      features: [
+        "Everything in Professional Plan",
+        "Custom document templates",
+        "Dedicated legal research",
+        "Team access (up to 5 users)",
+        "Bulk document processing",
+        "API access",
+        "Dedicated account manager"
+      ],
+      popular: false
+    }
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">SmartDispute.ai Subscription Plans</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          Choose the right subscription plan to get ongoing access to AI-powered legal assistance
-          tailored to your needs.
+    <div className="container mx-auto py-8 px-4">
+      <Helmet>
+        <title>Subscription Plans | SmartDispute.ai</title>
+        <meta name="description" content="Choose the subscription plan that best fits your legal needs. From low-income options to professional services." />
+      </Helmet>
+      
+      <div className="text-center mb-10">
+        <Badge variant="secondary" className="mb-2">Subscriptions</Badge>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">Choose Your Plan</h1>
+        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          Select the subscription that best fits your needs. All plans include access to our AI-powered legal document analysis.
         </p>
       </div>
       
-      <Alert className="mb-8 max-w-3xl mx-auto">
-        <InfoIcon className="h-4 w-4" />
-        <AlertTitle>Secure Payment Processing</AlertTitle>
-        <AlertDescription>
-          All payments are processed securely through PayPal. Your subscription can be canceled at any time
-          from your PayPal account.
-        </AlertDescription>
-      </Alert>
-      
-      <Tabs defaultValue="professional" className="max-w-5xl mx-auto">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="professional">Professional</TabsTrigger>
-          <TabsTrigger value="low-income" disabled>Low Income (Coming Soon)</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="professional">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
-            {subscriptionPlans.map((plan) => (
-              <Card key={plan.id} className="flex flex-col transition-all hover:shadow-lg border-2">
-                {plan.badge && (
-                  <div className="absolute -right-2 -top-2">
-                    <Badge variant="secondary" className="bg-blue-600 text-white font-semibold">
-                      {plan.badge}
-                    </Badge>
-                  </div>
-                )}
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-t-lg">
-                  <CardTitle className="text-blue-800">{plan.title}</CardTitle>
-                  <CardDescription className="text-2xl font-bold text-blue-700">
-                    {plan.price}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow pt-6">
-                  <p className="text-gray-600 mb-4">{plan.description}</p>
-                  <ul className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <CheckIcon className="text-blue-500 w-5 h-5 mr-2 flex-shrink-0" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-                <CardFooter className="pt-4 pb-6 flex flex-col items-center">
-                  <Separator className="mb-4" />
-                  <div className="w-full">
-                    <SubscriptionButton 
-                      planId={plan.planId}
-                      onSuccess={(data) => handleSubscriptionSuccess(plan.planId, data.subscriptionID)}
-                    />
-                  </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-          
-          <div className="mt-10 max-w-3xl mx-auto p-6 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="flex items-start mb-4">
-              <ShieldCheck className="text-blue-700 w-6 h-6 mr-3 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-lg">Our Commitment to Legal Support</h3>
-                <p className="text-gray-700">
-                  Every SmartDispute.ai subscription helps us provide free and reduced-cost services
-                  to those most in need. Your subscription ensures we can continue improving our AI
-                  tools and making legal assistance more accessible to all Canadians.
-                </p>
-              </div>
-            </div>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="low-income">
-          <div className="text-center py-12">
-            <p className="text-lg text-gray-600">
-              Low-income pricing options are coming soon. Please check back later.
+      {/* Income-based pricing notice */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 max-w-3xl mx-auto">
+        <div className="flex items-start">
+          <svg 
+            className="w-6 h-6 text-blue-500 mt-0.5 mr-3" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24" 
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+            />
+          </svg>
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">Income-Based Pricing Available</h3>
+            <p className="text-blue-700">
+              We offer income-based pricing for those in need. If you qualify for our low-income plan, select the Low Income Plan option.
+              Documentation may be required for verification.
             </p>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+      
+      {/* Subscription plans grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {subscriptionPlans.map((plan) => (
+          <div key={plan.planId} className="flex" onClick={() => handleSubscriptionClick()}>
+            <SubscriptionButton
+              planId={plan.planId}
+              title={plan.title}
+              price={plan.price}
+              frequency={plan.frequency}
+              features={plan.features}
+              popular={plan.popular}
+            />
+          </div>
+        ))}
+      </div>
+      
+      {/* Low-income verification notice */}
+      <div className="bg-gray-50 rounded-lg p-6 mb-8 max-w-3xl mx-auto">
+        <h3 className="text-xl font-semibold mb-2">Low-Income Verification</h3>
+        <p className="text-gray-700 mb-4">
+          To qualify for our low-income plan, you may need to provide documentation. We accept various forms of proof including:
+        </p>
+        <ul className="list-disc pl-6 mb-4 text-gray-700">
+          <li>Proof of government assistance (EI, disability, etc.)</li>
+          <li>Income tax assessment notice</li>
+          <li>Social assistance benefit statement</li>
+          <li>Income verification letter from employer</li>
+        </ul>
+        <p className="text-gray-700">
+          After subscribing, you'll be prompted to upload verification documents if you selected the Low Income Plan.
+        </p>
+      </div>
+      
+      {/* Enterprise plans */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-3xl mx-auto">
+        <h3 className="text-xl font-semibold mb-2">Need a Custom Solution?</h3>
+        <p className="text-gray-700 mb-4">
+          For law firms, advocacy groups, and organizations requiring custom solutions, we offer tailored enterprise plans.
+        </p>
+        <Button 
+          className="w-full sm:w-auto"
+          onClick={() => toast({
+            title: "Contact Form Submitted",
+            description: "Our sales team will contact you shortly to discuss custom plans.",
+          })}
+        >
+          Contact Our Sales Team
+        </Button>
+      </div>
     </div>
   );
 }
