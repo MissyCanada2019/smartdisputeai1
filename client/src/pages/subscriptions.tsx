@@ -4,8 +4,10 @@ import { Helmet } from 'react-helmet';
 import { useAuth } from '@/context/authContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubscriptionButton from '@/components/checkout/SubscriptionButton';
 import LowIncomeSubscriptionButton from '@/components/checkout/LowIncomeSubscriptionButton';
+import AddOnOptions from '@/components/checkout/AddOnOptions';
 import { loadSubscriptionScript } from '@/utils/paypal-loader';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryParams } from '@/hooks/use-query-params';
@@ -219,6 +221,26 @@ export default function SubscriptionsPage() {
             We're committed to making legal assistance accessible to all Canadians, regardless of financial situation.
           </p>
         </div>
+      </div>
+      
+      {/* Add-on Services section with Tab option for different PayPal button styles */}
+      <div className="mb-12">
+        <Tabs defaultValue="new_buttons">
+          <div className="flex justify-center mb-6">
+            <TabsList>
+              <TabsTrigger value="new_buttons">New PayPal Buttons</TabsTrigger>
+              <TabsTrigger value="hosted_buttons">Hosted PayPal Buttons</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <TabsContent value="new_buttons">
+            <AddOnOptions useNewPayPalButtons={true} />
+          </TabsContent>
+          
+          <TabsContent value="hosted_buttons">
+            <AddOnOptions useNewPayPalButtons={false} />
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Enterprise plans */}
