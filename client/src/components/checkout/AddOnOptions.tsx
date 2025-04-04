@@ -17,7 +17,7 @@ const addOns = [
       "24-hour turnaround"
     ],
     paypalButtonId: "JV8988GUCPJ3Q", // Hosted button ID
-    paypalPaymentId: "G4SZEKGHWXB7G" // Buy Now button ID
+    paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   },
   {
     id: 2,
@@ -29,8 +29,8 @@ const addOns = [
       "Fillable PDF format",
       "Unlimited revisions"
     ],
-    paypalButtonId: "JV8988GUCPJ3Q", // Using the same ID for demo purposes
-    paypalPaymentId: "G4SZEKGHWXB7G" // Using the same ID for demo purposes
+    paypalButtonId: "JV8988GUCPJ3Q", // Using the same hosted button ID for demo
+    paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   },
   {
     id: 3,
@@ -42,8 +42,8 @@ const addOns = [
       "Personalized legal strategy",
       "Expert recommendations"
     ],
-    paypalButtonId: "JV8988GUCPJ3Q", // Using the same ID for demo purposes
-    paypalPaymentId: "G4SZEKGHWXB7G" // Using the same ID for demo purposes
+    paypalButtonId: "JV8988GUCPJ3Q", // Using the same hosted button ID for demo
+    paypalPaymentId: "7K4SREHDBAZ7E" // Using specific payment ID provided
   }
 ];
 
