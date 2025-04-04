@@ -67,7 +67,7 @@ export default function PayPalCheckout() {
           <PayPalOptions showAll={false} selectedOptions={["monthly-subscription"]} />
         </TabsContent>
         <TabsContent value="premium">
-          <PayPalOptions showAll={false} selectedOptions={["case-strategy", "priority-processing"]} />
+          <PayPalOptions showAll={false} selectedOptions={["case-strategy", "priority-processing", "premium-case-review"]} />
         </TabsContent>
       </Tabs>
 
@@ -116,6 +116,18 @@ export default function PayPalCheckout() {
             Unlimited document analysis, priority support, and exclusive legal resources
           </p>
           <div id="paypal-button-container-P-08038987C9239303UM7XUMQY"></div>
+        </div>
+      </div>
+      
+      {/* Premium Case Review Section */}
+      <div className="mt-8 max-w-xl mx-auto">
+        <div className="p-8 border rounded-lg shadow-md border-blue-200 bg-blue-50 w-full relative">
+          <div className="absolute -right-2 -top-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md">PREMIUM</div>
+          <h3 className="text-xl font-bold mb-4 text-center">Premium Case Review</h3>
+          <p className="text-gray-600 mb-6 text-center">
+            Priority case review with extended legal analysis and personalized strategy recommendations
+          </p>
+          <div id="paypal-container-6ADXJKVACV736"></div>
         </div>
       </div>
     </div>

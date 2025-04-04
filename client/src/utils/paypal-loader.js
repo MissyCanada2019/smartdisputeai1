@@ -86,6 +86,18 @@ export function renderHostedButtons() {
   } catch (err) {
     console.error("Error rendering case review button:", err);
   }
+  
+  // Render premium case review button
+  try {
+    const container = document.getElementById("paypal-container-6ADXJKVACV736");
+    if (container) {
+      window.paypal.HostedButtons({
+        hostedButtonId: "6ADXJKVACV736",
+      }).render("#paypal-container-6ADXJKVACV736");
+    }
+  } catch (err) {
+    console.error("Error rendering premium case review button:", err);
+  }
 }
 
 /**

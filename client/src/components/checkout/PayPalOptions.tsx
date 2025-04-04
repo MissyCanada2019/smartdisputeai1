@@ -38,7 +38,7 @@ const paymentOptions: PaymentOption[] = [
       "Priority in review queue",
       "Detailed feedback"
     ],
-    paypalButtonId: "QD2XW5BJCKQGU" // Replace with the correct button ID
+    paypalButtonId: "R4FJL8GB7FRNN" // Using case review button ID for now until dedicated button is created
   },
   {
     id: "case-strategy",
@@ -51,7 +51,20 @@ const paymentOptions: PaymentOption[] = [
       "Legal precedent analysis",
       "Strategic next steps"
     ],
-    paypalButtonId: "QD2XW5BJCKQGU" // Replace with the correct button ID
+    paypalButtonId: "R4FJL8GB7FRNN"
+  },
+  {
+    id: "premium-case-review",
+    title: "Premium Case Review",
+    price: "$49.99",
+    description: "Priority case review with extended legal analysis",
+    features: [
+      "Expedited processing",
+      "Comprehensive case analysis",
+      "Personalized strategy",
+      "Follow-up consultation"
+    ],
+    paypalButtonId: "6ADXJKVACV736"
   },
   {
     id: "monthly-subscription",
