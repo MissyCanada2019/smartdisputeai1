@@ -180,9 +180,9 @@ export default function EvidenceUploader({
           onUpload={handleFilesSelected}
           multiple={true}
           acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.csv,.mp3,.mp4,.wav,.xlsx,.xls,.ppt,.pptx"
-          maxFileSizeMB={50}
+          maxFileSizeMB={200}
           label="Evidence Files"
-          helpText="Upload any documents, photos, videos or audio files that support your case. We support large files up to 50MB."
+          helpText="Upload any documents, photos, videos or audio files that support your case. We support large files up to 200MB."
         />
         
         <div className="mt-4 space-y-2">
