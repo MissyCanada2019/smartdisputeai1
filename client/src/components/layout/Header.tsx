@@ -4,6 +4,7 @@ import { useAuth } from "@/context/authContext";
 import { useOnboarding } from "@/context/onboardingContext";
 import { Button } from "@/components/ui/button";
 import { TutorialButton } from "@/components/onboarding";
+import OptimizedImage from "@/components/common/OptimizedImage";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -19,6 +20,9 @@ import {
   SheetClose
 } from "@/components/ui/sheet";
 import { HelpCircle } from "lucide-react";
+
+// Import logo
+import logoPath from "@/assets/logo.png";
 
 export default function Header() {
   const [location] = useLocation();
@@ -45,15 +49,14 @@ export default function Header() {
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center">
-          <svg 
-            className="text-primary text-3xl mr-2 w-8 h-8" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l9 6 9-6M3 12l9 6 9-6M3 18l9 6 9-6" />
-          </svg>
+          <OptimizedImage 
+            src={logoPath} 
+            alt="SmartDispute.ai Logo" 
+            width={40} 
+            height={40} 
+            priority={true} 
+            className="mr-2"
+          />
           <span className="text-xl font-semibold text-primary">SmartDispute.ai Canada</span>
         </Link>
         

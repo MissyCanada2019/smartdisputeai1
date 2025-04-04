@@ -60,6 +60,7 @@ import FastlaneCheckout from "@/pages/fastlane-checkout";
 import PaymentSuccess from "@/pages/payment-success";
 import Subscriptions from "@/pages/subscriptions";
 import AiDocumentAnalysis from "@/pages/AiDocumentAnalysis";
+import PerformanceDemo from "@/pages/PerformanceDemo";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
@@ -173,6 +174,7 @@ function Router() {
       
       {/* Component Demos */}
       <Route path="/demos/file-uploader" component={FileUploaderDemo} />
+      <Route path="/demos/performance" component={PerformanceDemo} />
       
       <Route component={NotFound} />
     </Switch>

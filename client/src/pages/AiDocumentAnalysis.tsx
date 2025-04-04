@@ -1,6 +1,5 @@
 import React from 'react';
-import { useAuth } from "@/contexts/AuthContext";
-import { Container } from "@/components/ui/container";
+import { useAuth } from "@/context/authContext";
 import { Helmet } from "react-helmet";
 import DocumentAnalyzer from "@/components/documents/DocumentAnalyzer";
 
@@ -14,7 +13,7 @@ export default function AiDocumentAnalysis() {
         <meta name="description" content="Use advanced AI models to analyze your legal documents for case merit, evidence strength, and court strategy recommendations." />
       </Helmet>
       
-      <Container className="py-8">
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-3">
             <h1 className="text-3xl font-bold text-gray-900">AI-Powered Document Analysis</h1>
@@ -95,7 +94,7 @@ export default function AiDocumentAnalysis() {
             </div>
           </div>
         </div>
-      </Container>
+      </div>
     </>
   );
 }
