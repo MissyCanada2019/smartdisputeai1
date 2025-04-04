@@ -182,13 +182,20 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
           userId: Number(data.userId)
         };
         
+        console.log('Creating folder with data:', JSON.stringify(folderData));
+        
         const response = await apiRequest('POST', '/api/document-folders', folderData);
+        console.log('Folder creation response status:', response.status);
+        
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Server error response:', errorText);
           throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
-        return await response.json();
+        
+        const result = await response.json();
+        console.log('Folder creation successful with result:', JSON.stringify(result));
+        return result;
       } catch (error: any) {
         console.error('Folder creation error:', error);
         throw new Error(error.message || 'Error creating folder');

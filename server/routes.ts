@@ -966,10 +966,25 @@ const subscription = await stripe.subscriptions.create({
   
   app.post("/api/document-folders", async (req: Request, res: Response) => {
     try {
+      console.log('Creating document folder with data:', JSON.stringify(req.body));
       const folderData = req.body;
+      
+      // Validate required fields match the schema
+      if (!folderData.userId || typeof folderData.userId !== 'number') {
+        console.error('Invalid userId in folder creation:', folderData.userId);
+        return res.status(400).json({ message: 'userId must be a number' });
+      }
+      
+      if (!folderData.name || typeof folderData.name !== 'string') {
+        console.error('Invalid name in folder creation:', folderData.name);
+        return res.status(400).json({ message: 'name is required and must be a string' });
+      }
+      
       const folder = await storage.createDocumentFolder(folderData);
+      console.log('Document folder created successfully:', JSON.stringify(folder));
       res.status(201).json(folder);
     } catch (error: any) {
+      console.error('Error creating document folder:', error);
       res.status(500).json({ message: `Error creating document folder: ${error.message}` });
     }
   });
