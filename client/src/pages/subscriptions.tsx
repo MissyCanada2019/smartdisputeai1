@@ -66,14 +66,15 @@ export default function SubscriptionsPage() {
   // Low income plan
   const lowIncomePlan = {
     title: "Low Income Plan",
-    price: "$19.99",
-    frequency: "/month",
+    price: "$25",
+    frequency: "/year",
+    pricePerDocument: "$0.99/document",
     features: [
-      "Full access to document templates",
+      "Discounted access to all document services",
       "Basic evidence analysis",
       "Email support",
-      "1 case review per month",
-      "Access to basic resources"
+      "Access to basic resources",
+      "Income verification required"
     ]
   };
   
@@ -81,48 +82,48 @@ export default function SubscriptionsPage() {
   const subscriptionPlans = [
     {
       planId: "P-08038987C9239303UM7XUMQY",
-      title: "Standard Plan",
-      price: "$49.99",
+      title: "Standard Monthly Subscription",
+      price: "$50",
       frequency: "/month",
       features: [
         "Full access to all document templates",
-        "Advanced evidence analysis",
-        "Priority email support",
-        "3 case reviews per month",
-        "Access to all resources",
-        "Chat support"
+        "AI-powered document analysis",
+        "Evidence file review & categorization",
+        "Basic case assessment",
+        "Evidence Dashboard (50MB storage)",
+        "Email support"
       ],
       popular: true
     },
     {
       planId: "P-9AX658241M042612XM7XYWQA",
-      title: "Professional Plan",
-      price: "$89.99",
+      title: "Premium Plan",
+      price: "$75",
       frequency: "/month",
       features: [
-        "Full access to all document templates",
-        "Advanced AI evidence analysis",
-        "Priority email and phone support",
-        "Unlimited case reviews",
-        "Access to all resources",
-        "24/7 chat support",
-        "Dedicated case manager"
+        "Everything in Standard plan",
+        "Advanced AI document analysis",
+        "Priority processing queue",
+        "Full case briefs with precedents",
+        "Monthly webinar access (live & recorded)",
+        "Community forum access",
+        "Jurisdiction-based analysis"
       ],
       popular: false
     },
     {
       planId: "P-7JM446383R159705KM7XYYGI",
-      title: "Enterprise Plan",
-      price: "$199.99",
+      title: "Family Plan",
+      price: "$100",
       frequency: "/month",
       features: [
-        "Everything in Professional Plan",
-        "Custom document templates",
-        "Dedicated legal research",
-        "Team access (up to 5 users)",
-        "Bulk document processing",
-        "API access",
-        "Dedicated account manager"
+        "Everything in Premium plan",
+        "Covers up to 4 family cases",
+        "Full automation suite",
+        "Court deadline tracker",
+        "Personalized case strategy reports",
+        "Family law document bundle",
+        "Moderated legal groups access"
       ],
       popular: false
     }
