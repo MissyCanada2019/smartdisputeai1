@@ -20,22 +20,32 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Create container for PayPal button if it doesn't exist
-    if (!document.getElementById(containerId)) {
-      const container = document.createElement('div');
-      container.id = containerId;
-      document.getElementById('root')?.appendChild(container);
-    }
-
-    // Render the PayPal button
+    let checkInterval: number | null = null;
+    let timeoutId: number | null = null;
+    
+    // Function to render the PayPal button
     const renderPayPalButton = () => {
       if (window.paypal && window.paypal.HostedButtons) {
         try {
           setLoading(true);
-          window.paypal.HostedButtons({
-            hostedButtonId: hostedButtonId,
-          }).render(`#${containerId}`);
-          setLoading(false);
+          // Find the container element
+          const container = document.getElementById(containerId);
+          
+          if (container) {
+            // Clear any existing content first
+            container.innerHTML = '';
+            
+            // Render the PayPal button in the container
+            window.paypal.HostedButtons({
+              hostedButtonId: hostedButtonId,
+            }).render(`#${containerId}`);
+            
+            setLoading(false);
+          } else {
+            console.error(`Container with ID ${containerId} not found`);
+            setError('Button container not found');
+            setLoading(false);
+          }
         } catch (err) {
           console.error('Error rendering PayPal button:', err);
           setError('Failed to load payment button');
@@ -47,21 +57,21 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
       }
     };
 
-    // Check if PayPal is loaded, otherwise wait
+    // Check if PayPal is loaded, otherwise wait and try again
     if (window.paypal) {
       renderPayPalButton();
     } else {
       // If not loaded yet, wait for it
-      const checkPayPalInterval = setInterval(() => {
+      checkInterval = window.setInterval(() => {
         if (window.paypal) {
-          clearInterval(checkPayPalInterval);
+          if (checkInterval) window.clearInterval(checkInterval);
           renderPayPalButton();
         }
-      }, 100);
+      }, 200);
 
       // Clear interval after 10 seconds to avoid infinite checking
-      setTimeout(() => {
-        clearInterval(checkPayPalInterval);
+      timeoutId = window.setTimeout(() => {
+        if (checkInterval) window.clearInterval(checkInterval);
         if (!window.paypal) {
           setError('PayPal SDK failed to load');
           setLoading(false);
@@ -71,10 +81,8 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
 
     // Clean up function
     return () => {
-      const container = document.getElementById(containerId);
-      if (container && container.parentNode !== document.getElementById('root')) {
-        container.parentNode?.removeChild(container);
-      }
+      if (checkInterval) window.clearInterval(checkInterval);
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [hostedButtonId, containerId]);
 

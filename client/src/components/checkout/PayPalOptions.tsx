@@ -64,7 +64,7 @@ const paymentOptions: PaymentOption[] = [
       "Document generation",
       "Priority support"
     ],
-    paypalButtonId: "QD2XW5BJCKQGU" // Replace with the correct button ID
+    paypalButtonId: "VPHYTYJQB32Y6"
   }
 ];
 
