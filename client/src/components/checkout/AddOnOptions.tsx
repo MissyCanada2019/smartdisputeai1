@@ -47,21 +47,9 @@ const addOns = [
   }
 ];
 
-interface AddOnOptionsProps {
-  useNewPayPalButtons?: boolean;
-}
+interface AddOnOptionsProps {}
 
-export default function AddOnOptions({ useNewPayPalButtons = true }: AddOnOptionsProps) {
-  const [selectedAddOns, setSelectedAddOns] = useState<number[]>([]);
-
-  const toggleAddOn = (id: number) => {
-    if (selectedAddOns.includes(id)) {
-      setSelectedAddOns(selectedAddOns.filter(item => item !== id));
-    } else {
-      setSelectedAddOns([...selectedAddOns, id]);
-    }
-  };
-  
+export default function AddOnOptions({}: AddOnOptionsProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -94,15 +82,9 @@ export default function AddOnOptions({ useNewPayPalButtons = true }: AddOnOption
               </ul>
             </CardContent>
             <CardFooter>
-              {useNewPayPalButtons ? (
-                <div className="w-full">
-                  <PayPalBuyNowButton paymentId={addOn.paypalPaymentId} />
-                </div>
-              ) : (
-                <div className="w-full">
-                  <PayPalHostedButton buttonId={addOn.paypalButtonId} />
-                </div>
-              )}
+              <div className="w-full">
+                <PayPalBuyNowButton paymentId={addOn.paypalPaymentId} />
+              </div>
             </CardFooter>
           </Card>
         ))}

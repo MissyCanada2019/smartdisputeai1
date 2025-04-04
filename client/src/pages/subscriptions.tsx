@@ -223,24 +223,9 @@ export default function SubscriptionsPage() {
         </div>
       </div>
       
-      {/* Add-on Services section with Tab option for different PayPal button styles */}
+      {/* Add-on Services section */}
       <div className="mb-12">
-        <Tabs defaultValue="new_buttons">
-          <div className="flex justify-center mb-6">
-            <TabsList>
-              <TabsTrigger value="new_buttons">New PayPal Buttons</TabsTrigger>
-              <TabsTrigger value="hosted_buttons">Hosted PayPal Buttons</TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <TabsContent value="new_buttons">
-            <AddOnOptions useNewPayPalButtons={true} />
-          </TabsContent>
-          
-          <TabsContent value="hosted_buttons">
-            <AddOnOptions useNewPayPalButtons={false} />
-          </TabsContent>
-        </Tabs>
+        <AddOnOptions />
       </div>
       
       {/* Enterprise plans */}
