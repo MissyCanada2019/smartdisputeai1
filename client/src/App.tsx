@@ -59,6 +59,7 @@ import PayPalCheckout from "@/pages/paypal-checkout";
 import FastlaneCheckout from "@/pages/fastlane-checkout";
 import PaymentSuccess from "@/pages/payment-success";
 import Subscriptions from "@/pages/subscriptions";
+import AiDocumentAnalysis from "@/pages/AiDocumentAnalysis";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
