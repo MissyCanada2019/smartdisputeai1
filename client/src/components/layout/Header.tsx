@@ -67,6 +67,9 @@ export default function Header() {
           <Link href="/paypal-checkout" className={`text-gray-600 hover:text-primary font-medium ${location === '/paypal-checkout' ? 'text-primary' : ''}`}>
             Pay Online
           </Link>
+          <Link href="/subscriptions" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscriptions' ? 'text-primary' : ''}`}>
+            Subscriptions
+          </Link>
           <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
             My Documents
           </Link>
@@ -189,6 +192,11 @@ export default function Header() {
                 <SheetClose asChild>
                   <Link href="/paypal-checkout" className={`text-gray-600 hover:text-primary font-medium ${location === '/paypal-checkout' ? 'text-primary' : ''}`}>
                     Pay Online
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link href="/subscriptions" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscriptions' ? 'text-primary' : ''}`}>
+                    Subscriptions
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>

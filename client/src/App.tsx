@@ -58,6 +58,7 @@ import Onboarding from "@/pages/onboarding";
 import PayPalCheckout from "@/pages/paypal-checkout";
 import FastlaneCheckout from "@/pages/fastlane-checkout";
 import PaymentSuccess from "@/pages/payment-success";
+import Subscriptions from "@/pages/subscriptions";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Marketing Funnel Pages
@@ -136,6 +137,7 @@ function Router() {
       <Route path="/paypal-checkout" component={PayPalCheckout} />
       <Route path="/fastlane-checkout" component={FastlaneCheckout} />
       <Route path="/payment-success" component={PaymentSuccess} />
+      <Route path="/subscriptions" component={Subscriptions} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />

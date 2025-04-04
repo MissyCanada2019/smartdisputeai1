@@ -106,32 +106,43 @@ export function renderHostedButtons() {
 export function renderSubscriptionButton() {
   if (!window.paypal || !window.paypal.Buttons) return;
   
-  try {
-    const container = document.getElementById("paypal-button-container-P-08038987C9239303UM7XUMQY");
-    if (container) {
-      window.paypal.Buttons({
-        style: {
-          shape: 'rect',
-          color: 'gold',
-          layout: 'vertical',
-          label: 'subscribe'
-        },
-        createSubscription: function(data, actions) {
-          return actions.subscription.create({
-            /* Creates the subscription */
-            plan_id: 'P-08038987C9239303UM7XUMQY'
-          });
-        },
-        onApprove: function(data, actions) {
-          alert('Subscription successful! Subscription ID: ' + data.subscriptionID);
-          // Here you would typically handle this server-side
-          // For example, send the subscription ID to your server
-        }
-      }).render('#paypal-button-container-P-08038987C9239303UM7XUMQY');
+  // List of subscription plan IDs to render
+  const subscriptionPlans = [
+    'P-08038987C9239303UM7XUMQY',
+    'P-9AX658241M042612XM7XYWQA',
+    'P-7JM446383R159705KM7XYYGI'
+  ];
+  
+  // Render each subscription button
+  subscriptionPlans.forEach(planId => {
+    try {
+      const container = document.getElementById(`paypal-button-container-${planId}`);
+      if (container) {
+        window.paypal.Buttons({
+          style: {
+            shape: 'rect',
+            color: 'gold',
+            layout: 'vertical',
+            label: 'subscribe'
+          },
+          createSubscription: function(data, actions) {
+            return actions.subscription.create({
+              /* Creates the subscription */
+              plan_id: planId
+            });
+          },
+          onApprove: function(data, actions) {
+            alert('Subscription successful! Subscription ID: ' + data.subscriptionID);
+            // Here you would typically handle this server-side
+            // For example, redirect to payment success page
+            window.location.href = `/payment-success?subscriptionId=${data.subscriptionID}&type=subscription`;
+          }
+        }).render(`#paypal-button-container-${planId}`);
+      }
+    } catch (err) {
+      console.error(`Error rendering subscription button for plan ${planId}:`, err);
     }
-  } catch (err) {
-    console.error("Error rendering plan subscription button:", err);
-  }
+  });
 }
 
 /**
