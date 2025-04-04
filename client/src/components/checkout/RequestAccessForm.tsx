@@ -68,8 +68,8 @@ export default function RequestAccessForm({ onSuccess }: RequestAccessFormProps)
     }
   `;
 
-  const handleFormspreeSubmit = (e: React.FormEvent) => {
-    // Form will be submitted to Formspree
+  const handleJotFormSubmit = (e: React.FormEvent) => {
+    // Form will be submitted to JotForm
     // We just need to show a toast notification and call the success callback
     toast({
       title: "Verification Form Submitted",
@@ -96,22 +96,22 @@ export default function RequestAccessForm({ onSuccess }: RequestAccessFormProps)
       </ul>
 
       <form 
-        action="https://formspree.io/f/xwp1ryzj" 
+        action="https://form.jotform.com/241008673257861" 
         method="POST" 
         encType="multipart/form-data"
-        onSubmit={handleFormspreeSubmit}
+        onSubmit={handleJotFormSubmit}
       >
         <label htmlFor="name">Full Name:</label>
-        <input type="text" id="name" name="name" required />
+        <input type="text" id="name" name="q3_name" required />
 
         <label htmlFor="email">Email Address:</label>
-        <input type="email" id="email" name="email" required />
+        <input type="email" id="email" name="q4_email" required />
 
         <label htmlFor="upload">Upload Document:</label>
         <input 
           type="file" 
           id="upload" 
-          name="upload" 
+          name="q5_uploadDocument" 
           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" 
           required 
         />

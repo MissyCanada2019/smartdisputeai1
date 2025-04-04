@@ -82,7 +82,7 @@ export default function LowIncomeSubscriptionButton({
             <DialogHeader>
               <DialogTitle>Income Verification for $25/Year Plan</DialogTitle>
               <DialogDescription>
-                To access our discounted low-income plan, please submit income verification below. We use Formspree for secure document handling.
+                To access our discounted low-income plan, please submit income verification below. We use JotForm for secure document handling.
               </DialogDescription>
             </DialogHeader>
             <RequestAccessForm onSuccess={handleRequestSuccess} />
