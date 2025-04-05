@@ -46,7 +46,7 @@ const fileStorage = multer.diskStorage({
 const upload = multer({
   storage: fileStorage,
   limits: {
-    fileSize: 200 * 1024 * 1024, // 200MB limit
+    fileSize: 500 * 1024 * 1024, // 500MB limit (increased from 200MB to match Express body-parser)
   },
   fileFilter: function (req, file, cb) {
     // Check accepted file types
