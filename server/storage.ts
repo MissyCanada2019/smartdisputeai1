@@ -381,7 +381,7 @@ export class MemStorage implements IStorage {
       password: "G5n@8#hK2pQ!Lst9", // Changed to a secure password that's not disclosed anywhere
       firstName: "System",
       lastName: "Demo",
-      email: "system@smartdispute.ai",
+      email: "smartdisputecanada@gmail.com",
       phone: null,
       dob: null,
       address: null,

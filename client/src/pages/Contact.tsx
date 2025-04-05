@@ -42,7 +42,7 @@ export default function Contact() {
           <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
             <form 
               id="contact-form"
-              action="https://formspree.io/f/xeqgydpg"  
+              action="mailto:smartdisputecanada@gmail.com"  
               method="POST"
               className="space-y-6"
               onSubmit={handleFormSubmit}
@@ -130,8 +130,8 @@ export default function Contact() {
               </div>
               <h3 className="text-lg font-semibold mb-2">Email</h3>
               <p className="text-gray-600">
-                <a href="mailto:support@smartdispute.ai" className="text-primary hover:underline">
-                  support@smartdispute.ai
+                <a href="mailto:smartdisputecanada@gmail.com" className="text-primary hover:underline">
+                  smartdisputecanada@gmail.com
                 </a>
               </p>
             </div>
