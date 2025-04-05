@@ -65,6 +65,52 @@ export const insertDocumentTemplateSchema = createInsertSchema(documentTemplates
 });
 
 // User documents
+// Payment records
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  amount: doublePrecision("amount").notNull(),
+  currency: text("currency").notNull().default("CAD"),
+  status: text("status").notNull().default("pending"),
+  paymentMethod: text("payment_method").notNull(), // stripe, paypal, etc
+  paymentMethodId: text("payment_method_id"), // External payment system ID
+  paymentType: text("payment_type").notNull(), // one_time, subscription, etc
+  description: text("description"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  planId: text("plan_id").notNull(),
+  status: text("status").notNull().default("active"),
+  currentPeriodStart: timestamp("current_period_start").notNull(),
+  currentPeriodEnd: timestamp("current_period_end").notNull(),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
+  paymentMethodId: text("payment_method_id"),
+  priceId: text("price_id").notNull(),
+  quantity: integer("quantity").default(1),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const invoices = pgTable("invoices", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  subscriptionId: integer("subscription_id").references(() => subscriptions.id),
+  amount: doublePrecision("amount").notNull(),
+  currency: text("currency").notNull().default("CAD"),
+  status: text("status").notNull().default("draft"),
+  dueDate: timestamp("due_date"),
+  paidAt: timestamp("paid_at"),
+  invoiceNumber: text("invoice_number").notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const userDocuments = pgTable("user_documents", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
@@ -72,9 +118,9 @@ export const userDocuments = pgTable("user_documents", {
   documentData: json("document_data").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   finalPrice: doublePrecision("final_price").notNull(),
+  paymentId: integer("payment_id").references(() => payments.id),
   paymentStatus: text("payment_status").notNull().default("pending"),
   documentPath: text("document_path"),
-  stripePaymentIntentId: text("stripe_payment_intent_id"),
   supportingDocuments: text("supporting_documents"),
 });
 
@@ -366,6 +412,52 @@ export type User = typeof users.$inferSelect;
 
 export type InsertDocumentTemplate = z.infer<typeof insertDocumentTemplateSchema>;
 export type DocumentTemplate = typeof documentTemplates.$inferSelect;
+
+// Payment schemas
+export const insertPaymentSchema = createInsertSchema(payments).pick({
+  userId: true,
+  amount: true,
+  currency: true,
+  paymentMethod: true,
+  paymentMethodId: true,
+  paymentType: true,
+  description: true,
+  metadata: true,
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  userId: true,
+  planId: true,
+  status: true,
+  currentPeriodStart: true,
+  currentPeriodEnd: true,
+  cancelAtPeriodEnd: true,
+  paymentMethodId: true,
+  priceId: true,
+  quantity: true,
+  metadata: true,
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).pick({
+  userId: true,
+  subscriptionId: true,
+  amount: true,
+  currency: true,
+  status: true,
+  dueDate: true,
+  paidAt: true,
+  invoiceNumber: true,
+  metadata: true,
+});
+
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
 
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;
