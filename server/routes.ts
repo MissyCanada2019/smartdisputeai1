@@ -193,6 +193,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Serve government partnerships page
+  app.get('/government-partnerships', (req: Request, res: Response) => {
+    console.log('Serving government partnerships page');
+    const filePath = path.join(__dirname, '../government-partnerships.html');
+    res.sendFile(filePath);
+  });
+  
   // Serve Google Search Console verification file
   app.get('/google-search-console-verification.html', (req: Request, res: Response) => {
     const filePath = path.join(__dirname, '../client/public/google-search-console-verification.html');
