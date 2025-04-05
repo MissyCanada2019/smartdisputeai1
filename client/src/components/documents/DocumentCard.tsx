@@ -17,27 +17,32 @@ export default function DocumentCard({
 }: DocumentCardProps) {
   // Calculate the discounted price if income-based pricing is requested
   const getPrice = () => {
+    let price: number | undefined;
     if (requestIncomeBased && userIncome) {
       const tier = pricingTiers.find(tier => tier.incomeRange === userIncome);
       if (tier) {
-        const discountedPrice = template.basePrice * (1 - tier.discountPercentage / 100);
-        
-        if (discountedPrice === 0) {
-          return <span className="text-green-600 font-semibold">Free</span>;
-        }
-        
-        return (
-          <div>
-            <span className="line-through text-gray-400 mr-2">${template.basePrice.toFixed(2)}</span>
-            <span className="text-green-600 font-semibold">${discountedPrice.toFixed(2)}</span>
-          </div>
-        );
+        price = template.basePrice * (1 - tier.discountPercentage / 100);
       }
+    } else {
+      price = template.basePrice;
     }
-    
-    return <span>${template.basePrice.toFixed(2)}</span>;
+
+    if (price === 0 || price === undefined) {
+      return <span className="text-green-600 font-semibold">Free</span>;
+    }
+
+    if (requestIncomeBased && userIncome && price && price < template.basePrice) {
+      return (
+        <div>
+          <span className="line-through text-gray-400 mr-2">${template.basePrice.toFixed(2)}</span>
+          <span className="text-green-600 font-semibold">${price.toFixed(2)}</span>
+        </div>
+      );
+    }
+
+    return <span>${price.toFixed(2)}</span>;
   };
-  
+
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="bg-gray-100 p-4 flex justify-center h-48">
