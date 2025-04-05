@@ -106,9 +106,15 @@ export default function registerDirectEvidenceRoutes(storage: IStorage): Router 
     try {
       console.log("POST /direct-evidence/upload - Request received");
       console.log("Files received:", req.files ? (req.files as Express.Multer.File[]).length : 0);
+      console.log("Request body:", req.body);
       console.log("Request body keys:", Object.keys(req.body || {}));
       
+      // Check if userId exists and is valid
+      const userId = req.body.userId;
+      console.log("Requested userId:", userId, "Type:", typeof userId);
+      
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        console.error("No files found in request");
         return res.status(400).json({
           message: "No files uploaded",
           details: "Please upload at least one evidence file"

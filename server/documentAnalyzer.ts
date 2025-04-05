@@ -374,7 +374,10 @@ Format your response with clear section headings and prioritize actionable advic
         ],
       });
       
-      return response.content[0].text;
+      if (response.content && response.content[0] && 'text' in response.content[0]) {
+        return response.content[0].text;
+      }
+      return "Analysis not available.";
     } else {
       // For images (PDF, DOC, DOCX), use vision capabilities
       const response = await anthropic.messages.create({
@@ -402,7 +405,10 @@ Format your response with clear section headings and prioritize actionable advic
         ],
       });
       
-      return response.content[0].text;
+      if (response.content && response.content[0] && 'text' in response.content[0]) {
+        return response.content[0].text;
+      }
+      return "Analysis not available.";
     }
   } catch (error) {
     console.error("Error in Claude document analysis:", error);
