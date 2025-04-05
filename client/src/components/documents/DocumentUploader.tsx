@@ -71,7 +71,13 @@ export default function DocumentUploader({
         formData.append('folderId', folderId.toString());
       }
 
-      const response = await apiRequest("POST", "/api/upload-documents", formData);
+      // Use the apiRequest function to handle protocol matching
+      const response = await apiRequest("POST", "/api/upload-documents", formData, {
+        onProgress: (progress) => {
+          console.log(`Upload progress: ${progress}%`);
+          // Could add progress tracking UI here
+        }
+      });
 
       const data = await response.json();
 

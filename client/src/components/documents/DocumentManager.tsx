@@ -184,6 +184,7 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
         
         console.log('Creating folder with data:', JSON.stringify(folderData));
         
+        // Use the current protocol to avoid mixed content issues
         const response = await apiRequest('POST', '/api/document-folders', folderData);
         console.log('Folder creation response status:', response.status);
         

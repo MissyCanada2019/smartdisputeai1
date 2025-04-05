@@ -176,7 +176,8 @@ export function trackDocumentGeneration(
   templateId: number,
   isCustomized: boolean
 ): void {
-  trackEvent('generate_document', 'document', {
+  trackEvent('generate_document', {
+    event_category: 'document',
     document_type: documentType,
     template_id: templateId,
     customized: isCustomized
@@ -195,7 +196,8 @@ export function trackSearch(
   category: string,
   resultsCount: number
 ): void {
-  trackEvent('search', 'engagement', {
+  trackEvent('search', {
+    event_category: 'engagement',
     search_term: searchTerm,
     search_category: category,
     results_count: resultsCount
@@ -214,7 +216,8 @@ export function trackError(
   errorMessage: string,
   errorLocation: string
 ): void {
-  trackEvent('error', 'error', {
+  trackEvent('error', {
+    event_category: 'error',
     error_type: errorType,
     error_message: errorMessage,
     error_location: errorLocation
