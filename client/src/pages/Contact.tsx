@@ -42,49 +42,20 @@ export default function Contact() {
           <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
             <form 
               id="contact-form"
-              action="mailto:smartdisputecanada@gmail.com"  
+              action="https://formspree.io/f/xwplryzj"  
               method="POST"
               className="space-y-6"
               onSubmit={handleFormSubmit}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <Input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Your name"
-                    required
-                    className="w-full"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Your email address"
-                    required
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
               <div className="space-y-2">
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-                  Subject
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Your email
                 </label>
                 <Input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  placeholder="What is this regarding?"
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Your email address"
                   required
                   className="w-full"
                 />
@@ -92,7 +63,7 @@ export default function Contact() {
 
               <div className="space-y-2">
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700">
-                  Message
+                  Your message
                 </label>
                 <Textarea
                   id="message"
@@ -109,7 +80,7 @@ export default function Contact() {
                   type="submit" 
                   className="w-full md:w-auto"
                 >
-                  Send Message
+                  Send
                 </Button>
               </div>
 
