@@ -59,6 +59,43 @@ const upload = multer({
 export default function registerDocumentAnalyzerRoutes(storage: IStorage): Router {
   const router = express.Router();
 
+  // Route to get a list of user's documents
+  router.get('/user-documents', async (req: Request, res: Response) => {
+    try {
+      const userId = req.query.userId || 'guest';
+      const userDocumentsDir = path.join(process.cwd(), "uploads", userId.toString());
+      
+      // Create the directory if it doesn't exist
+      if (!fs.existsSync(userDocumentsDir)) {
+        return res.json({ success: true, documents: [] });
+      }
+      
+      // Read the documents in the user's directory
+      const files = fs.readdirSync(userDocumentsDir);
+      const documents = files.map(file => {
+        const filePath = path.join(userDocumentsDir, file);
+        const stats = fs.statSync(filePath);
+        return {
+          name: file,
+          path: filePath,
+          size: stats.size,
+          createdAt: stats.birthtime
+        };
+      });
+      
+      return res.json({
+        success: true,
+        documents
+      });
+    } catch (error: any) {
+      console.error("Error getting user documents:", error);
+      return res.status(500).json({ 
+        success: false, 
+        error: error.message || "An error occurred while retrieving documents" 
+      });
+    }
+  });
+
   // Route to analyze uploaded document (using OpenAI by default)
   router.post('/analyze', upload.single('document'), async (req: Request, res: Response) => {
     try {
@@ -70,6 +107,20 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
       const model = req.query.model as string || 'openai';
       console.log(`Document analysis requested using model: ${model}`);
 
+      // Get user ID from query parameter or default to 'guest'
+      const userId = req.query.userId || 'guest';
+      console.log(`User ID for document storage: ${userId}`);
+      
+      // Create user-specific directory for document storage
+      const userDocumentsDir = path.join(process.cwd(), "uploads", userId.toString());
+      if (!fs.existsSync(userDocumentsDir)) {
+        fs.mkdirSync(userDocumentsDir, { recursive: true });
+      }
+      
+      // Save a copy of the file to the user's directory
+      const savedFilePath = path.join(userDocumentsDir, req.file.originalname);
+      fs.copyFileSync(req.file.path, savedFilePath);
+      
       const filePath = req.file.path;
       let fileContent = "";
 
@@ -82,61 +133,112 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
         const base64Data = fs.readFileSync(filePath).toString("base64");
         
         let analysis;
-        if (model === 'claude') {
-          analysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
-        } else {
-          analysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
+        try {
+          if (model === 'claude') {
+            analysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
+          } else {
+            analysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
+          }
+          
+          // Clean up only the temporary uploaded file, not the saved copy
+          fs.unlinkSync(filePath);
+          
+          return res.json({
+            success: true,
+            analysis,
+            filename: req.file.originalname,
+            model,
+            saved: true,
+            path: savedFilePath
+          });
+        } catch (analysisError) {
+          console.error("Error analyzing PDF:", analysisError);
+          
+          // Clean up only the temporary uploaded file
+          fs.unlinkSync(filePath);
+          
+          return res.status(500).json({
+            success: false,
+            error: "Failed to analyze document. The document has been saved and can be analyzed later.",
+            filename: req.file.originalname,
+            saved: true,
+            path: savedFilePath
+          });
         }
-        
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
-        
-        return res.json({
-          success: true,
-          analysis,
-          filename: req.file.originalname,
-          model
-        });
       } else {
         // For DOC/DOCX files, we'll extract text using OpenAI Vision as well
         const base64Data = fs.readFileSync(filePath).toString("base64");
         
         let analysis;
-        if (model === 'claude') {
-          analysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
-        } else {
-          analysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
+        try {
+          if (model === 'claude') {
+            analysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
+          } else {
+            analysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
+          }
+          
+          // Clean up only the temporary uploaded file
+          fs.unlinkSync(filePath);
+          
+          return res.json({
+            success: true,
+            analysis,
+            filename: req.file.originalname,
+            model,
+            saved: true,
+            path: savedFilePath
+          });
+        } catch (analysisError) {
+          console.error("Error analyzing DOC/DOCX:", analysisError);
+          
+          // Clean up only the temporary uploaded file
+          fs.unlinkSync(filePath);
+          
+          return res.status(500).json({
+            success: false,
+            error: "Failed to analyze document. The document has been saved and can be analyzed later.",
+            filename: req.file.originalname,
+            saved: true,
+            path: savedFilePath
+          });
         }
-        
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
-        
-        return res.json({
-          success: true,
-          analysis,
-          filename: req.file.originalname,
-          model
-        });
       }
 
       // If we have text content (for TXT files)
       if (fileContent) {
         let analysis;
-        if (model === 'claude') {
-          analysis = await analyzeDocumentWithClaude(fileContent, req.file.originalname, "text");
-        } else {
-          analysis = await analyzeDocumentWithOpenAI(fileContent, req.file.originalname, "text");
+        try {
+          if (model === 'claude') {
+            analysis = await analyzeDocumentWithClaude(fileContent, req.file.originalname, "text");
+          } else {
+            analysis = await analyzeDocumentWithOpenAI(fileContent, req.file.originalname, "text");
+          }
+          
+          // Clean up only the temporary uploaded file
+          fs.unlinkSync(filePath);
+          
+          return res.json({
+            success: true,
+            analysis,
+            filename: req.file.originalname,
+            model,
+            saved: true,
+            path: savedFilePath
+          });
+        } catch (analysisError) {
+          console.error("Error analyzing text file:", analysisError);
+          
+          // Clean up only the temporary uploaded file
+          fs.unlinkSync(filePath);
+          
+          return res.status(500).json({
+            success: false,
+            error: "Failed to analyze document. The document has been saved and can be analyzed later.",
+            filename: req.file.originalname,
+            saved: true,
+            path: savedFilePath
+          });
         }
-        
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
-        
-        return res.json({
-          success: true,
-          analysis,
-          filename: req.file.originalname,
-          model
-        });
       }
 
     } catch (error: any) {
@@ -192,36 +294,60 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
 
       console.log(`Dual AI model analysis requested for document: ${req.file.originalname}`);
       
+      // Get user ID from query parameter or default to 'guest'
+      const userId = req.query.userId || 'guest';
+      console.log(`User ID for document storage: ${userId}`);
+      
+      // Create user-specific directory for document storage
+      const userDocumentsDir = path.join(process.cwd(), "uploads", userId.toString());
+      if (!fs.existsSync(userDocumentsDir)) {
+        fs.mkdirSync(userDocumentsDir, { recursive: true });
+      }
+      
+      // Save a copy of the file to the user's directory
+      const savedFilePath = path.join(userDocumentsDir, req.file.originalname);
+      fs.copyFileSync(req.file.path, savedFilePath);
+      
       const filePath = req.file.path;
       let fileContent = "";
       let openaiAnalysis = "";
       let claudeAnalysis = "";
+      let analysisSuccess = true;
 
-      // Extract text from document based on file type
-      if (req.file.mimetype === "text/plain") {
-        // For text files, just read the content
-        fileContent = fs.readFileSync(filePath, "utf8");
-        
-        // Analyze with both models
-        openaiAnalysis = await analyzeDocumentWithOpenAI(fileContent, req.file.originalname, "text");
-        claudeAnalysis = await analyzeDocumentWithClaude(fileContent, req.file.originalname, "text");
-      } else {
-        // For PDF/DOC/DOCX files, use base64 content
-        const base64Data = fs.readFileSync(filePath).toString("base64");
-        
-        // Analyze with both models
-        openaiAnalysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
-        claudeAnalysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
+      try {
+        // Extract text from document based on file type
+        if (req.file.mimetype === "text/plain") {
+          // For text files, just read the content
+          fileContent = fs.readFileSync(filePath, "utf8");
+          
+          // Analyze with both models
+          openaiAnalysis = await analyzeDocumentWithOpenAI(fileContent, req.file.originalname, "text");
+          claudeAnalysis = await analyzeDocumentWithClaude(fileContent, req.file.originalname, "text");
+        } else {
+          // For PDF/DOC/DOCX files, use base64 content
+          const base64Data = fs.readFileSync(filePath).toString("base64");
+          
+          // Analyze with both models
+          openaiAnalysis = await analyzeDocumentWithOpenAI(base64Data, req.file.originalname, "image");
+          claudeAnalysis = await analyzeDocumentWithClaude(base64Data, req.file.originalname, "image");
+        }
+      } catch (analysisError) {
+        console.error("Error during dual analysis:", analysisError);
+        analysisSuccess = false;
+        openaiAnalysis = "Analysis failed. Please try again later.";
+        claudeAnalysis = "Analysis failed. Please try again later.";
       }
       
-      // Clean up the uploaded file
+      // Clean up only the temporary uploaded file
       fs.unlinkSync(filePath);
       
       return res.json({
-        success: true,
+        success: analysisSuccess,
         openai: openaiAnalysis,
         claude: claudeAnalysis,
-        filename: req.file.originalname
+        filename: req.file.originalname,
+        saved: true,
+        path: savedFilePath
       });
       
     } catch (error: any) {
@@ -275,50 +401,95 @@ Analyze the provided content in depth and provide a comprehensive assessment tha
 
 Format your response with clear section headings and prioritize actionable advice that a self-represented litigant could understand and apply.`;
 
+    console.log(`Analyzing document with OpenAI: ${filename || 'unnamed document'}`);
     let response: any;
 
     if (type === "text") {
       // For text content, use standard chat completion
-      response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Analyze this legal document${filename ? ` (${filename})` : ''}: ${content}` }
-        ],
-        max_tokens: 2500,
-      });
-      
-      return response.choices[0].message.content;
+      try {
+        response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Analyze this legal document${filename ? ` (${filename})` : ''}: ${content}` }
+          ],
+          max_tokens: 2500,
+        });
+        
+        if (response?.choices?.[0]?.message?.content) {
+          return response.choices[0].message.content;
+        } else {
+          console.warn("Empty or invalid response from OpenAI text analysis");
+          return "Unable to generate analysis. Please try using Claude instead.";
+        }
+      } catch (textError) {
+        console.error("Error in OpenAI text analysis:", textError);
+        // Try with Claude as a fallback
+        console.log("Falling back to Claude for text analysis");
+        try {
+          const claudeResponse = await analyzeDocumentWithClaude(content, filename, "text");
+          return "⚠️ OpenAI analysis failed, using Claude analysis instead:\n\n" + claudeResponse;
+        } catch (claudeError) {
+          console.error("Claude fallback also failed:", claudeError);
+          return "Analysis failed. Please try again later or upload a different format.";
+        }
+      }
     } else {
       // For images (PDF, DOC, DOCX), use vision API
-      response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          { role: "system", content: systemPrompt },
-          { 
-            role: "user", 
-            content: [
-              {
-                type: "text",
-                text: `Analyze this legal document${filename ? ` (${filename})` : ''}:`
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:image/jpeg;base64,${content}`
+      try {
+        response = await openai.chat.completions.create({
+          model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+          messages: [
+            { role: "system", content: systemPrompt },
+            { 
+              role: "user", 
+              content: [
+                {
+                  type: "text",
+                  text: `Analyze this legal document${filename ? ` (${filename})` : ''}:`
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:image/jpeg;base64,${content}`
+                  }
                 }
-              }
-            ]
-          }
-        ],
-        max_tokens: 2500,
-      });
-      
-      return response.choices[0].message.content;
+              ]
+            }
+          ],
+          max_tokens: 2500,
+        });
+        
+        if (response?.choices?.[0]?.message?.content) {
+          return response.choices[0].message.content;
+        } else {
+          console.warn("Empty or invalid response from OpenAI vision analysis");
+          return "Unable to generate analysis. Please try using Claude instead.";
+        }
+      } catch (visionError) {
+        console.error("Error in OpenAI vision analysis:", visionError);
+        // Try with Claude as a fallback
+        console.log("Falling back to Claude for document analysis");
+        try {
+          const claudeResponse = await analyzeDocumentWithClaude(content, filename, "image");
+          return "⚠️ OpenAI analysis failed, using Claude analysis instead:\n\n" + claudeResponse;
+        } catch (claudeError) {
+          console.error("Claude fallback also failed:", claudeError);
+          return "Analysis failed. Please try again later or upload a different format.";
+        }
+      }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in OpenAI document analysis:", error);
-    throw new Error("Failed to analyze document with OpenAI");
+    console.error("Error details:", error.message);
+    
+    // More detailed error logging
+    if (error.response) {
+      console.error("API response status:", error.response.status);
+      console.error("API response data:", error.response.data);
+    }
+    
+    return "Failed to analyze document. Please try again with a different model or format.";
   }
 }
 
@@ -360,52 +531,80 @@ Analyze the provided content in depth and provide a comprehensive assessment tha
 
 Format your response with clear section headings and prioritize actionable advice that a self-represented litigant could understand and apply.`;
 
+    console.log(`Analyzing document with Claude: ${filename || 'unnamed document'}`);
+
     if (type === "text") {
       // For text content, use standard chat completion
-      const response = await anthropic.messages.create({
-        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-        max_tokens: 2500,
-        system: systemPrompt,
-        messages: [
-          { 
-            role: "user", 
-            content: `Analyze this legal document${filename ? ` (${filename})` : ''}: ${content}` 
+      try {
+        const response = await anthropic.messages.create({
+          model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+          max_tokens: 2500,
+          system: systemPrompt,
+          messages: [
+            { 
+              role: "user", 
+              content: `Analyze this legal document${filename ? ` (${filename})` : ''}: ${content}` 
+            }
+          ],
+        });
+        
+        if (response.content && response.content.length > 0) {
+          const contentBlock = response.content[0];
+          if (typeof contentBlock === 'object' && contentBlock !== null && 'text' in contentBlock) {
+            return contentBlock.text;
           }
-        ],
-      });
-      
-      return response.content[0].text;
+        }
+        
+        return "Unable to generate analysis.";
+      } catch (textError) {
+        console.error("Error in Claude text analysis:", textError);
+        return "Claude analysis failed. Please try using OpenAI instead.";
+      }
     } else {
       // For images (PDF, DOC, DOCX), use vision capabilities
-      const response = await anthropic.messages.create({
-        model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-        max_tokens: 2500,
-        system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: `Analyze this legal document${filename ? ` (${filename})` : ''}:`
-              },
-              {
-                type: "image",
-                source: {
-                  type: "base64",
-                  media_type: "image/jpeg",
-                  data: content
+      try {
+        const response = await anthropic.messages.create({
+          model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+          max_tokens: 2500,
+          system: systemPrompt,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Analyze this legal document${filename ? ` (${filename})` : ''}:`
+                },
+                {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "image/jpeg",
+                    data: content
+                  }
                 }
-              }
-            ]
+              ]
+            }
+          ],
+        });
+        
+        if (response.content && response.content.length > 0) {
+          const contentBlock = response.content[0];
+          if (typeof contentBlock === 'object' && contentBlock !== null && 'text' in contentBlock) {
+            return contentBlock.text;
           }
-        ],
-      });
-      
-      return response.content[0].text;
+        }
+        
+        return "Unable to generate analysis.";
+      } catch (visionError) {
+        console.error("Error in Claude vision analysis:", visionError);
+        return "Claude analysis failed. Please try using OpenAI instead.";
+      }
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in Claude document analysis:", error);
-    throw new Error("Failed to analyze document with Claude");
+    console.error("Error details:", error.message);
+    
+    return "Failed to analyze document with Claude. Please try again with a different model or format.";
   }
 }

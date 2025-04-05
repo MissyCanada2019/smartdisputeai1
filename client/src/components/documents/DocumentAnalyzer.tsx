@@ -1,25 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, Loader2, RefreshCw } from "lucide-react";
+import { FileText, Brain, Loader2, RefreshCw, FileCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/forms/FileUpload";
 import AIDocumentComparison from "./AIDocumentComparison";
-import { analyzeDocument, AIAnalysisResponse } from "@/lib/aiService";
+import { analyzeDocument, analyzeExistingDocument, AIAnalysisResponse } from "@/lib/aiService";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface DocumentAnalyzerProps {
   title?: string;
   description?: string;
   onAnalysisComplete?: (analysis: any) => void;
+  selectedDocumentPath?: string;
+  userId?: string | number;
 }
 
 export default function DocumentAnalyzer({
   title = "AI-Powered Document Analysis",
   description = "Upload a document to analyze with AI. We'll identify key points, evidence weight, and provide strategic recommendations.",
-  onAnalysisComplete
+  onAnalysisComplete,
+  selectedDocumentPath,
+  userId = 'guest'
 }: DocumentAnalyzerProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -34,17 +39,47 @@ export default function DocumentAnalyzer({
   } | null>(null);
   const [selectedModel, setSelectedModel] = useState<'openai' | 'claude' | 'dual'>('openai');
   const [activeTab, setActiveTab] = useState<'document' | 'analysis' | 'openai' | 'claude' | 'comparison'>('document');
+  const [hasSelectedDocument, setHasSelectedDocument] = useState<boolean>(false);
   const { toast } = useToast();
+
+  // Effect to handle when a document is selected from the library
+  useEffect(() => {
+    if (selectedDocumentPath) {
+      setHasSelectedDocument(true);
+      // Reset any previous results
+      setResult(null);
+      setActiveTab('document');
+      
+      // Extract filename from path for display
+      const filename = selectedDocumentPath.split('/').pop() || 'Selected Document';
+      
+      toast({
+        title: "Document Selected",
+        description: `${filename} is ready for analysis`,
+      });
+    } else {
+      setHasSelectedDocument(false);
+    }
+  }, [selectedDocumentPath, toast]);
 
   const handleFileSelected = (files: File[]) => {
     if (files.length > 0) {
       setFile(files[0]);
+      // Clear the selected document path if the user manually uploads a file
+      setHasSelectedDocument(false);
     } else {
       setFile(null);
     }
   };
 
   const handleAnalyze = async () => {
+    // If we have a selected document path, use that
+    if (hasSelectedDocument && selectedDocumentPath) {
+      await analyzeSelectedDocument();
+      return;
+    }
+    
+    // Otherwise use the uploaded file
     if (!file) {
       toast({
         title: "No file selected",
@@ -59,7 +94,7 @@ export default function DocumentAnalyzer({
 
     try {
       // Use our AI service for analysis
-      const data = await analyzeDocument(file, selectedModel);
+      const data = await analyzeDocument(file, selectedModel, userId.toString());
       
       if (data.success) {
         if (selectedModel === 'dual') {
@@ -87,6 +122,73 @@ export default function DocumentAnalyzer({
         toast({
           title: "Analysis Complete",
           description: `Successfully analyzed ${file.name}`,
+          variant: "default",
+        });
+      } else {
+        throw new Error(data.error || "Failed to analyze the document");
+      }
+    } catch (error: any) {
+      setResult({
+        error: error.message,
+        success: false
+      });
+      
+      toast({
+        title: "Analysis Failed",
+        description: error.message || "Failed to analyze the document",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+  
+  const analyzeSelectedDocument = async () => {
+    if (!selectedDocumentPath) {
+      toast({
+        title: "No document selected",
+        description: "Please select a document from your library",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setResult(null);
+
+    try {
+      // Extract filename from path for display
+      const filename = selectedDocumentPath.split('/').pop() || 'Selected Document';
+      
+      // Use our AI service for analysis
+      const data = await analyzeExistingDocument(selectedDocumentPath, selectedModel);
+      
+      if (data.success) {
+        if (selectedModel === 'dual') {
+          setResult({
+            openai: data.openai,
+            claude: data.claude,
+            filename: data.filename || filename,
+            success: true
+          });
+          setActiveTab('openai'); // Default to OpenAI tab for results
+        } else {
+          setResult({
+            analysis: data.analysis,
+            filename: data.filename || filename,
+            model: data.model,
+            success: true
+          });
+          setActiveTab('analysis');
+        }
+
+        if (onAnalysisComplete) {
+          onAnalysisComplete(data);
+        }
+
+        toast({
+          title: "Analysis Complete",
+          description: `Successfully analyzed ${filename}`,
           variant: "default",
         });
       } else {
@@ -156,18 +258,30 @@ export default function DocumentAnalyzer({
               </p>
             </div>
 
-            <FileUpload 
-              onUpload={handleFileSelected}
-              multiple={false}
-              acceptedFileTypes=".pdf,.doc,.docx,.txt"
-              maxFileSizeMB={10}
-              label="Document for Analysis"
-              helpText="Upload a legal document to analyze. We support PDF, DOC, DOCX, and TXT files up to 10MB."
-            />
+            {hasSelectedDocument && selectedDocumentPath && (
+              <Alert className="mb-4">
+                <FileCheck className="h-4 w-4" />
+                <AlertTitle>Selected Document</AlertTitle>
+                <AlertDescription>
+                  {selectedDocumentPath.split('/').pop()} has been selected from your library
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!hasSelectedDocument && (
+              <FileUpload 
+                onUpload={handleFileSelected}
+                multiple={false}
+                acceptedFileTypes=".pdf,.doc,.docx,.txt"
+                maxFileSizeMB={10}
+                label="Document for Analysis"
+                helpText="Upload a legal document to analyze. We support PDF, DOC, DOCX, and TXT files up to 10MB."
+              />
+            )}
             
             <Button 
               onClick={handleAnalyze} 
-              disabled={!file || isAnalyzing}
+              disabled={((!file && !hasSelectedDocument) || isAnalyzing)}
               className="w-full mt-4"
             >
               {isAnalyzing ? (
@@ -178,7 +292,7 @@ export default function DocumentAnalyzer({
               ) : (
                 <>
                   <Brain className="h-4 w-4 mr-2" />
-                  Analyze Document
+                  {hasSelectedDocument ? 'Analyze Selected Document' : 'Analyze Document'}
                 </>
               )}
             </Button>
