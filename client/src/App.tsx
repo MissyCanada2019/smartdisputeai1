@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { FormProvider } from "@/lib/formContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import ChatBotModal from "@/components/chatbot/ChatBotModal";
 import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
 import MaintenanceNotification from "@/components/common/MaintenanceNotification";
@@ -33,7 +32,6 @@ import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
 import About from "@/pages/about";
-import Chat from "@/pages/chat";
 import Resources from "@/pages/resources-new";
 import ResourceSharing from "@/pages/resource-sharing";
 import NewResource from "@/pages/new-resource";
@@ -129,11 +127,6 @@ function Router() {
       </Route>
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/about" component={About} />
-      <Route path="/chat">
-        <ProtectedRoute>
-          <Chat />
-        </ProtectedRoute>
-      </Route>
       <Route path="/resources" component={Resources} />
       <Route path="/resources/ltb" component={LTBResourcesPage} />
       <Route path="/resources/cas" component={CASResourcesPage} />
@@ -278,7 +271,6 @@ function App() {
                   {/* Add bottom padding to prevent sticky CTA from overlapping content */}
                   <div className="pb-16 md:pb-12"></div>
                   <Footer />
-                  <ChatBotModal />
                   <CookieConsentBanner />
                   <AutomaticUpdates />
                   <MaintenanceNotification />
