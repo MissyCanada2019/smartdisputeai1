@@ -92,12 +92,7 @@ export default function Header() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
-            AI Assistant
-          </Link>
-          <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
-            Chat
-          </Link>
+          {/* AI Assistant and Chat links removed */}
           <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
             FAQ
           </Link>
@@ -248,16 +243,7 @@ export default function Header() {
                     </SheetClose>
                   </div>
                 </div>
-                <SheetClose asChild>
-                  <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
-                    Chat
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
-                    AI Assistant
-                  </Link>
-                </SheetClose>
+                {/* AI Assistant and Chat links removed from mobile menu */}
                 <SheetClose asChild>
                   <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
                     FAQ
