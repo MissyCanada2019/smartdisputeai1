@@ -9,6 +9,7 @@ import ChatBotModal from "@/components/chatbot/ChatBotModal";
 import AutomaticUpdates from "@/components/common/AutomaticUpdates";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
 import MaintenanceNotification from "@/components/common/MaintenanceNotification";
+import StickyCta from "@/components/common/StickyCta";
 import { LeadCaptureProvider } from "@/components/marketing/LeadCaptureProvider";
 import { AnalyticsProvider, RouteTracker } from "@/components/analytics";
 import { useEffect } from "react";
@@ -264,12 +265,15 @@ function App() {
                   <main className="flex-grow">
                     <Router />
                   </main>
+                  {/* Add bottom padding to prevent sticky CTA from overlapping content */}
+                  <div className="pb-16 md:pb-12"></div>
                   <Footer />
                   <ChatBotModal />
                   <CookieConsentBanner />
                   <AutomaticUpdates />
                   <MaintenanceNotification />
                   <TutorialModal />
+                  <StickyCta buttonText="Contact Us Now" buttonLink="/contact" />
                 </div>
                 <Toaster />
               </AnalyticsProvider>
