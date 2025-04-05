@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
+import { trackCtaClick } from '@/lib/analytics';
 
 type StickyCtaProps = {
   buttonText?: string;
@@ -10,15 +11,10 @@ export default function StickyCta({
   buttonText = "Contact Us Now", 
   buttonLink = "/contact" 
 }: StickyCtaProps) {
-  // Function to track CTA click with dataLayer for GTM
-  const trackCtaClick = () => {
-    if (typeof window !== 'undefined' && window.dataLayer) {
-      window.dataLayer.push({
-        'event': 'cta_click',
-        'cta_text': buttonText,
-        'cta_location': 'sticky_footer'
-      });
-    }
+  // Function to track CTA click using our analytics library
+  const handleCtaClick = () => {
+    // Track the CTA click using our unified analytics function
+    trackCtaClick(buttonText, 'sticky_footer', buttonLink);
   };
 
   return (
@@ -27,7 +23,9 @@ export default function StickyCta({
         <a 
           id="cta-primary" 
           className="cta-button inline-block bg-white text-primary hover:bg-gray-100 font-bold py-2 px-6 rounded-full text-center shadow-md transition-all"
-          onClick={trackCtaClick}
+          onClick={handleCtaClick}
+          data-tracking="cta-click"
+          aria-label={buttonText}
         >
           {buttonText}
         </a>

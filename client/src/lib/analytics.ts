@@ -368,3 +368,22 @@ export function trackProfileUpdate(
     fields_updated: fieldsUpdated.join(',')
   });
 }
+
+/**
+ * Track CTA (Call-to-Action) clicks
+ * 
+ * @param ctaText Text displayed on the CTA
+ * @param ctaLocation Location of the CTA (e.g., 'sticky_footer', 'header', 'sidebar')
+ * @param destinationUrl Destination URL of the CTA
+ */
+export function trackCtaClick(
+  ctaText: string,
+  ctaLocation: string,
+  destinationUrl: string
+): void {
+  trackEvent('cta_click', 'conversion', {
+    cta_text: ctaText,
+    cta_location: ctaLocation,
+    destination_url: destinationUrl
+  });
+}
