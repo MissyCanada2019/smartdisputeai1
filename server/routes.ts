@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({ 
     storage: fileStorage,
     limits: {
-      fileSize: 200 * 1024 * 1024, // 200MB limit
+      fileSize: 500 * 1024 * 1024, // 500MB limit
     },
     fileFilter: function (req, file, cb) {
       // Check the mimetype first (more reliable)
@@ -2592,16 +2592,39 @@ const subscription = await stripe.subscriptions.create({
   // Special endpoint to update the sysdemoaccount profile fields
   app.post("/api/update-demo-profile", async (req: Request, res: Response) => {
     try {
-      // Get the demo user (hardcoded ID for sysdemoaccount)
-      const demoUserId = 999;
-      
-      const demoUser = await storage.getUser(demoUserId);
+      // Get the demo user by username (sysdemoaccount) instead of hardcoded ID
+      const demoUser = await storage.getUserByUsername("sysdemoaccount");
       if (!demoUser) {
-        return res.status(404).json({ message: "Demo user not found" });
+        // Try alternate username (may be in Demouser account)
+        const altDemoUser = await storage.getUserByUsername("Demouser");
+        if (!altDemoUser) {
+          return res.status(404).json({ message: "Demo user not found (tried both sysdemoaccount and Demouser)" });
+        }
+        
+        // We found an alternate demo user, let's use it
+        console.log("Using alternate Demouser account with ID:", altDemoUser.id);
+        const updatedUser = await storage.updateUser(altDemoUser.id, {
+          city: req.body.city || "Toronto", 
+          postalCode: req.body.postalCode || "M5V 2A8",
+          address: req.body.address || "123 Demo Street",
+          phone: req.body.phone || "416-555-1234",
+          province: req.body.province || "ON"
+        });
+        
+        // Remove sensitive data before sending
+        const { password, ...safeUserData } = updatedUser;
+        
+        res.json({
+          success: true,
+          message: "Demo user profile updated successfully (using Demouser account)",
+          user: safeUserData
+        });
+        return;
       }
       
+      console.log("Updating sysdemoaccount profile with ID:", demoUser.id);
       // Update the demo user with required profile fields
-      const updatedUser = await storage.updateUser(demoUserId, {
+      const updatedUser = await storage.updateUser(demoUser.id, {
         city: req.body.city || "Toronto", 
         postalCode: req.body.postalCode || "M5V 2A8",
         address: req.body.address || "123 Demo Street",
@@ -2620,6 +2643,74 @@ const subscription = await stripe.subscriptions.create({
     } catch (error: any) {
       console.error("Error updating demo user profile:", error);
       res.status(500).json({ message: `Error updating demo profile: ${error.message}` });
+    }
+  });
+  
+  // Endpoint to check the status of demo account fields required for analysis
+  app.get("/api/check-demo-profile", async (req: Request, res: Response) => {
+    try {
+      // First check the sysdemoaccount
+      const demoUser = await storage.getUserByUsername("sysdemoaccount");
+      
+      if (demoUser) {
+        // Check if profile has all required fields
+        const missingFields = [];
+        if (!demoUser.city) missingFields.push("city");
+        if (!demoUser.postalCode) missingFields.push("postalCode");
+        if (!demoUser.address) missingFields.push("address");
+        if (!demoUser.phone) missingFields.push("phone");
+        if (!demoUser.province) missingFields.push("province");
+        
+        return res.json({
+          username: "sysdemoaccount",
+          id: demoUser.id,
+          email: demoUser.email,
+          isComplete: missingFields.length === 0,
+          missingFields,
+          fieldsStatus: {
+            city: demoUser.city || null,
+            postalCode: demoUser.postalCode || null,
+            address: demoUser.address || null,
+            phone: demoUser.phone || null,
+            province: demoUser.province || null
+          }
+        });
+      }
+      
+      // If sysdemoaccount not found, check Demouser as fallback
+      const altDemoUser = await storage.getUserByUsername("Demouser");
+      if (altDemoUser) {
+        const missingFields = [];
+        if (!altDemoUser.city) missingFields.push("city");
+        if (!altDemoUser.postalCode) missingFields.push("postalCode");
+        if (!altDemoUser.address) missingFields.push("address");
+        if (!altDemoUser.phone) missingFields.push("phone");
+        if (!altDemoUser.province) missingFields.push("province");
+        
+        return res.json({
+          username: "Demouser",
+          id: altDemoUser.id,
+          email: altDemoUser.email,
+          isComplete: missingFields.length === 0,
+          missingFields,
+          fieldsStatus: {
+            city: altDemoUser.city || null,
+            postalCode: altDemoUser.postalCode || null,
+            address: altDemoUser.address || null,
+            phone: altDemoUser.phone || null,
+            province: altDemoUser.province || null
+          }
+        });
+      }
+      
+      // If we couldn't find any demo account
+      return res.status(404).json({ 
+        message: "No demo accounts found", 
+        searched: ["sysdemoaccount", "Demouser"] 
+      });
+    } catch (error: any) {
+      console.error("Error checking demo profile:", error);
+      res.status(500).json({ message: `Error checking demo profile: ${error.message}` });
     }
   });
   

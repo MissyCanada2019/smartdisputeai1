@@ -7,20 +7,30 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
-        }
-        h1 {
             color: #333;
+        }
+        h1, h2 {
+            color: #0066cc;
             text-align: center;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         form {
             background: #f9f9f9;
             border: 1px solid #ddd;
             padding: 20px;
             border-radius: 5px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
@@ -29,24 +39,33 @@
         }
         input, select {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
+            font-size: 16px;
         }
         button {
             background-color: #0066cc;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 15px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
             width: 100%;
+            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #0055b3;
+        }
+        .button-secondary {
+            background-color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .button-secondary:hover {
+            background-color: #45a049;
         }
         .response-box {
             margin-top: 20px;
@@ -55,6 +74,15 @@
             border-radius: 4px;
             background-color: #f5f5f5;
             display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status-box {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f5f5f5;
         }
         .error {
             color: #d32f2f;
@@ -62,66 +90,222 @@
         .success {
             color: #388e3c;
         }
+        .warning {
+            color: #ff9800;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-complete {
+            background-color: #4CAF50;
+        }
+        .status-missing {
+            background-color: #f44336;
+        }
+        .profile-status {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            font-style: italic;
+            color: #666;
+            display: none;
+        }
+        .field-status {
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 2px solid #0066cc;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <h1>Update SmartDispute Demo Profile</h1>
-    <p>Use this form to update the missing profile information for the sysdemoaccount user.</p>
+    <h1>SmartDispute Demo Profile Manager</h1>
     
-    <form id="profileForm">
-        <div>
-            <label for="city">City:</label>
-            <input type="text" id="city" name="city" value="Toronto" required>
-        </div>
-        
-        <div>
-            <label for="postalCode">Postal Code:</label>
-            <input type="text" id="postalCode" name="postalCode" value="M5V 2A8" required>
-        </div>
-        
-        <div>
-            <label for="address">Address:</label>
-            <input type="text" id="address" name="address" value="123 Demo Street" required>
-        </div>
-        
-        <div>
-            <label for="phone">Phone Number:</label>
-            <input type="tel" id="phone" name="phone" value="416-555-1234" required>
-        </div>
-        
-        <div>
-            <label for="province">Province:</label>
-            <select id="province" name="province" required>
-                <option value="AB">Alberta</option>
-                <option value="BC">British Columbia</option>
-                <option value="MB">Manitoba</option>
-                <option value="NB">New Brunswick</option>
-                <option value="NL">Newfoundland and Labrador</option>
-                <option value="NS">Nova Scotia</option>
-                <option value="NT">Northwest Territories</option>
-                <option value="NU">Nunavut</option>
-                <option value="ON" selected>Ontario</option>
-                <option value="PE">Prince Edward Island</option>
-                <option value="QC">Quebec</option>
-                <option value="SK">Saskatchewan</option>
-                <option value="YT">Yukon</option>
-            </select>
-        </div>
-        
-        <button type="submit">Update Profile</button>
-    </form>
+    <div class="tabs">
+        <div class="tab active" data-tab="update">Update Profile</div>
+        <div class="tab" data-tab="check">Check Status</div>
+        <div class="tab" data-tab="testing">Testing Guide</div>
+    </div>
     
-    <div id="responseBox" class="response-box">
-        <h3>Response:</h3>
-        <pre id="responseContent"></pre>
+    <div class="tab-content active" id="update-tab">
+        <div class="card">
+            <h2>Update Demo Profile</h2>
+            <p>Use this form to update the missing profile information for the sysdemoaccount user to fix the Error 400 issue during data analysis.</p>
+            
+            <form id="profileForm">
+                <div>
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" value="Toronto" required>
+                </div>
+                
+                <div>
+                    <label for="postalCode">Postal Code:</label>
+                    <input type="text" id="postalCode" name="postalCode" value="M5V 2A8" required>
+                </div>
+                
+                <div>
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address" value="123 Demo Street" required>
+                </div>
+                
+                <div>
+                    <label for="phone">Phone Number:</label>
+                    <input type="tel" id="phone" name="phone" value="416-555-1234" required>
+                </div>
+                
+                <div>
+                    <label for="province">Province:</label>
+                    <select id="province" name="province" required>
+                        <option value="AB">Alberta</option>
+                        <option value="BC">British Columbia</option>
+                        <option value="MB">Manitoba</option>
+                        <option value="NB">New Brunswick</option>
+                        <option value="NL">Newfoundland and Labrador</option>
+                        <option value="NS">Nova Scotia</option>
+                        <option value="NT">Northwest Territories</option>
+                        <option value="NU">Nunavut</option>
+                        <option value="ON" selected>Ontario</option>
+                        <option value="PE">Prince Edward Island</option>
+                        <option value="QC">Quebec</option>
+                        <option value="SK">Saskatchewan</option>
+                        <option value="YT">Yukon</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Update Profile</button>
+            </form>
+            
+            <div id="updateLoading" class="loading">Updating profile...</div>
+            
+            <div id="responseBox" class="response-box">
+                <h3>Response:</h3>
+                <pre id="responseContent"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="check-tab">
+        <div class="card">
+            <h2>Profile Status</h2>
+            <p>Check if the demo account has all the required fields for document analysis.</p>
+            
+            <button id="checkStatusBtn" class="button-secondary">Check Demo Profile Status</button>
+            <div id="checkLoading" class="loading">Checking profile status...</div>
+            
+            <div id="statusBox" class="status-box" style="display:none">
+                <div id="profileStatusSummary" class="profile-status"></div>
+                
+                <h3>Field Details:</h3>
+                <table id="statusTable">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Status</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- This will be filled dynamically -->
+                    </tbody>
+                </table>
+                
+                <div id="accountInfo"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tab-content" id="testing-tab">
+        <div class="card">
+            <h2>Testing Guide</h2>
+            <p>Follow these steps to test file uploads and document analysis:</p>
+            
+            <ol>
+                <li>First, update the demo account profile using the "Update Profile" tab.</li>
+                <li>Verify all fields are properly set using the "Check Status" tab. All fields should show as "Complete".</li>
+                <li>Log in to the application with the sysdemoaccount username.</li>
+                <li>Navigate to the document upload section and upload a test file (under 500MB).</li>
+                <li>Try a document analysis operation that previously failed with Error 400.</li>
+            </ol>
+            
+            <h3>Troubleshooting Tips:</h3>
+            <ul>
+                <li>If you still get Error 400, check if your upload is completing successfully and the file appears in your account.</li>
+                <li>For larger uploads, monitor the network tab in your browser's developer tools for any timeout issues.</li>
+                <li>If uploads fail with Error 413, refresh the page and try again with a smaller file or try different file formats.</li>
+            </ul>
+        </div>
     </div>
     
     <script>
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Show selected tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId + '-tab').classList.add('active');
+            });
+        });
+        
+        // Update profile form submission
         document.getElementById('profileForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const responseBox = document.getElementById('responseBox');
             const responseContent = document.getElementById('responseContent');
+            const loading = document.getElementById('updateLoading');
+            
+            // Show loading indicator
+            loading.style.display = 'block';
+            responseBox.style.display = 'none';
             
             // Get form values
             const formData = {
@@ -144,6 +328,9 @@
                 
                 const result = await response.json();
                 
+                // Hide loading indicator
+                loading.style.display = 'none';
+                
                 // Display the response
                 responseBox.style.display = 'block';
                 
@@ -155,9 +342,114 @@
                     responseContent.textContent = JSON.stringify(result, null, 2);
                 }
             } catch (error) {
+                // Hide loading indicator
+                loading.style.display = 'none';
+                
+                // Display error
                 responseBox.style.display = 'block';
                 responseContent.className = 'error';
                 responseContent.textContent = `Error: ${error.message}`;
+            }
+        });
+        
+        // Check profile status
+        document.getElementById('checkStatusBtn').addEventListener('click', async function() {
+            const statusBox = document.getElementById('statusBox');
+            const profileStatusSummary = document.getElementById('profileStatusSummary');
+            const statusTable = document.getElementById('statusTable').querySelector('tbody');
+            const accountInfo = document.getElementById('accountInfo');
+            const loading = document.getElementById('checkLoading');
+            
+            // Show loading indicator
+            loading.style.display = 'block';
+            statusBox.style.display = 'none';
+            
+            try {
+                // Send request to check profile status
+                const response = await fetch('/api/check-demo-profile');
+                const result = await response.json();
+                
+                // Hide loading indicator
+                loading.style.display = 'none';
+                
+                // Display the status
+                statusBox.style.display = 'block';
+                
+                // Clear existing content
+                statusTable.innerHTML = '';
+                
+                if (response.ok) {
+                    // Display profile status summary
+                    if (result.isComplete) {
+                        profileStatusSummary.innerHTML = `
+                            <div class="success">
+                                <span class="status-indicator status-complete"></span>
+                                Profile is complete with all required fields.
+                            </div>
+                        `;
+                    } else {
+                        profileStatusSummary.innerHTML = `
+                            <div class="error">
+                                <span class="status-indicator status-missing"></span>
+                                Profile is missing ${result.missingFields.length} required field(s): ${result.missingFields.join(', ')}
+                            </div>
+                        `;
+                    }
+                    
+                    // Display field details in table
+                    const fields = ['city', 'postalCode', 'address', 'phone', 'province'];
+                    fields.forEach(field => {
+                        const value = result.fieldsStatus[field];
+                        const row = document.createElement('tr');
+                        
+                        // Create field name cell
+                        const fieldNameCell = document.createElement('td');
+                        fieldNameCell.textContent = field;
+                        row.appendChild(fieldNameCell);
+                        
+                        // Create status cell
+                        const statusCell = document.createElement('td');
+                        if (value) {
+                            statusCell.innerHTML = '<span class="field-status success">Complete</span>';
+                        } else {
+                            statusCell.innerHTML = '<span class="field-status error">Missing</span>';
+                        }
+                        row.appendChild(statusCell);
+                        
+                        // Create value cell
+                        const valueCell = document.createElement('td');
+                        valueCell.textContent = value || 'N/A';
+                        row.appendChild(valueCell);
+                        
+                        statusTable.appendChild(row);
+                    });
+                    
+                    // Display account info
+                    accountInfo.innerHTML = `
+                        <h3>Account Information:</h3>
+                        <p><strong>Username:</strong> ${result.username}</p>
+                        <p><strong>User ID:</strong> ${result.id}</p>
+                        <p><strong>Email:</strong> ${result.email || 'N/A'}</p>
+                    `;
+                } else {
+                    // Display error
+                    profileStatusSummary.innerHTML = `
+                        <div class="error">
+                            Error checking profile status: ${result.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                // Hide loading indicator
+                loading.style.display = 'none';
+                
+                // Display error
+                statusBox.style.display = 'block';
+                profileStatusSummary.innerHTML = `
+                    <div class="error">
+                        Error: ${error.message}
+                    </div>
+                `;
             }
         });
     </script>

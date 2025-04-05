@@ -12,8 +12,10 @@ const __dirname = dirname(__filename);
 
 const app = express();
 // Increase payload size limits for JSON and URL encoded data
-app.use(express.json({ limit: '500mb' }));
-app.use(express.urlencoded({ extended: false, limit: '500mb' }));
+app.use(express.json({ limit: '1000mb' }));
+app.use(express.urlencoded({ extended: false, limit: '1000mb' }));
+// Add body parser limit
+app.use(express.raw({ limit: '1000mb' }));
 
 // Enable CORS for both HTTP and HTTPS connections
 app.use((req, res, next) => {
