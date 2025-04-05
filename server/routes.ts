@@ -186,6 +186,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Serve profile update page for demo account
+  app.get('/update-profile', (req: Request, res: Response) => {
+    console.log('Serving profile update page');
+    const filePath = path.join(__dirname, '../update-profile.html');
+    res.sendFile(filePath);
+  });
+  
   // Serve Google Search Console verification file
   app.get('/google-search-console-verification.html', (req: Request, res: Response) => {
     const filePath = path.join(__dirname, '../client/public/google-search-console-verification.html');
@@ -2545,6 +2552,74 @@ const subscription = await stripe.subscriptions.create({
     } catch (error: any) {
       console.error("Error fetching current user data:", error);
       res.status(500).json({ message: `Error fetching user data: ${error.message}` });
+    }
+  });
+
+  // Update profile for current user - handles missing fields required for analysis
+  app.patch("/api/users/current/profile", async (req: Request, res: Response) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Use the logged-in user's ID
+      const userId = req.user.id;
+      
+      // Validate request body
+      const validationResult = userInfoFormSchema.partial().safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ message: "Invalid profile data", errors: validationResult.error.format() });
+      }
+      
+      const profileData = validationResult.data;
+      
+      // Update user
+      const updatedUser = await storage.updateUser(userId, profileData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Remove sensitive data before sending
+      const { password, ...safeUserData } = updatedUser;
+      
+      res.json(safeUserData);
+    } catch (error: any) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: `Error updating profile: ${error.message}` });
+    }
+  });
+  
+  // Special endpoint to update the sysdemoaccount profile fields
+  app.post("/api/update-demo-profile", async (req: Request, res: Response) => {
+    try {
+      // Get the demo user (hardcoded ID for sysdemoaccount)
+      const demoUserId = 999;
+      
+      const demoUser = await storage.getUser(demoUserId);
+      if (!demoUser) {
+        return res.status(404).json({ message: "Demo user not found" });
+      }
+      
+      // Update the demo user with required profile fields
+      const updatedUser = await storage.updateUser(demoUserId, {
+        city: req.body.city || "Toronto", 
+        postalCode: req.body.postalCode || "M5V 2A8",
+        address: req.body.address || "123 Demo Street",
+        phone: req.body.phone || "416-555-1234",
+        province: req.body.province || "ON"
+      });
+      
+      // Remove sensitive data before sending
+      const { password, ...safeUserData } = updatedUser;
+      
+      res.json({
+        success: true,
+        message: "Demo user profile updated successfully",
+        user: safeUserData
+      });
+    } catch (error: any) {
+      console.error("Error updating demo user profile:", error);
+      res.status(500).json({ message: `Error updating demo profile: ${error.message}` });
     }
   });
   
