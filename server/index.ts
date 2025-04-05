@@ -12,8 +12,8 @@ const __dirname = dirname(__filename);
 
 const app = express();
 // Increase payload size limits for JSON and URL encoded data
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ extended: false, limit: '100mb' }));
+app.use(express.json({ limit: '500mb' }));
+app.use(express.urlencoded({ extended: false, limit: '500mb' }));
 
 // Enable CORS for both HTTP and HTTPS connections
 app.use((req, res, next) => {
@@ -70,7 +70,7 @@ app.use(express.static(path.join(__dirname, '..'), {
     await seedDatabase(storage);
     log("Database seeded successfully");
   } catch (error) {
-    log("Error seeding database:", error);
+    log("Error seeding database:", error instanceof Error ? error.message : String(error));
   }
 
   const server = await registerRoutes(app);

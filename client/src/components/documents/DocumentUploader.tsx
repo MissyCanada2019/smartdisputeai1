@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import FileUpload from "@/components/forms/FileUpload";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { FileText, FileCheck } from "lucide-react";
+import { FileText, FileCheck, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface DocumentUploaderProps {
   documentId?: number;
@@ -26,6 +27,7 @@ export default function DocumentUploader({
   const [files, setFiles] = React.useState<File[]>([]);
   const [isUploading, setIsUploading] = React.useState(false);
   const [uploadedFiles, setUploadedFiles] = React.useState<any[]>([]);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   const { toast } = useToast();
 
   const handleFilesSelected = (selectedFiles: File[]) => {
@@ -75,7 +77,7 @@ export default function DocumentUploader({
       const response = await apiRequest("POST", "/api/upload-documents", formData, {
         onProgress: (progress) => {
           console.log(`Upload progress: ${progress}%`);
-          // Could add progress tracking UI here
+          setUploadProgress(progress);
         }
       });
 
@@ -93,6 +95,9 @@ export default function DocumentUploader({
         variant: "default",
       });
 
+      // Reset upload progress and state
+      setUploadProgress(0);
+      
       if (onUploadComplete) {
         onUploadComplete(data.files);
       }
@@ -104,6 +109,10 @@ export default function DocumentUploader({
       });
     } finally {
       setIsUploading(false);
+      // Ensure progress is reset after a brief delay to show completion
+      setTimeout(() => {
+        setUploadProgress(0);
+      }, 1000);
     }
   };
 
@@ -134,7 +143,7 @@ export default function DocumentUploader({
           >
             {isUploading ? (
               <>
-                <span className="animate-spin mr-2">⟳</span> 
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
                 Uploading...
               </>
             ) : (
@@ -144,6 +153,15 @@ export default function DocumentUploader({
               </>
             )}
           </Button>
+          
+          {isUploading && (
+            <div className="space-y-1 mt-2">
+              <Progress value={uploadProgress} className="h-2 w-full" />
+              <p className="text-xs text-center text-gray-500">
+                {uploadProgress < 100 ? 'Uploading...' : 'Processing...'} {uploadProgress}%
+              </p>
+            </div>
+          )}
         </div>
         
         {uploadedFiles.length > 0 && (

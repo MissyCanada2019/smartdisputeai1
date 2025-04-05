@@ -158,14 +158,14 @@ export default function FileUpload({
         onDrop={handleDrop}
         onClick={triggerFileInput}
       >
-        <CardContent className="flex flex-col items-center justify-center py-12">
-          <Upload className="h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-lg font-medium mb-2">Drag and drop files here</p>
-          <p className="text-sm text-gray-500 mb-4">Or click to browse your computer</p>
+        <CardContent className="flex flex-col items-center justify-center py-6 sm:py-8 md:py-12">
+          <Upload className="h-10 w-10 text-gray-400 mb-3" />
+          <p className="text-base sm:text-lg font-medium mb-2">Drag and drop files here</p>
+          <p className="text-sm text-gray-500 mb-3">Or click to browse your computer</p>
           <Button variant="outline" onClick={(e) => { e.stopPropagation(); triggerFileInput(); }}>
             Select Files {multiple && "(Multiple)"}
           </Button>
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-xs text-gray-400 mt-3">
             Accepted file types: {acceptedFileTypes.replace(/\./g, '').toUpperCase().split(',').join(', ')}
             <br />
             Maximum file size: {maxFileSizeMB} MB
@@ -185,17 +185,17 @@ export default function FileUpload({
       {showPreview && files.length > 0 && (
         <div className="mt-4">
           <h4 className="text-md font-medium mb-2">Selected Files</h4>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-60 overflow-y-auto p-1 border rounded">
             {files.map((file, index) => (
               <div key={index} className="flex items-center justify-between py-2 px-4 bg-gray-50 rounded-md border">
-                <div className="flex items-center">
-                  <FileText className="h-5 w-5 text-primary mr-2" />
-                  <div>
-                    <p className="text-sm font-medium">{file.name}</p>
+                <div className="flex items-center overflow-hidden">
+                  <FileText className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                   </div>
                 </div>
-                <div className="flex items-center">
+                <div className="flex items-center flex-shrink-0 ml-2">
                   <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   <Button 
                     variant="ghost" 
