@@ -63,6 +63,8 @@ import Subscriptions from "@/pages/subscriptions";
 import AiDocumentAnalysis from "@/pages/AiDocumentAnalysis";
 import PerformanceDemo from "@/pages/PerformanceDemo";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Contact from "@/pages/Contact";
+import ThankYou from "@/pages/ThankYou";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -172,6 +174,10 @@ function Router() {
       {/* Marketing Funnel Routes */}
       <Route path="/marketing" component={MarketingIndex} />
       <Route path="/marketing/children-aid" component={ChildrenAidLandingPage} />
+      
+      {/* Contact and Form Submission Pages */}
+      <Route path="/contact" component={Contact} />
+      <Route path="/thank-you" component={ThankYou} />
       
       {/* Component Demos - Admin Access Only */}
       <Route path="/demos/file-uploader">

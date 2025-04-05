@@ -48,7 +48,7 @@ export default function Footer() {
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/about" className="hover:text-white">Our Team</Link></li>
               <li><Link href="/affiliate-program" className="hover:text-white">Affiliate Program</Link></li>
-              <li><a href="mailto:support@smartdispute.ai" className="hover:text-white">Contact</a></li>
+              <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
             </ul>
           </div>
           
