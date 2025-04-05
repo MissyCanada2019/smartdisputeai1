@@ -189,7 +189,7 @@ export default function DocumentUploader({
               {uploadedFiles.map((file, index) => (
                 <li key={index} className="text-sm text-gray-600 flex items-center">
                   <FileCheck className="h-4 w-4 text-green-500 mr-2" />
-                  {file.originalName} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                  {file.originalname || file.name || 'Untitled Document'} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                 </li>
               ))}
             </ul>

@@ -426,7 +426,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           success: true, 
           filePath: pdfFilename,
-          document: updatedDocument
+          document: {
+            ...updatedDocument,
+            originalname: req.file?.originalname || updatedDocument.name
+          }
         });
       });
     } catch (error: any) {
