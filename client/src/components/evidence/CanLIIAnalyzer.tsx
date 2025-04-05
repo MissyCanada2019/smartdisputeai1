@@ -326,8 +326,9 @@ const CanLIIAnalyzer: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="summary">
-                  <TabsList className="w-full grid grid-cols-4">
+                  <TabsList className="w-full grid grid-cols-5">
                     <TabsTrigger value="summary">Summary</TabsTrigger>
+                    <TabsTrigger value="merit">Merit Weight</TabsTrigger>
                     <TabsTrigger value="precedents">CanLII Precedents</TabsTrigger>
                     <TabsTrigger value="court-rules">Court Rules</TabsTrigger>
                     <TabsTrigger value="actions">Recommended Actions</TabsTrigger>
@@ -336,6 +337,74 @@ const CanLIIAnalyzer: React.FC = () => {
                   <TabsContent value="summary" className="pt-4">
                     <div className="prose dark:prose-invert prose-sm max-w-none">
                       <div dangerouslySetInnerHTML={{ __html: latestAnalysis.analysis_text.replace(/\n/g, '<br />') }} />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="merit" className="pt-4">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Case Merit Assessment</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                          Based on the analysis of your evidence and relevant legal precedents, we've calculated the merit weight of your case:
+                        </p>
+                        
+                        <div className="flex items-center mb-3">
+                          <span className="text-sm font-medium text-gray-700 mr-2 w-28">
+                            Merit Score:
+                          </span>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                            <div 
+                              className={`h-2.5 rounded-full ${
+                                latestAnalysis.case_strength > 7 
+                                ? "bg-green-500" 
+                                : latestAnalysis.case_strength > 4 
+                                  ? "bg-yellow-500" 
+                                  : "bg-red-500"
+                              }`}
+                              style={{ width: `${(latestAnalysis.case_strength/10)*100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 ml-2 w-12">
+                            {Math.round((latestAnalysis.case_strength/10)*100)}%
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                          <div className="bg-green-50 border border-green-100 rounded-lg p-4 dark:bg-green-900/20 dark:border-green-800/30">
+                            <h4 className="font-medium text-green-800 dark:text-green-400 mb-2">Case Strengths</h4>
+                            <ul className="text-sm text-green-700 dark:text-green-300 space-y-1 list-disc pl-5">
+                              <li>Evidence consistency</li>
+                              <li>Supporting precedents</li>
+                              <li>Legal grounds alignment</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-4 dark:bg-yellow-900/20 dark:border-yellow-800/30">
+                            <h4 className="font-medium text-yellow-800 dark:text-yellow-400 mb-2">Considerations</h4>
+                            <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1 list-disc pl-5">
+                              <li>Procedural compliance</li>
+                              <li>Evidence documentation</li>
+                              <li>Timeline factors</li>
+                            </ul>
+                          </div>
+                          
+                          <div className="bg-red-50 border border-red-100 rounded-lg p-4 dark:bg-red-900/20 dark:border-red-800/30">
+                            <h4 className="font-medium text-red-800 dark:text-red-400 mb-2">Potential Challenges</h4>
+                            <ul className="text-sm text-red-700 dark:text-red-300 space-y-1 list-disc pl-5">
+                              <li>Counterarguments</li>
+                              <li>Evidentiary gaps</li>
+                              <li>Statutory limitations</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 dark:bg-gray-800/30 dark:border-gray-700/30">
+                        <h4 className="font-medium mb-2">Court Strategy Recommendations</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Based on your case's merit assessment, we recommend focusing on the strongest elements of your case while preparing to address potential weaknesses. Consider additional documentation to strengthen any evidentiary gaps identified above.
+                        </p>
+                      </div>
                     </div>
                   </TabsContent>
                   
