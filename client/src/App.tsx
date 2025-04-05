@@ -61,6 +61,7 @@ import FastlaneCheckout from "@/pages/fastlane-checkout";
 import PaymentSuccess from "@/pages/payment-success";
 import Subscriptions from "@/pages/subscriptions";
 import AiDocumentAnalysis from "@/pages/AiDocumentAnalysis";
+import LegalRightsMap from "@/pages/legal-rights-map";
 import PerformanceDemo from "@/pages/PerformanceDemo";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Contact from "@/pages/Contact";
@@ -144,6 +145,7 @@ function Router() {
       <Route path="/payment-success" component={PaymentSuccess} />
       <Route path="/subscriptions" component={Subscriptions} />
       <Route path="/ai-document-analysis" component={AiDocumentAnalysis} />
+      <Route path="/legal-rights-map" component={LegalRightsMap} />
       
       {/* Resource Sharing Routes */}
       <Route path="/resource-sharing" component={ResourceSharing} />

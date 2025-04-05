@@ -79,9 +79,19 @@ export default function Header() {
           <Link href="/community" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/community') ? 'text-primary' : ''}`}>
             Community
           </Link>
-          <Link href="/resource-sharing" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') ? 'text-primary' : ''}`}>
-            Resources
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') || location === '/legal-rights-map' ? 'text-primary' : ''}`}>
+              Resources
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/resource-sharing">Resource Library</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/legal-rights-map">Legal Rights Map</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Link href="/subscribe" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscribe' ? 'text-primary' : ''}`}>
             AI Assistant
           </Link>
@@ -212,11 +222,22 @@ export default function Header() {
                     Community
                   </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/resource-sharing" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') ? 'text-primary' : ''}`}>
-                    Resources
-                  </Link>
-                </SheetClose>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Resources:</p>
+                  <div className="ml-2 space-y-2">
+                    <SheetClose asChild>
+                      <Link href="/resource-sharing" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') ? 'text-primary' : ''}`}>
+                        Resource Library
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/legal-rights-map" className={`text-gray-600 hover:text-primary font-medium ${location === '/legal-rights-map' ? 'text-primary' : ''}`}>
+                        Legal Rights Map
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </div>
                 <SheetClose asChild>
                   <Link href="/chat" className={`text-gray-600 hover:text-primary font-medium ${location === '/chat' ? 'text-primary' : ''}`}>
                     Chat
