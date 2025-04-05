@@ -484,7 +484,7 @@ interface MapConfig {
 
 // Map configuration
 const mapConfig: MapConfig = {
-  center: [-95, 62],
+  center: [-95, 62] as [number, number],
   scale: 600,
   minZoom: 1,
   maxZoom: 5,
@@ -519,7 +519,10 @@ export default function CanadaMap() {
 
   // Handle mouse events for tooltip
   const handleMouseMove = (e: React.MouseEvent) => {
-    setTooltipPosition({ x: e.clientX, y: e.clientY });
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left; // x position within the element
+    const y = e.clientY - rect.top;  // y position within the element
+    setTooltipPosition({ x, y });
   };
 
   const handleMouseEnter = (geo: Geography) => {
@@ -656,9 +659,8 @@ export default function CanadaMap() {
                   <div 
                     className="absolute bg-black text-white py-1 px-2 rounded text-xs"
                     style={{ 
-                      left: `${tooltipPosition.x + 10}px`, 
-                      top: `${tooltipPosition.y - 20}px`,
-                      transform: 'translate(-50%, -100%)',
+                      left: `${tooltipPosition.x}px`, 
+                      top: `${tooltipPosition.y - 30}px`,
                       pointerEvents: 'none',
                       zIndex: 1000
                     }}
