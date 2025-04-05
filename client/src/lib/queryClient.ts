@@ -41,18 +41,33 @@ export async function apiRequest(
       
       // Setup completion handlers
       xhr.addEventListener('load', () => {
-        const response = new Response(xhr.response, {
-          status: xhr.status,
-          statusText: xhr.statusText,
-          headers: new Headers({
-            'Content-Type': xhr.getResponseHeader('Content-Type') || 'application/json'
-          })
-        });
-        
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(response);
-        } else {
-          reject(new Error(`Request failed with status ${xhr.status}`));
+        try {
+          // Create a Response object to match fetch API
+          const responseData = xhr.response;
+          const contentType = xhr.getResponseHeader('Content-Type') || 'application/json';
+          
+          // Create a blob to construct the Response
+          const blob = new Blob(
+            [contentType.includes('json') ? JSON.stringify(responseData) : responseData], 
+            { type: contentType }
+          );
+          
+          const response = new Response(blob, {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            headers: new Headers({
+              'Content-Type': contentType
+            })
+          });
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(response);
+          } else {
+            reject(new Error(`Request failed with status ${xhr.status}`));
+          }
+        } catch (error) {
+          // If anything goes wrong, reject with the error
+          reject(error);
         }
       });
       
@@ -66,7 +81,7 @@ export async function apiRequest(
       
       // Open and send the request
       xhr.open(method, apiUrl);
-      xhr.responseType = 'blob';
+      xhr.responseType = 'json'; // Change from 'blob' to 'json' to match expected response
       xhr.withCredentials = true;
       xhr.send(data as FormData);
     });

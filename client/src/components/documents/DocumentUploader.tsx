@@ -56,6 +56,14 @@ export default function DocumentUploader({
     setIsUploading(true);
 
     try {
+      // Check total file size
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const maxSize = 500 * 1024 * 1024; // 500MB server limit
+      
+      if (totalSize > maxSize) {
+        throw new Error(`Total file size (${(totalSize / (1024 * 1024)).toFixed(2)}MB) exceeds the maximum allowed (500MB)`);
+      }
+      
       const formData = new FormData();
       files.forEach(file => {
         formData.append('documents', file);
@@ -73,6 +81,8 @@ export default function DocumentUploader({
         formData.append('folderId', folderId.toString());
       }
 
+      console.log(`Uploading ${files.length} files with total size: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
+      
       // Use the apiRequest function to handle protocol matching
       const response = await apiRequest("POST", "/api/upload-documents", formData, {
         onProgress: (progress) => {
@@ -81,7 +91,14 @@ export default function DocumentUploader({
         }
       });
 
-      const data = await response.json();
+      // Parse the response
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        throw new Error('Error parsing server response. The upload may have succeeded but the response was invalid.');
+      }
 
       if (!response.ok) {
         throw new Error(data.message || "Error uploading files");
@@ -102,6 +119,7 @@ export default function DocumentUploader({
         onUploadComplete(data.files);
       }
     } catch (error: any) {
+      console.error('Upload error:', error);
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload files",
