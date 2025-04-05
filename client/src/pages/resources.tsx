@@ -35,13 +35,13 @@ export default function Resources() {
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Fetch resource categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<ResourceCategory[]>({
     queryKey: ['/api/resource-categories'],
     refetchOnWindowFocus: false,
   });
 
   // Fetch subcategories
-  const { data: subcategories, isLoading: subcategoriesLoading } = useQuery({
+  const { data: subcategories, isLoading: subcategoriesLoading } = useQuery<ResourceSubcategory[]>({
     queryKey: ['/api/resource-subcategories'],
     refetchOnWindowFocus: false,
   });

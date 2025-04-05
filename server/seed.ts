@@ -43,19 +43,13 @@ export const seedDatabase = async (storage: IStorage): Promise<void> => {
     
     console.log(`Created test user with id: ${testUser.id}`);
     
-    // Log all the created user data for verification
-    console.log("User data created:", JSON.stringify({
-      ...testUser,
-      password: '******' // Mask password in logs
-    }));
+    // Log minimal user data for verification without sensitive information
+    console.log("Demo user created with ID:", testUser.id);
   } else {
     console.log("Demo user already exists, skipping creation");
     
-    // Log existing user data for debugging
-    console.log("Existing demo user:", JSON.stringify({
-      ...existingDemoUser,
-      password: '******' // Mask password in logs
-    }));
+    // Log minimal information about existing user
+    console.log(`Existing demo user with ID: ${existingDemoUser.id}`);
   }
   
   // Add more seed data here as needed
@@ -80,10 +74,12 @@ const createDemoUser = async (storage: IStorage) => {
   // Check if we can directly access the users Map to insert with a specific ID
   if ((storage as any).users && typeof (storage as any).users.set === 'function') {
     const now = new Date();
+    // Generate a secure random password that's not visible in the code
+    const securePassword = require('crypto').randomBytes(16).toString('hex');
     const demoUser = {
       id: 999,
       username: "Demouser",  // Changed to capitalized to match what the user is entering
-      password: "password123",  // This is the correct password
+      password: securePassword,  // Using a secure random password
       firstName: "Demo",
       lastName: "User",
       email: "demo@example.com",
@@ -105,9 +101,11 @@ const createDemoUser = async (storage: IStorage) => {
   } else {
     // Fallback to regular createUser - note this won't have ID 999 but will use auto-increment
     console.log("WARNING: Using fallback createUser that won't have ID 999!");
+    // Generate a secure random password for the fallback method too
+    const securePassword = require('crypto').randomBytes(16).toString('hex');
     return await storage.createUser({
       username: "Demouser",  // Changed to capitalized to match what the user is entering
-      password: "password123",
+      password: securePassword,
       firstName: "Demo",
       lastName: "User",
       email: "demo@example.com"

@@ -11,6 +11,9 @@ declare global {
   }
 }
 
+// We're using process.env.NODE_ENV instead of import.meta.env
+// to avoid TypeScript compiler errors
+
 /**
  * Track a page view event
  * 
@@ -32,7 +35,8 @@ export function trackPageView(path: string, title: string): void {
       page_location: window.location.href
     });
     
-    if (import.meta.env.DEV) {
+    // Log in development mode (using process.env.NODE_ENV as alternative)
+    if (process.env.NODE_ENV !== 'production') {
       console.log(`[Analytics] Page view: ${title} (${path})`);
     }
   } catch (error) {
@@ -65,7 +69,8 @@ export function trackEvent(
     // Push the event to dataLayer
     window.dataLayer.push(eventData);
     
-    if (import.meta.env.DEV) {
+    // Log in development mode (using process.env.NODE_ENV as alternative)
+    if (process.env.NODE_ENV !== 'production') {
       console.log(`[Analytics] Event tracked: ${eventName}`, eventData);
     }
   } catch (error) {
@@ -236,7 +241,8 @@ export function trackEvidenceUpload(
   fileTypes: string[],
   totalSize: number
 ): void {
-  trackEvent('evidence_upload', 'evidence', {
+  trackEvent('evidence_upload', {
+    event_category: 'evidence',
     file_count: fileCount,
     file_types: fileTypes.join(','),
     total_size: totalSize
@@ -253,7 +259,8 @@ export function trackTenantDisputeProgress(
   step: string,
   details: Record<string, any> = {}
 ): void {
-  trackEvent('tenant_dispute_progress', 'workflow', {
+  trackEvent('tenant_dispute_progress', {
+    event_category: 'workflow',
     step,
     ...details
   });
@@ -269,7 +276,8 @@ export function trackCASDisputeProgress(
   step: string,
   details: Record<string, any> = {}
 ): void {
-  trackEvent('cas_dispute_progress', 'workflow', {
+  trackEvent('cas_dispute_progress', {
+    event_category: 'workflow',
     step,
     ...details
   });
@@ -287,7 +295,8 @@ export function trackResourceInteraction(
   action: string,
   province?: string
 ): void {
-  trackEvent('resource_interaction', 'resource', {
+  trackEvent('resource_interaction', {
+    event_category: 'resource',
     resource_id: resourceId,
     action,
     province
@@ -306,7 +315,8 @@ export function trackCommunityEngagement(
   contentType: string,
   contentId: number
 ): void {
-  trackEvent('community_engagement', 'community', {
+  trackEvent('community_engagement', {
+    event_category: 'community',
     action,
     content_type: contentType,
     content_id: contentId
@@ -325,7 +335,8 @@ export function trackAIProcessCompletion(
   timeToComplete: number,
   successRate: number
 ): void {
-  trackEvent('ai_process_completion', 'ai', {
+  trackEvent('ai_process_completion', {
+    event_category: 'ai',
     process_type: processType,
     time_to_complete: timeToComplete,
     success_rate: successRate
@@ -344,7 +355,8 @@ export function trackDocumentDownload(
   documentType: string,
   format: string
 ): void {
-  trackEvent('document_download', 'document', {
+  trackEvent('document_download', {
+    event_category: 'document',
     document_id: documentId,
     document_type: documentType,
     format
@@ -365,7 +377,8 @@ export function trackPayment(
   serviceType: string,
   paymentMethod: string
 ): void {
-  trackEvent('payment', 'ecommerce', {
+  trackEvent('payment', {
+    event_category: 'ecommerce',
     amount,
     currency,
     service_type: serviceType,
@@ -383,7 +396,8 @@ export function trackProfileUpdate(
   userId: number,
   fieldsUpdated: string[]
 ): void {
-  trackEvent('profile_update', 'account', {
+  trackEvent('profile_update', {
+    event_category: 'account',
     user_id: userId,
     fields_updated: fieldsUpdated.join(',')
   });
