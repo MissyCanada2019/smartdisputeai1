@@ -1595,13 +1595,13 @@ const subscription = await stripe.subscriptions.create({
       }
       
       const files = Array.isArray(req.files) ? req.files : [req.files];
-      const { documentId, userId } = req.body;
+      const { documentId, userId, folderId } = req.body;
       
       if (!documentId && !userId) {
         return res.status(400).json({ message: "Either documentId or userId is required" });
       }
       
-      console.log(`Document upload request received - documentId: ${documentId}, userId: ${userId}`);
+      console.log(`Document upload request received - documentId: ${documentId}, userId: ${userId}, folderId: ${folderId}`);
       console.log(`Received ${files.length} files for upload`);
       
       // Create response with file information
@@ -1624,18 +1624,28 @@ const subscription = await stripe.subscriptions.create({
             await storage.updateUserDocument(docId, {
               supportingDocuments: JSON.stringify(uploadedFiles)
             });
+            
+            // If a folder ID is also provided, add the document to the folder
+            if (folderId) {
+              const folderIdNum = parseInt(folderId);
+              if (!isNaN(folderIdNum)) {
+                await storage.moveDocumentToFolder(docId, folderIdNum);
+                console.log(`Document ${docId} assigned to folder ${folderIdNum}`);
+              }
+            }
           }
         }
       }
       
-      // If userId is provided but no documentId, create standalone documents without folder assignment
+      // If userId is provided but no documentId, create standalone documents
       if (userId && !documentId) {
         const userIdNum = parseInt(userId);
         if (!isNaN(userIdNum)) {
-          // For each uploaded file, create a document record without folder assignment
+          // For each uploaded file, create a document record
+          const createdDocuments = [];
           for (const file of uploadedFiles) {
             // Create a user document for the file
-            await storage.createUserDocument({
+            const newDocument = await storage.createUserDocument({
               userId: userIdNum,
               templateId: 0, // Special template ID for uploaded files
               documentData: JSON.stringify({
@@ -1647,6 +1657,20 @@ const subscription = await stripe.subscriptions.create({
               status: 'completed',
               supportingDocuments: JSON.stringify([file])
             });
+            
+            // Add to list of created documents
+            if (newDocument) {
+              createdDocuments.push(newDocument);
+              
+              // If a folder ID is provided, add the document to the folder
+              if (folderId) {
+                const folderIdNum = parseInt(folderId);
+                if (!isNaN(folderIdNum)) {
+                  await storage.moveDocumentToFolder(newDocument.id, folderIdNum);
+                  console.log(`Document ${newDocument.id} assigned to folder ${folderIdNum}`);
+                }
+              }
+            }
           }
         }
       }
@@ -1689,6 +1713,33 @@ const subscription = await stripe.subscriptions.create({
               
               if (newEvidenceFile) {
                 createdEvidenceFiles.push(newEvidenceFile);
+                
+                // If a folder ID is provided, we should create a user document for this evidence file
+                // and add it to the specified folder
+                if (folderId) {
+                  const folderIdNum = parseInt(folderId);
+                  if (!isNaN(folderIdNum)) {
+                    // Create a document for this evidence file
+                    const evidenceDocument = await storage.createUserDocument({
+                      userId: uId,
+                      templateId: 0, // Special template ID for evidence files
+                      documentData: JSON.stringify({
+                        title: file.originalName,
+                        content: `Evidence file: ${file.originalName}`
+                      }),
+                      finalPrice: 0,
+                      paymentStatus: 'paid',
+                      status: 'completed',
+                      supportingDocuments: JSON.stringify([newEvidenceFile])
+                    });
+                    
+                    // Add the document to the folder
+                    if (evidenceDocument) {
+                      await storage.moveDocumentToFolder(evidenceDocument.id, folderIdNum);
+                      console.log(`Evidence file ${newEvidenceFile.id} added to folder ${folderIdNum} as document ${evidenceDocument.id}`);
+                    }
+                  }
+                }
               }
             } catch (evidenceErr) {
               console.error("Error creating evidence file:", evidenceErr);
