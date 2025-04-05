@@ -41,15 +41,13 @@ export function trackPageView(path: string, title: string): void {
 }
 
 /**
- * Track a user action event
+ * Track a user action event with properties
  * 
  * @param eventName Name of the event
- * @param category Event category
- * @param properties Additional properties to track with the event
+ * @param properties Object with event properties
  */
 export function trackEvent(
   eventName: string,
-  category: string,
   properties: Record<string, any> = {}
 ): void {
   if (!window.dataLayer) {
@@ -61,7 +59,6 @@ export function trackEvent(
     // Prepare event data with standard properties
     const eventData = {
       event: eventName,
-      event_category: category,
       ...properties
     };
     
@@ -69,11 +66,29 @@ export function trackEvent(
     window.dataLayer.push(eventData);
     
     if (import.meta.env.DEV) {
-      console.log(`[Analytics] Event tracked: ${eventName} (${category})`, properties);
+      console.log(`[Analytics] Event tracked: ${eventName}`, eventData);
     }
   } catch (error) {
     console.error('[Analytics] Error tracking event:', error);
   }
+}
+
+/**
+ * Track a user action event with category
+ * 
+ * @param eventName Name of the event
+ * @param category Event category
+ * @param properties Additional properties to track with the event
+ */
+export function trackEventWithCategory(
+  eventName: string,
+  category: string,
+  properties: Record<string, any> = {}
+): void {
+  trackEvent(eventName, {
+    event_category: category,
+    ...properties
+  });
 }
 
 /**
@@ -88,12 +103,11 @@ export function trackConversion(
   value?: number,
   properties: Record<string, any> = {}
 ): void {
-  const eventData = {
-    ...properties,
-    value
-  };
-  
-  trackEvent('conversion', conversionName, eventData);
+  trackEvent('conversion', {
+    conversion_name: conversionName,
+    value,
+    ...properties
+  });
 }
 
 /**
@@ -108,7 +122,8 @@ export function trackResourceShare(
   resourceType: string,
   shareMethod: string
 ): void {
-  trackEvent('resource_share', 'sharing', {
+  trackEvent('resource_share', {
+    event_category: 'sharing',
     resource_id: resourceId,
     resource_type: resourceType,
     share_method: shareMethod
@@ -122,7 +137,8 @@ export function trackResourceShare(
  * @param source Where the user signed up from (e.g., 'homepage', 'resource_page')
  */
 export function trackSignup(method: string, source: string): void {
-  trackEvent('sign_up', 'account', {
+  trackEvent('sign_up', {
+    event_category: 'account',
     signup_method: method,
     signup_source: source
   });
@@ -140,7 +156,8 @@ export function trackFormSubmission(
   formLocation: string,
   isSuccess: boolean
 ): void {
-  trackEvent('form_submit', 'engagement', {
+  trackEvent('form_submit', {
+    event_category: 'engagement',
     form_name: formName,
     form_location: formLocation,
     success: isSuccess
@@ -381,7 +398,8 @@ export function trackCtaClick(
   ctaLocation: string,
   destinationUrl: string
 ): void {
-  trackEvent('cta_click', 'conversion', {
+  trackEvent('cta_click', {
+    event_category: 'conversion',
     cta_text: ctaText,
     cta_location: ctaLocation,
     destination_url: destinationUrl

@@ -14,6 +14,7 @@ export default function Contact() {
   const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
     // Push event to GTM dataLayer for form submission tracking
     trackEvent('form_submit', {
+      event_category: 'engagement',
       form_name: 'contact_form',
       form_page: 'contact'
     });
