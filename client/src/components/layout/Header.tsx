@@ -101,9 +101,19 @@ export default function Header() {
           <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
             FAQ
           </Link>
-          <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
-            About
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/about' || location === '/for-agencies' ? 'text-primary' : ''}`}>
+              About
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/about">About Us</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/for-agencies">For Agencies</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
         
         <div className="flex items-center space-x-4">
@@ -253,11 +263,22 @@ export default function Header() {
                     FAQ
                   </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
-                    About
-                  </Link>
-                </SheetClose>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">About:</p>
+                  <div className="ml-2 space-y-2">
+                    <SheetClose asChild>
+                      <Link href="/about" className={`text-gray-600 hover:text-primary font-medium ${location === '/about' ? 'text-primary' : ''}`}>
+                        About Us
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/for-agencies" className={`text-gray-600 hover:text-primary font-medium ${location === '/for-agencies' ? 'text-primary' : ''}`}>
+                        For Agencies
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </div>
                 <SheetClose asChild>
                   <Link href="/onboarding" className={`text-gray-600 hover:text-primary font-medium ${location === '/onboarding' ? 'text-primary' : ''}`}>
                     Tutorials

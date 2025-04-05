@@ -47,6 +47,7 @@ export default function Footer() {
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/about" className="hover:text-white">About Us</Link></li>
               <li><Link href="/about" className="hover:text-white">Our Team</Link></li>
+              <li><Link href="/for-agencies" className="hover:text-white">For Agencies</Link></li>
               <li><Link href="/affiliate-program" className="hover:text-white">Affiliate Program</Link></li>
               <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
             </ul>

@@ -48,13 +48,21 @@ export default function TermsOfService() {
         </section>
 
         <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">4. No Legal Representation</h2>
+          <h2 className="text-xl font-semibold mb-3">4. No Legal Representation or Advice</h2>
           <p className="mb-2">
-            SmartDispute.ai is not a law firm.
+            SmartDispute.ai is not a law firm and does not provide legal advice, legal opinions, or legal representation.
           </p>
           <p className="mb-2">
-            No lawyer-client relationship is formed by using the site. All documents generated are for informational 
-            and self-help purposes only.
+            Using SmartDispute.ai does not create an attorney-client relationship between you and SmartDispute.ai, its employees, or its contractors. All content, documents, and tools provided are for informational and self-help purposes only.
+          </p>
+          <p className="mb-2">
+            The information provided through our platform is not a substitute for personalized advice from a qualified legal professional. Every legal situation is unique, and the documents and information generated through our service should be reviewed by a licensed attorney if you have concerns about their applicability to your specific situation.
+          </p>
+          <p className="mb-2">
+            SmartDispute.ai does not guarantee the validity or effectiveness of any documents or strategies provided. Legal rules, regulations, and procedures vary by jurisdiction and change over time. The information provided is general in nature and may not be current or applicable to your specific circumstances.
+          </p>
+          <p className="mb-2">
+            If your matter involves complex legal issues, significant financial or personal stakes, or potential criminal implications, we strongly recommend consulting with a licensed attorney in your jurisdiction.
           </p>
         </section>
 
@@ -100,9 +108,39 @@ export default function TermsOfService() {
         </section>
 
         <section className="mb-6">
-          <h2 className="text-xl font-semibold mb-3">9. Modifications</h2>
+          <h2 className="text-xl font-semibold mb-3">9. Security and Data Handling</h2>
           <p className="mb-2">
-            We may update these Terms at any time. Continued use of the service after changes means you accept the new terms.
+            We take the security and privacy of your information seriously. By using SmartDispute.ai, you acknowledge and agree to our data handling practices as outlined in this section and in our Privacy Policy.
+          </p>
+          
+          <h3 className="text-lg font-medium mb-2 mt-4">9.1 Data Storage and Protection</h3>
+          <p className="mb-2">
+            Your submitted documents, personal information, and account data are stored securely with industry-standard encryption and access controls. We implement administrative, technical, and physical safeguards designed to protect your information.
+          </p>
+          <p className="mb-2">
+            You acknowledge that no method of transmission over the Internet or electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your personal information, we cannot guarantee its absolute security.
+          </p>
+          
+          <h3 className="text-lg font-medium mb-2 mt-4">9.2 Data Processing</h3>
+          <p className="mb-2">
+            When you upload documents or enter information, you grant SmartDispute.ai the right to process this data for the purpose of providing our services, including analysis by artificial intelligence systems. You warrant that you have the legal right to submit any documents you upload and that they do not violate any third-party rights.
+          </p>
+          
+          <h3 className="text-lg font-medium mb-2 mt-4">9.3 Data Retention and Deletion</h3>
+          <p className="mb-2">
+            We retain your data as outlined in our Privacy Policy. You may request deletion of your account and associated data at any time by contacting us. However, we may retain certain information as required by law or for legitimate business purposes, such as fraud prevention.
+          </p>
+          
+          <h3 className="text-lg font-medium mb-2 mt-4">9.4 Third-Party Services</h3>
+          <p className="mb-2">
+            Our service integrates with various third-party services, such as payment processors. Your use of these services is subject to their respective terms and privacy policies. SmartDispute.ai is not responsible for the privacy practices or content of these third-party services.
+          </p>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-xl font-semibold mb-3">10. Modifications</h2>
+          <p className="mb-2">
+            We may update these Terms at any time. Continued use of the service after changes means you accept the new terms. We will make reasonable efforts to notify you of significant changes through email or notices on our website.
           </p>
         </section>
 

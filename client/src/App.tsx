@@ -66,6 +66,7 @@ import PerformanceDemo from "@/pages/PerformanceDemo";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Contact from "@/pages/Contact";
 import ThankYou from "@/pages/ThankYou";
+import ForAgencies from "@/pages/for-agencies";
 
 // Marketing Funnel Pages
 import MarketingIndex from "@/pages/marketing/index";
@@ -162,6 +163,7 @@ function Router() {
       <Route path="/cookie-policy" component={CookiePolicy} />
       <Route path="/disclaimer" component={Disclaimer} />
       <Route path="/affiliate-program" component={AffiliateProgram} />
+      <Route path="/for-agencies" component={ForAgencies} />
       
       {/* Community Routes */}
       <Route path="/community" component={Community} />
