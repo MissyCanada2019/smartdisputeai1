@@ -877,7 +877,7 @@ const subscription = await stripe.subscriptions.create({
         console.log("LOGIN FAILED - Invalid credentials for user:", username);
         return res.status(401).json({ 
           message: "Invalid username or password", 
-          details: "If you're having trouble logging in, try the following: 1) Check your capitalization, 2) Make sure you're using the correct password, 3) Try the Demouser/password123 demo account, or 4) Visit /login-diagnostics for troubleshooting tools."
+          details: "If you're having trouble logging in, try the following: 1) Check your capitalization, 2) Make sure you're using the correct password, 3) Reset your password if needed, or 4) Visit /login-diagnostics for troubleshooting tools."
         });
       }
       

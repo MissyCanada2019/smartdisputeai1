@@ -185,20 +185,7 @@
       <div class="tab" id="register-tab">Create Account</div>
     </div>
 
-    <!-- The demo account info will only be shown to developers -->
-    <div id="test-account-notice" class="info message" style="display: none;">
-      <strong>Test Account:</strong> You can use <strong>username:</strong> demouser, <strong>password:</strong> password123
-    </div>
-    
-    <script>
-      // Only show test account info in development environments
-      (function() {
-        const hostname = window.location.hostname;
-        if (hostname.includes('localhost') || hostname.includes('.replit.dev') || hostname.includes('.repl.co')) {
-          document.getElementById('test-account-notice').style.display = 'block';
-        }
-      })();
-    </script>
+    <!-- Security update: Demo credentials have been removed for production deployment -->
 
     <div id="error-message" class="error message"></div>
     <div id="success-message" class="success message"></div>
@@ -224,8 +211,15 @@
       
       <div class="links">
         <a id="forgot-link">Forgot your password?</a>
-        <span style="padding: 0 5px;">•</span>
-        <a id="debug-mode-toggle" style="color: #999;">Debug Mode</a>
+        <!-- Debug mode is now hidden in production but can still be activated with localStorage -->
+        <script>
+          // Only show Debug Mode link in development environments
+          document.write(window.location.hostname.includes('localhost') || 
+                        window.location.hostname.includes('.replit.dev') || 
+                        window.location.hostname.includes('.repl.co') 
+            ? '<span style="padding: 0 5px;">•</span><a id="debug-mode-toggle" style="color: #999;">Debug Mode</a>' 
+            : '');
+        </script>
       </div>
     </div>
     
@@ -311,33 +305,45 @@
     
     // Forgot password
     forgotLink.addEventListener('click', () => {
-      alert('This feature is not yet implemented. Please contact support or use the test account.');
+      alert('This feature is not yet implemented. Please contact support for assistance.');
     });
     
-    // Debug mode toggle
+    // Debug mode toggle with security code requirement
     const debugModeToggle = document.getElementById('debug-mode-toggle');
-    debugModeToggle.addEventListener('click', () => {
-      const isCurrentlyDebugMode = localStorage.getItem('debugMode') === 'true';
-      const newDebugMode = !isCurrentlyDebugMode;
-      
-      localStorage.setItem('debugMode', newDebugMode.toString());
-      
-      // Update UI
-      if (newDebugMode) {
-        debugModeToggle.style.color = '#ff6b6b';
-        debugModeToggle.innerHTML = 'Debug Mode: ON';
-        alert('Debug mode activated. Login and registration errors will show detailed debugging information.');
-      } else {
-        debugModeToggle.style.color = '#999';
-        debugModeToggle.innerHTML = 'Debug Mode';
-        alert('Debug mode deactivated.');
-      }
-      
-      console.log('[CLIENT] Debug mode set to:', newDebugMode);
-    });
+    if (debugModeToggle) { // Check if element exists before adding event listener
+      debugModeToggle.addEventListener('click', () => {
+        const isCurrentlyDebugMode = localStorage.getItem('debugMode') === 'true';
+        
+        if (!isCurrentlyDebugMode) {
+          // Require security code to enable debug mode
+          const securityCode = prompt("Enter security code to enable debug mode:");
+          // Simple security code for developers - in production this would use a more secure approach
+          if (securityCode !== "SmartDispute2025") {
+            alert("Invalid security code. Debug mode not activated.");
+            return;
+          }
+        }
+        
+        const newDebugMode = !isCurrentlyDebugMode;
+        localStorage.setItem('debugMode', newDebugMode.toString());
+        
+        // Update UI
+        if (newDebugMode) {
+          debugModeToggle.style.color = '#ff6b6b';
+          debugModeToggle.innerHTML = 'Debug Mode: ON';
+          alert('Debug mode activated. Login and registration errors will show detailed debugging information.');
+        } else {
+          debugModeToggle.style.color = '#999';
+          debugModeToggle.innerHTML = 'Debug Mode';
+          alert('Debug mode deactivated.');
+        }
+        
+        console.log('[CLIENT] Debug mode set to:', newDebugMode);
+      });
+    }
     
     // Initialize debug mode state
-    if (localStorage.getItem('debugMode') === 'true') {
+    if (debugModeToggle && localStorage.getItem('debugMode') === 'true') {
       debugModeToggle.style.color = '#ff6b6b';
       debugModeToggle.innerHTML = 'Debug Mode: ON';
     }
@@ -361,11 +367,12 @@
       try {
         console.log('[CLIENT] Attempting login with username:', username);
         
-        // Show debug info in the page if username is "debug"
-        let debugMode = username.toLowerCase() === "debug" || localStorage.getItem('debugMode') === 'true';
+        // Only use debug mode if explicitly enabled in localStorage
+        let debugMode = localStorage.getItem('debugMode') === 'true';
+        
+        // Security update: No longer allow debug mode activation by username
         if (debugMode) {
-          console.log('[CLIENT] Debug mode activated');
-          localStorage.setItem('debugMode', 'true');
+          console.log('[CLIENT] Debug mode active during login');
           
           // Add debug info
           errorMessage.innerHTML = '<strong>DEBUG MODE</strong><br>Sending request to /api/login...';

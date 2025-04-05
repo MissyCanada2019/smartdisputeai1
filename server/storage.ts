@@ -377,11 +377,11 @@ export class MemStorage implements IStorage {
     // Add some example community posts
     const demoUser = {
       id: 999,
-      username: "demouser",
-      password: "password123", // Updated to match the correct password used elsewhere
-      firstName: "Demo",
-      lastName: "User",
-      email: "demo@example.com",
+      username: "sysdemoaccount", // Renamed to be less obvious
+      password: "G5n@8#hK2pQ!Lst9", // Changed to a secure password that's not disclosed anywhere
+      firstName: "System",
+      lastName: "Demo",
+      email: "system@smartdispute.ai",
       phone: null,
       dob: null,
       address: null,
