@@ -638,7 +638,8 @@ export default function Resources() {
               </div>
             </TabsContent>
           </Tabs>
-          )}
+          )
+        }
         </div>
       </div>
     </div>

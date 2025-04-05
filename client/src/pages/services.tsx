@@ -14,6 +14,43 @@ export default function Services() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* AI Document Analysis - NEW */}
+        <Card className="transition-all hover:shadow-lg border-2 border-teal-200 relative">
+          <div className="absolute top-0 right-0 bg-teal-500 text-white text-xs font-bold px-2 py-1 rounded-bl-lg">
+            NEW
+          </div>
+          <CardHeader className="bg-teal-50 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-teal-800">AI Document Analysis</CardTitle>
+              <Brain className="h-6 w-6 text-teal-600" />
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <CardDescription className="text-gray-600 min-h-[80px]">
+              Analyze your legal documents with our dual AI system comparing both OpenAI and Claude models for comprehensive insights.
+            </CardDescription>
+            <ul className="space-y-2 mt-4">
+              <li className="flex items-start">
+                <Shield className="h-4 w-4 mr-2 text-teal-600 mt-1 flex-shrink-0" />
+                <span className="text-sm">Multi-model AI comparison</span>
+              </li>
+              <li className="flex items-start">
+                <Shield className="h-4 w-4 mr-2 text-teal-600 mt-1 flex-shrink-0" />
+                <span className="text-sm">Legal complexity assessment</span>
+              </li>
+              <li className="flex items-start">
+                <Shield className="h-4 w-4 mr-2 text-teal-600 mt-1 flex-shrink-0" />
+                <span className="text-sm">Case merit evaluation</span>
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button asChild className="w-full bg-teal-600 hover:bg-teal-700">
+              <Link href="/ai-document-analysis">Analyze Documents</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
         {/* Document Creation */}
         <Card className="transition-all hover:shadow-lg">
           <CardHeader className="bg-blue-50 rounded-t-lg">

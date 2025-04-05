@@ -6,8 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import FileUpload from "@/components/forms/FileUpload";
+import AIDocumentComparison from "./AIDocumentComparison";
+import { analyzeDocument, AIAnalysisResponse } from "@/lib/aiService";
 
 interface DocumentAnalyzerProps {
   title?: string;
@@ -32,7 +33,7 @@ export default function DocumentAnalyzer({
     error?: string;
   } | null>(null);
   const [selectedModel, setSelectedModel] = useState<'openai' | 'claude' | 'dual'>('openai');
-  const [activeTab, setActiveTab] = useState<'document' | 'analysis' | 'openai' | 'claude'>('document');
+  const [activeTab, setActiveTab] = useState<'document' | 'analysis' | 'openai' | 'claude' | 'comparison'>('document');
   const { toast } = useToast();
 
   const handleFileSelected = (files: File[]) => {
@@ -57,18 +58,11 @@ export default function DocumentAnalyzer({
     setResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append('document', file);
-
-      let response;
-      let data;
-
-      if (selectedModel === 'dual') {
-        // Use dual analysis endpoint
-        response = await apiRequest("POST", "/api/document-analyzer/analyze-dual", formData);
-        data = await response.json();
-        
-        if (response.ok && data.success) {
+      // Use our AI service for analysis
+      const data = await analyzeDocument(file, selectedModel);
+      
+      if (data.success) {
+        if (selectedModel === 'dual') {
           setResult({
             openai: data.openai,
             claude: data.claude,
@@ -77,15 +71,6 @@ export default function DocumentAnalyzer({
           });
           setActiveTab('openai'); // Default to OpenAI tab for results
         } else {
-          throw new Error(data.error || "Failed to analyze the document");
-        }
-      } else {
-        // Use single model analysis with model parameter
-        const url = `/api/document-analyzer/analyze?model=${selectedModel}`;
-        response = await apiRequest("POST", url, formData);
-        data = await response.json();
-        
-        if (response.ok && data.success) {
           setResult({
             analysis: data.analysis,
             filename: data.filename,
@@ -93,20 +78,20 @@ export default function DocumentAnalyzer({
             success: true
           });
           setActiveTab('analysis');
-        } else {
-          throw new Error(data.error || "Failed to analyze the document");
         }
-      }
 
-      if (onAnalysisComplete) {
-        onAnalysisComplete(data);
-      }
+        if (onAnalysisComplete) {
+          onAnalysisComplete(data);
+        }
 
-      toast({
-        title: "Analysis Complete",
-        description: `Successfully analyzed ${file.name}`,
-        variant: "default",
-      });
+        toast({
+          title: "Analysis Complete",
+          description: `Successfully analyzed ${file.name}`,
+          variant: "default",
+        });
+      } else {
+        throw new Error(data.error || "Failed to analyze the document");
+      }
     } catch (error: any) {
       setResult({
         error: error.message,
@@ -141,8 +126,9 @@ export default function DocumentAnalyzer({
             )}
             {selectedModel === 'dual' && result?.success && (
               <>
-                <TabsTrigger value="openai" className="flex-1">OpenAI Analysis</TabsTrigger>
-                <TabsTrigger value="claude" className="flex-1">Claude Analysis</TabsTrigger>
+                <TabsTrigger value="openai" className="flex-1">GPT-4o</TabsTrigger>
+                <TabsTrigger value="claude" className="flex-1">Claude</TabsTrigger>
+                <TabsTrigger value="comparison" className="flex-1">Compare</TabsTrigger>
               </>
             )}
           </TabsList>
@@ -224,7 +210,7 @@ export default function DocumentAnalyzer({
           </TabsContent>
 
           <TabsContent value="openai" className="mt-4">
-            {result?.success && result.openai && (
+            {result?.success && result.openai && result.claude && (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-center mb-4">
@@ -249,7 +235,7 @@ export default function DocumentAnalyzer({
           </TabsContent>
 
           <TabsContent value="claude" className="mt-4">
-            {result?.success && result.claude && (
+            {result?.success && result.openai && result.claude && (
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex justify-between items-center mb-4">
@@ -270,6 +256,16 @@ export default function DocumentAnalyzer({
                   </div>
                 </div>
               </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="comparison" className="mt-4">
+            {result?.success && result.openai && result.claude && (
+              <AIDocumentComparison 
+                openaiAnalysis={result.openai}
+                claudeAnalysis={result.claude}
+                filename={result.filename || 'document'}
+              />
             )}
           </TabsContent>
         </Tabs>
