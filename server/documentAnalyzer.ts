@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 500 * 1024 * 1024, // 500MB limit (increased from 200MB to match Express body-parser)
+    fileSize: 10 * 1024 * 1024, // 10MB limit for analysis
   },
   fileFilter: (req, file, cb) => {
     // Accept only specific file types
@@ -374,10 +374,7 @@ Format your response with clear section headings and prioritize actionable advic
         ],
       });
       
-      if (response.content && response.content[0] && 'text' in response.content[0]) {
-        return response.content[0].text;
-      }
-      return "Analysis not available.";
+      return response.content[0].text;
     } else {
       // For images (PDF, DOC, DOCX), use vision capabilities
       const response = await anthropic.messages.create({
@@ -405,10 +402,7 @@ Format your response with clear section headings and prioritize actionable advic
         ],
       });
       
-      if (response.content && response.content[0] && 'text' in response.content[0]) {
-        return response.content[0].text;
-      }
-      return "Analysis not available.";
+      return response.content[0].text;
     }
   } catch (error) {
     console.error("Error in Claude document analysis:", error);

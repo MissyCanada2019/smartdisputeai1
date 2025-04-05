@@ -160,9 +160,9 @@ export default function DocumentAnalyzer({
               onUpload={handleFileSelected}
               multiple={false}
               acceptedFileTypes=".pdf,.doc,.docx,.txt"
-              maxFileSizeMB={20}
+              maxFileSizeMB={10}
               label="Document for Analysis"
-              helpText="Upload a legal document to analyze. We support PDF, DOC, DOCX, and TXT files up to 20MB."
+              helpText="Upload a legal document to analyze. We support PDF, DOC, DOCX, and TXT files up to 10MB."
             />
             
             <Button 
