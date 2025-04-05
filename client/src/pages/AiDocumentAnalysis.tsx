@@ -1,7 +1,7 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import DocumentAnalyzer from "@/components/documents/DocumentAnalyzer";
 import UserDocumentLibrary from "@/components/documents/UserDocumentLibrary";
-import { AuthContext } from "@/contexts/AuthContext";
+import { useAuth } from "@/context/authContext";
 import { 
   Breadcrumb, 
   BreadcrumbItem, 
@@ -28,7 +28,7 @@ export default function AiDocumentAnalysis() {
   const [hasPurchased, setHasPurchased] = useState(true);
   const [analysisCount, setAnalysisCount] = useState(2);
   const [activeTab, setActiveTab] = useState("new-analysis");
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const userId = user?.id || 'guest';
   const { toast } = useToast();
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);

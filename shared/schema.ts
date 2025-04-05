@@ -21,6 +21,32 @@ export const users = pgTable("users", {
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   isTemporary: boolean("is_temporary").default(false),
+  credits: integer("credits").default(0),
+});
+
+// Payment transactions table
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  paymentId: text("payment_id"),
+  paymentMethod: text("payment_method").notNull(),
+  amount: doublePrecision("amount").notNull(),
+  currency: text("currency").default("CAD"),
+  status: text("status").notNull(),
+  transactionDate: text("transaction_date").notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).pick({
+  userId: true,
+  paymentId: true,
+  paymentMethod: true,
+  amount: true,
+  currency: true,
+  status: true,
+  transactionDate: true,
+  metadata: true,
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -458,6 +484,9 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type Invoice = typeof invoices.$inferSelect;
+
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
 
 export type InsertUserDocument = z.infer<typeof insertUserDocumentSchema>;
 export type UserDocument = typeof userDocuments.$inferSelect;

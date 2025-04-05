@@ -46,7 +46,7 @@ import paypalRoutes from "./paypalRoutes";
 
 // WebSocket client tracking
 interface WebSocketClient {
-  ws: WebSocket;
+  ws: WebSocket & { isAlive?: boolean };
   userId?: number;
   connectionTime: Date;
 }
@@ -1430,15 +1430,16 @@ const subscription = await stripe.subscriptions.create({
   });
 
   // Set up heartbeat
-  function heartbeat() {
+  function heartbeat(this: WebSocket & { isAlive?: boolean }) {
+    // The 'this' in this context refers to the WebSocket instance
     this.isAlive = true;
   }
 
   const interval = setInterval(() => {
-    wss.clients.forEach((ws: any) => {
+    wss.clients.forEach((ws: WebSocket & { isAlive?: boolean }) => {
       if (ws.isAlive === false) return ws.terminate();
       ws.isAlive = false;
-      ws.ping();
+      ws.ping(() => {});
     });
   }, 30000);
 
@@ -1449,7 +1450,11 @@ const subscription = await stripe.subscriptions.create({
   // Store connected clients
   const clients = new Map<string, WebSocketClient>();
   
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws: WebSocket & { isAlive?: boolean }) => {
+    // Set up heartbeat handler
+    ws.isAlive = true;
+    ws.on('pong', heartbeat);
+    
     // Generate a unique client ID
     const clientId = Date.now().toString();
     

@@ -26,7 +26,8 @@ import {
   contributorReputations, type ContributorReputation, type InsertContributorReputation,
   resourceVotes, type ResourceVote, type InsertResourceVote,
   reputationHistory, type ReputationHistory, type InsertReputationHistory,
-  formData, type FormData, type InsertFormData
+  formData, type FormData, type InsertFormData,
+  paymentTransactions, type PaymentTransaction, type InsertPaymentTransaction
 } from "@shared/schema";
 
 // Storage interface
@@ -75,6 +76,14 @@ export interface IStorage {
   
   // Payment updates
   updatePaymentStatus(documentId: number, status: string, paymentIntentId?: string): Promise<UserDocument | undefined>;
+
+  // Payment transaction operations 
+  createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction>;
+  getUserTransactions(userId: number): Promise<PaymentTransaction[]>;
+  getTransaction(id: number): Promise<PaymentTransaction | undefined>;
+  getTransactionByPaymentId(paymentId: string): Promise<PaymentTransaction | undefined>;
+  updateUserCredits(userId: number, amount: number): Promise<User | undefined>;
+  getUserCredits(userId: number): Promise<number>;
   
   // Community category operations
   getCommunityCategories(): Promise<CommunityCategory[]>;
@@ -214,6 +223,9 @@ export class MemStorage implements IStorage {
   private documentFolderAssignments: Map<number, DocumentFolderAssignment>;
   private incomeVerifications: Map<number, IncomeVerification>;
   
+  // Payment related data maps
+  private paymentTransactions: Map<number, PaymentTransaction>;
+  
   // Community related data maps
   private communityCategories: Map<number, CommunityCategory>;
   private communityPosts: Map<number, CommunityPost>;
@@ -253,6 +265,9 @@ export class MemStorage implements IStorage {
   private currentDocumentFolderId: number;
   private currentDocumentFolderAssignmentId: number;
   private currentIncomeVerificationId: number;
+  
+  // Payment related counters
+  private currentPaymentTransactionId: number;
   
   // Community related counters
   private currentCommunityCategoryId: number;
@@ -296,6 +311,9 @@ export class MemStorage implements IStorage {
     this.documentFolderAssignments = new Map();
     this.incomeVerifications = new Map();
     
+    // Initialize payment collections
+    this.paymentTransactions = new Map();
+    
     // Initialize community collections
     this.communityCategories = new Map();
     this.communityPosts = new Map();
@@ -336,6 +354,9 @@ export class MemStorage implements IStorage {
     this.currentDocumentFolderId = 1;
     this.currentDocumentFolderAssignmentId = 1;
     this.currentIncomeVerificationId = 1;
+    
+    // Initialize payment IDs
+    this.currentPaymentTransactionId = 1;
     
     // Initialize community IDs
     this.currentCommunityCategoryId = 1;
@@ -841,6 +862,65 @@ export class MemStorage implements IStorage {
     };
     this.userDocuments.set(documentId, updatedDocument);
     return updatedDocument;
+  }
+  
+  // Payment transaction methods
+  async createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const id = this.currentPaymentTransactionId++;
+    const timestamp = new Date().toISOString();
+    
+    const newTransaction: PaymentTransaction = {
+      ...transaction,
+      id,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
+    
+    this.paymentTransactions.set(id, newTransaction);
+    
+    // Update user credits if applicable
+    if (transaction.transactionType === 'credit_purchase' && transaction.userId && transaction.amount) {
+      await this.updateUserCredits(transaction.userId, transaction.amount);
+    }
+    
+    return newTransaction;
+  }
+  
+  async getUserTransactions(userId: number): Promise<PaymentTransaction[]> {
+    return Array.from(this.paymentTransactions.values())
+      .filter(transaction => transaction.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+  
+  async getTransaction(id: number): Promise<PaymentTransaction | undefined> {
+    return this.paymentTransactions.get(id);
+  }
+  
+  async getTransactionByPaymentId(paymentId: string): Promise<PaymentTransaction | undefined> {
+    return Array.from(this.paymentTransactions.values())
+      .find(transaction => transaction.paymentId === paymentId);
+  }
+  
+  async updateUserCredits(userId: number, amount: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    // Initialize credits if they don't exist
+    if (user.credits === undefined || user.credits === null) {
+      user.credits = 0;
+    }
+    
+    user.credits += amount;
+    this.users.set(userId, user);
+    
+    return user;
+  }
+  
+  async getUserCredits(userId: number): Promise<number> {
+    const user = this.users.get(userId);
+    if (!user) return 0;
+    
+    return user.credits || 0;
   }
   
   // Community category operations
