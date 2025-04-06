@@ -37,6 +37,13 @@ export default function DocumentAnalyzer({
     success?: boolean;
     error?: string;
   } | null>(null);
+
+  const handleFileUpload = (files: File[]) => {
+    if (files && files.length > 0) {
+      setFile(files[0]);
+    }
+  };
+
   const [selectedModel, setSelectedModel] = useState<'openai' | 'claude' | 'dual'>('openai');
   const [activeTab, setActiveTab] = useState<'document' | 'analysis' | 'openai' | 'claude' | 'comparison'>('document');
   const [hasSelectedDocument, setHasSelectedDocument] = useState<boolean>(false);
@@ -49,10 +56,10 @@ export default function DocumentAnalyzer({
       // Reset any previous results
       setResult(null);
       setActiveTab('document');
-      
+
       // Extract filename from path for display
       const filename = selectedDocumentPath.split('/').pop() || 'Selected Document';
-      
+
       toast({
         title: "Document Selected",
         description: `${filename} is ready for analysis`,
@@ -62,15 +69,6 @@ export default function DocumentAnalyzer({
     }
   }, [selectedDocumentPath, toast]);
 
-  const handleFileSelected = (files: File[]) => {
-    if (files.length > 0) {
-      setFile(files[0]);
-      // Clear the selected document path if the user manually uploads a file
-      setHasSelectedDocument(false);
-    } else {
-      setFile(null);
-    }
-  };
 
   const handleAnalyze = async () => {
     // If we have a selected document path, use that
@@ -78,7 +76,7 @@ export default function DocumentAnalyzer({
       await analyzeSelectedDocument();
       return;
     }
-    
+
     // Otherwise use the uploaded file
     if (!file) {
       toast({
@@ -95,7 +93,7 @@ export default function DocumentAnalyzer({
     try {
       // Use our AI service for analysis
       const data = await analyzeDocument(file, selectedModel);
-      
+
       if (data.success) {
         if (selectedModel === 'dual') {
           setResult({
@@ -132,7 +130,7 @@ export default function DocumentAnalyzer({
         error: error.message,
         success: false
       });
-      
+
       toast({
         title: "Analysis Failed",
         description: error.message || "Failed to analyze the document",
@@ -142,7 +140,7 @@ export default function DocumentAnalyzer({
       setIsAnalyzing(false);
     }
   };
-  
+
   const analyzeSelectedDocument = async () => {
     if (!selectedDocumentPath) {
       toast({
@@ -159,10 +157,10 @@ export default function DocumentAnalyzer({
     try {
       // Extract filename from path for display
       const filename = selectedDocumentPath.split('/').pop() || 'Selected Document';
-      
+
       // Use our AI service for analysis
       const data = await analyzeExistingDocument(selectedDocumentPath, selectedModel);
-      
+
       if (data.success) {
         if (selectedModel === 'dual') {
           setResult({
@@ -199,7 +197,7 @@ export default function DocumentAnalyzer({
         error: error.message,
         success: false
       });
-      
+
       toast({
         title: "Analysis Failed",
         description: error.message || "Failed to analyze the document",
@@ -234,7 +232,7 @@ export default function DocumentAnalyzer({
               </>
             )}
           </TabsList>
-          
+
           <TabsContent value="document" className="mt-4 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="ai-model">Select AI Model:</Label>
@@ -270,7 +268,7 @@ export default function DocumentAnalyzer({
 
             {!hasSelectedDocument && (
               <FileUpload 
-                onUpload={handleFileSelected}
+                onUpload={handleFileUpload}
                 multiple={false}
                 acceptedFileTypes=".pdf,.doc,.docx,.txt"
                 maxFileSizeMB={10}
@@ -278,7 +276,7 @@ export default function DocumentAnalyzer({
                 helpText="Upload a legal document to analyze. We support PDF, DOC, DOCX, and TXT files up to 10MB."
               />
             )}
-            
+
             <Button 
               onClick={handleAnalyze} 
               disabled={((!file && !hasSelectedDocument) || isAnalyzing)}
@@ -400,7 +398,7 @@ export default function DocumentAnalyzer({
               )}
             </h4>
             <p className="text-sm text-red-600">{result.error}</p>
-            
+
             {(result.error.includes('API key') || result.error.includes('AI service unavailable')) && (
               <div className="mt-3 text-xs bg-white p-3 rounded border border-red-100">
                 <p className="font-medium mb-1">Potential solutions:</p>
