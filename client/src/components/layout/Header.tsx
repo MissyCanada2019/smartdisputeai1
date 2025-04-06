@@ -67,8 +67,8 @@ export default function Header() {
           
           {/* Services Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/services' || location === '/subscriptions' ? 'text-primary' : ''}`}>
-              Services
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium bg-gray-100 px-3 py-1 rounded-md ${location === '/services' || location === '/subscriptions' ? 'text-primary' : ''}`}>
+              Services ▼
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
@@ -85,8 +85,8 @@ export default function Header() {
           
           {/* My Account Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' || location === '/case-analysis' || location === '/evidence-upload' ? 'text-primary' : ''}`}>
-              My Account
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium bg-gray-100 px-3 py-1 rounded-md ${location === '/document-management' || location === '/case-analysis' || location === '/evidence-upload' ? 'text-primary' : ''}`}>
+              My Account ▼
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
@@ -108,8 +108,8 @@ export default function Header() {
           
           {/* Resources Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') || location === '/legal-rights-map' ? 'text-primary' : ''}`}>
-              Resources
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium bg-gray-100 px-3 py-1 rounded-md ${location.startsWith('/resource-sharing') || location === '/legal-rights-map' ? 'text-primary' : ''}`}>
+              Resources ▼
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
@@ -126,8 +126,8 @@ export default function Header() {
           
           {/* About Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/about' || location === '/for-agencies' ? 'text-primary' : ''}`}>
-              About
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium bg-gray-100 px-3 py-1 rounded-md ${location === '/about' || location === '/for-agencies' ? 'text-primary' : ''}`}>
+              About ▼
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
