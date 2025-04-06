@@ -1,11 +1,6 @@
 import type { Express, Request as ExpressRequest, Response, NextFunction } from "express";
 import { User } from "@shared/schema";
-
-// Extend the Express Request type to include authentication and user info
-interface Request extends ExpressRequest {
-  isAuthenticated(): boolean;
-  user: User;
-}
+import passport from "passport";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
@@ -20,20 +15,46 @@ import {
   insertResourceSchema,
   provinces
 } from "@shared/schema";
-
-// Login schema
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
 import Stripe from "stripe";
 import OpenAI from "openai";
 import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { dirname } from "path";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from 'ws';
+import * as anthropicService from "./services/anthropic";
+
+// Extend the Express Request type to include authentication and user info
+interface Request extends ExpressRequest {
+  isAuthenticated(): boolean;
+  user: {
+    id: number;
+    username: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+    dob: string | null;
+    address: string | null;
+    province: string | null;
+    role: string | null;
+    subscription: string | null;
+    subscriptionStatus: string | null;
+    verifiedStatus: boolean | null;
+    lastLogin: Date | null;
+    registrationDate: Date;
+    credits: number | null;
+  };
+  logIn(user: any, callback: (err: any) => void): void;
+}
+
+// Login schema
+const loginSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
+});
 
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -190,6 +211,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/update-profile', (req: Request, res: Response) => {
     console.log('Serving profile update page');
     const filePath = path.join(__dirname, '../update-profile.html');
+    res.sendFile(filePath);
+  });
+  
+  app.get('/claude-test', (req: Request, res: Response) => {
+    console.log('Serving Claude API test page');
+    const filePath = path.join(__dirname, '../claude-test.html');
     res.sendFile(filePath);
   });
   
@@ -847,25 +874,9 @@ const subscription = await stripe.subscriptions.create({
   });
 
   // Login endpoint
-  app.post("/api/login", async (req: Request, res: Response) => {
+  app.post("/api/login", async (req: Request, res: Response, next: NextFunction) => {
     try {
       console.log("LOGIN - Request received:", JSON.stringify(req.body));
-      
-      // Import the auth module functions
-      const { authenticateUser, getSafeUser } = await import('./auth');
-      
-      // Log all available users for debugging
-      const allUsers = Array.from((storage as any).users.values());
-      console.log(`DEBUG - Available users (${allUsers.length}):`, allUsers.map(u => u.username));
-      console.log("DEBUG - User IDs in storage:", Array.from((storage as any).users.keys()));
-      
-      // Debug dump of the first user
-      if (allUsers.length > 0) {
-        console.log("DEBUG - First user:", JSON.stringify({
-          ...allUsers[0],
-          password: '******' // Hide password in logs
-        }));
-      }
       
       // Validate request body using Zod schema
       const validationResult = loginSchema.safeParse(req.body);
@@ -877,28 +888,35 @@ const subscription = await stripe.subscriptions.create({
         });
       }
       
-      const { username, password } = validationResult.data;
-      console.log("LOGIN ATTEMPT - User:", username);
-      
-      // Try to authenticate the user with our new auth module
-      const user = await authenticateUser(storage, username, password);
-      
-      if (!user) {
-        console.log("LOGIN FAILED - Invalid credentials for user:", username);
-        return res.status(401).json({ 
-          message: "Invalid username or password", 
-          details: "If you're having trouble logging in, try the following: 1) Check your capitalization, 2) Make sure you're using the correct password, 3) Reset your password if needed, or 4) Visit /login-diagnostics for troubleshooting tools."
+      // Use passport authentication
+      passport.authenticate('local', (err: any, user: any, info: any) => {
+        if (err) {
+          console.error("LOGIN ERROR - Passport error:", err);
+          return res.status(500).json({ message: "An error occurred during authentication" });
+        }
+        
+        if (!user) {
+          console.log("LOGIN FAILED - Invalid credentials:", info?.message);
+          return res.status(401).json({ 
+            message: "Invalid username or password", 
+            details: "If you're having trouble logging in, try the following: 1) Check your capitalization, 2) Make sure you're using the correct password, 3) Reset your password if needed, or 4) Visit /login-diagnostics for troubleshooting tools."
+          });
+        }
+        
+        // Log in the user
+        req.logIn(user, (loginErr) => {
+          if (loginErr) {
+            console.error("LOGIN ERROR - Session login error:", loginErr);
+            return res.status(500).json({ message: "Error establishing session" });
+          }
+          
+          console.log("LOGIN SUCCESS - User authenticated:", user.username, "(ID:", user.id, ")");
+          
+          // Return the user data (without password)
+          console.log("LOGIN RESPONSE - Sending user data to client");
+          return res.json(user); // Password is already removed by passport
         });
-      }
-      
-      console.log("LOGIN SUCCESS - User authenticated:", username, "(ID:", user.id, ")");
-      
-      // Get safe user data (without password) 
-      const userData = getSafeUser(user);
-      
-      // Return the user data to the client
-      console.log("LOGIN RESPONSE - Sending user data to client");
-      res.json(userData);
+      })(req, res, next);
     } catch (error: any) {
       console.error("LOGIN ERROR:", error);
       res.status(500).json({ message: `Login error: ${error.message}` });
@@ -4767,6 +4785,64 @@ const subscription = await stripe.subscriptions.create({
     } catch (error: any) {
       console.error("Error updating form data:", error);
       return res.status(500).json({ error: "Internal server error: " + error.message });
+    }
+  });
+
+  // Claude API endpoints for text, image, and legal situation analysis
+  app.post("/api/claude/analyze-text", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      if (!req.body.text) {
+        return res.status(400).json({ message: "Text content is required" });
+      }
+
+      const { text, prompt, options } = req.body;
+
+      // Call the Anthropic service
+      const analysis = await anthropicService.analyzeText(text, prompt || 'Analyze this text thoroughly.', options);
+      
+      res.json({ analysis });
+    } catch (error: any) {
+      console.error("Claude text analysis error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/claude/analyze-image", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      if (!req.body.image) {
+        return res.status(400).json({ message: "Image data is required" });
+      }
+
+      const { image, prompt, options } = req.body;
+
+      // Call the Anthropic service
+      const analysis = await anthropicService.analyzeImage(image, prompt, options);
+      
+      res.json({ analysis });
+    } catch (error: any) {
+      console.error("Claude image analysis error:", error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/claude/analyze-legal-situation", async (req: Request, res: Response) => {
+    try {
+      // Validate request body
+      if (!req.body.situation) {
+        return res.status(400).json({ message: "Legal situation description is required" });
+      }
+
+      const { situation, options } = req.body;
+
+      // Call the Anthropic service
+      const analysis = await anthropicService.analyzeLegalSituation(situation, options);
+      
+      res.json({ analysis });
+    } catch (error: any) {
+      console.error("Claude legal situation analysis error:", error);
+      res.status(500).json({ message: error.message });
     }
   });
 

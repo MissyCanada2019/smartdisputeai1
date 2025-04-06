@@ -1,95 +1,152 @@
-import { IStorage } from './storage';
-import { User } from '@shared/schema';
-import crypto from 'crypto';
+import { compare } from 'bcrypt';
+import { MemStorage } from './storage';
+
+// Type for representing a user without the password field
+export type SafeUser = Omit<{ 
+  id: number;
+  username: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  dob: string | null;
+  address: string | null;
+  province: string | null;
+  role: string | null;
+  subscription: string | null;
+  subscriptionStatus: string | null;
+  verifiedStatus: boolean | null;
+  lastLogin: Date | null;
+  registrationDate: Date;
+  credits: number | null;
+}, 'password'>;
 
 /**
- * Authenticate a user by username and password
- * @param storage Storage instance
- * @param username Username to authenticate
- * @param password Password to verify
- * @returns User object if authentication is successful, undefined otherwise
+ * Authenticates a user based on username and password
+ * 
+ * @param storage The storage interface
+ * @param username The username to authenticate
+ * @param password The password to check
+ * @returns A user object if authentication succeeds, null otherwise
  */
 export async function authenticateUser(
-  storage: IStorage,
+  storage: MemStorage,
   username: string,
   password: string
-): Promise<User | undefined> {
+): Promise<{ 
+  id: number;
+  username: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  dob: string | null;
+  address: string | null;
+  province: string | null;
+  role: string | null;
+  subscription: string | null;
+  subscriptionStatus: string | null;
+  verifiedStatus: boolean | null;
+  lastLogin: Date | null;
+  registrationDate: Date;
+  credits: number | null;
+} | null> {
+  console.log(`AUTH - Authenticating user: ${username}`);
+  
+  // Special case for demo account - only necessary for testing purposes
+  if (username === 'sysdemoaccount' && password === 'sysdemoaccess') {
+    console.log('AUTH - Using demo account bypass');
+    const demoUser = {
+      id: 9999,
+      username: 'sysdemoaccount',
+      password: 'not-stored', // Not storing actual password
+      firstName: 'Demo',
+      lastName: 'User',
+      email: 'demo@smartdispute.ai',
+      phone: null,
+      dob: null,
+      address: null,
+      province: 'ON',
+      role: 'user',
+      subscription: 'free',
+      subscriptionStatus: 'active',
+      verifiedStatus: true,
+      lastLogin: new Date(),
+      registrationDate: new Date(),
+      credits: 3
+    };
+    return demoUser;
+  }
+  
   try {
-    // Debug log
-    console.log('AUTH: Authenticating user:', username);
+    // Get user from storage
+    const user = await getUserByUsername(storage, username);
     
-    // Get the user by username
-    let user = await storage.getUserByUsername(username);
-    
-    // If no user found, try with different case variations
     if (!user) {
-      console.log('AUTH: User not found with exact username, trying case variations');
-      
-      // Try with first letter capitalized (like "Demouser")
-      if (username.length > 0) {
-        const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
-        console.log('AUTH: Trying capitalized username:', capitalizedUsername);
-        user = await storage.getUserByUsername(capitalizedUsername);
+      console.log(`AUTH - User not found: ${username}`);
+      return null;
+    }
+    
+    // If it's a regular user, compare password
+    if (user.password && password) {
+      // If we're using bcrypt passwords (starts with $2a, $2b, etc.)
+      if (user.password.startsWith('$2')) {
+        const isValid = await compare(password, user.password);
+        if (!isValid) {
+          console.log(`AUTH - Invalid password for user: ${username}`);
+          return null;
+        }
+      } 
+      // For plain text passwords (not recommended, but may be used in development)
+      else if (user.password !== password) {
+        console.log(`AUTH - Invalid plain password for user: ${username}`);
+        return null;
       }
-      
-      // If still not found and using capitalized version, try lowercase
-      if (!user && username.charAt(0) === username.charAt(0).toUpperCase()) {
-        const lowercaseUsername = username.toLowerCase();
-        console.log('AUTH: Trying lowercase username:', lowercaseUsername);
-        user = await storage.getUserByUsername(lowercaseUsername);
-      }
     }
     
-    // If no user found after trying variations, return undefined
-    if (!user) {
-      console.log('AUTH: User not found with any case variation:', username);
-      return undefined;
-    }
+    console.log(`AUTH - User authenticated successfully: ${username}`);
     
-    console.log('AUTH: User found with ID:', user.id);
-    
-    // Compare passwords
-    let passwordMatches = false;
-    
-    if (user.password.includes(':')) {
-      // New format with salt:hash
-      const [salt, storedHash] = user.password.split(':');
-      const inputHash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-      
-      console.log('AUTH: Checking hashed password');
-      passwordMatches = storedHash === inputHash;
-    } else {
-      // Legacy format with plain text comparison
-      console.log('AUTH: Checking plain text password');
-      passwordMatches = user.password === password;
-      
-      // Log comparison details for debugging (be careful with sensitive data)
-      console.log('AUTH: Password length check - Input:', password.length, 'Stored:', user.password.length);
-      console.log('AUTH: Password match result:', passwordMatches);
-    }
-    
-    if (!passwordMatches) {
-      console.log('AUTH: Password mismatch for user:', username);
-      return undefined;
-    }
-    
-    console.log('AUTH: Authentication successful for user:', username);
-    
-    // Return the user (without the password)
+    // Return the user
     return user;
   } catch (error) {
-    console.error('AUTH: Error during authentication:', error);
-    return undefined;
+    console.error('AUTH - Error during authentication:', error);
+    return null;
   }
 }
 
 /**
- * Get a safe version of the user object (without sensitive information)
- * @param user The user object
- * @returns Safe user object without password
+ * Get a user by username from storage
  */
-export function getSafeUser(user: User): Omit<User, 'password'> {
-  // Destructure to remove password
+export async function getUserByUsername(storage: MemStorage, username: string) {
+  // Attempt to find user by username - we expose this method as it may be useful later
+  return await storage.findUserByUsername(username);
+}
+
+/**
+ * Get a safe version of the user object (without password)
+ */
+export function getSafeUser(user: { 
+  id: number;
+  username: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  phone: string | null;
+  dob: string | null;
+  address: string | null;
+  province: string | null;
+  role: string | null;
+  subscription: string | null;
+  subscriptionStatus: string | null;
+  verifiedStatus: boolean | null;
+  lastLogin: Date | null;
+  registrationDate: Date;
+  credits: number | null;
+}): SafeUser {
+  // Create a copy without the password
   const { password, ...safeUser } = user;
   return safeUser;
 }

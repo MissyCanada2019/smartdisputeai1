@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude API Test</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .hidden {
+      display: none;
+    }
+    .spinner {
+      animation: spin 1s linear infinite;
+      border-top-color: transparent;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6 text-blue-800">Claude API Test Interface</h1>
+    
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4 text-blue-700">Text Analysis</h2>
+      <div class="mb-4">
+        <textarea id="text-input" class="w-full p-2 border border-gray-300 rounded" rows="5" placeholder="Enter text to analyze..."></textarea>
+      </div>
+      <div class="mb-4">
+        <input type="text" id="text-prompt" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter specific instructions for analysis (optional)">
+      </div>
+      <button id="analyze-text-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Analyze Text
+      </button>
+      <div id="text-result-container" class="mt-4 p-4 border border-gray-300 rounded hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-semibold text-gray-700">Analysis Result:</h3>
+          <button id="copy-text-result" class="text-sm text-blue-600 hover:text-blue-800">Copy</button>
+        </div>
+        <div id="text-result" class="bg-gray-50 p-3 rounded whitespace-pre-wrap"></div>
+      </div>
+      <div id="text-loading" class="hidden mt-4 flex justify-center">
+        <div class="spinner w-6 h-6 border-4 border-blue-500 rounded-full"></div>
+        <span class="ml-2 text-gray-700">Processing...</span>
+      </div>
+    </div>
+    
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4 text-blue-700">Image Analysis</h2>
+      <div class="mb-4">
+        <label class="block mb-2 text-gray-700">Upload an image:</label>
+        <input type="file" id="image-upload" class="w-full p-2 border border-gray-300 rounded" accept="image/*">
+      </div>
+      <div class="mb-4">
+        <input type="text" id="image-prompt" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter specific instructions for analysis (optional)">
+      </div>
+      <button id="analyze-image-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Analyze Image
+      </button>
+      <div id="image-result-container" class="mt-4 p-4 border border-gray-300 rounded hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-semibold text-gray-700">Analysis Result:</h3>
+          <button id="copy-image-result" class="text-sm text-blue-600 hover:text-blue-800">Copy</button>
+        </div>
+        <div id="image-result" class="bg-gray-50 p-3 rounded whitespace-pre-wrap"></div>
+      </div>
+      <div id="image-loading" class="hidden mt-4 flex justify-center">
+        <div class="spinner w-6 h-6 border-4 border-blue-500 rounded-full"></div>
+        <span class="ml-2 text-gray-700">Processing...</span>
+      </div>
+    </div>
+    
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4 text-blue-700">Legal Situation Analysis</h2>
+      <div class="mb-4">
+        <textarea id="legal-input" class="w-full p-2 border border-gray-300 rounded" rows="5" placeholder="Describe your legal situation..."></textarea>
+      </div>
+      <div class="mb-4">
+        <div class="flex items-center mb-2">
+          <input type="checkbox" id="legal-json" class="mr-2">
+          <label for="legal-json" class="text-gray-700">Return result as JSON</label>
+        </div>
+      </div>
+      <button id="analyze-legal-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Analyze Legal Situation
+      </button>
+      <div id="legal-result-container" class="mt-4 p-4 border border-gray-300 rounded hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="font-semibold text-gray-700">Analysis Result:</h3>
+          <button id="copy-legal-result" class="text-sm text-blue-600 hover:text-blue-800">Copy</button>
+        </div>
+        <div id="legal-result" class="bg-gray-50 p-3 rounded whitespace-pre-wrap"></div>
+      </div>
+      <div id="legal-loading" class="hidden mt-4 flex justify-center">
+        <div class="spinner w-6 h-6 border-4 border-blue-500 rounded-full"></div>
+        <span class="ml-2 text-gray-700">Processing...</span>
+      </div>
+    </div>
+
+    <div class="mt-6 text-center text-gray-600 text-sm">
+      <p>This interface is for testing the Anthropic Claude integration in the SmartDispute.ai application.</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Text Analysis
+      const analyzeTextBtn = document.getElementById('analyze-text-btn');
+      const textInput = document.getElementById('text-input');
+      const textPrompt = document.getElementById('text-prompt');
+      const textResult = document.getElementById('text-result');
+      const textResultContainer = document.getElementById('text-result-container');
+      const textLoading = document.getElementById('text-loading');
+      const copyTextResult = document.getElementById('copy-text-result');
+
+      // Image Analysis
+      const analyzeImageBtn = document.getElementById('analyze-image-btn');
+      const imageUpload = document.getElementById('image-upload');
+      const imagePrompt = document.getElementById('image-prompt');
+      const imageResult = document.getElementById('image-result');
+      const imageResultContainer = document.getElementById('image-result-container');
+      const imageLoading = document.getElementById('image-loading');
+      const copyImageResult = document.getElementById('copy-image-result');
+
+      // Legal Analysis
+      const analyzeLegalBtn = document.getElementById('analyze-legal-btn');
+      const legalInput = document.getElementById('legal-input');
+      const legalJson = document.getElementById('legal-json');
+      const legalResult = document.getElementById('legal-result');
+      const legalResultContainer = document.getElementById('legal-result-container');
+      const legalLoading = document.getElementById('legal-loading');
+      const copyLegalResult = document.getElementById('copy-legal-result');
+
+      // Text Analysis
+      analyzeTextBtn.addEventListener('click', async () => {
+        if (!textInput.value.trim()) {
+          alert('Please enter some text to analyze');
+          return;
+        }
+
+        textResultContainer.classList.add('hidden');
+        textLoading.classList.remove('hidden');
+
+        try {
+          const response = await fetch('/api/claude/analyze-text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              text: textInput.value.trim(),
+              prompt: textPrompt.value.trim() || undefined
+            })
+          });
+
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'An error occurred while analyzing the text');
+          }
+
+          textResult.textContent = data.result;
+          textResultContainer.classList.remove('hidden');
+        } catch (error) {
+          alert('Error: ' + error.message);
+          console.error('Error analyzing text:', error);
+        } finally {
+          textLoading.classList.add('hidden');
+        }
+      });
+
+      // Image Analysis
+      analyzeImageBtn.addEventListener('click', async () => {
+        if (!imageUpload.files || imageUpload.files.length === 0) {
+          alert('Please select an image to analyze');
+          return;
+        }
+
+        const file = imageUpload.files[0];
+        if (!file.type.startsWith('image/')) {
+          alert('Please select a valid image file');
+          return;
+        }
+
+        imageResultContainer.classList.add('hidden');
+        imageLoading.classList.remove('hidden');
+
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        if (imagePrompt.value.trim()) {
+          formData.append('prompt', imagePrompt.value.trim());
+        }
+
+        try {
+          const response = await fetch('/api/claude/analyze-image', {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'An error occurred while analyzing the image');
+          }
+
+          imageResult.textContent = data.result;
+          imageResultContainer.classList.remove('hidden');
+        } catch (error) {
+          alert('Error: ' + error.message);
+          console.error('Error analyzing image:', error);
+        } finally {
+          imageLoading.classList.add('hidden');
+        }
+      });
+
+      // Legal Analysis
+      analyzeLegalBtn.addEventListener('click', async () => {
+        if (!legalInput.value.trim()) {
+          alert('Please describe your legal situation');
+          return;
+        }
+
+        legalResultContainer.classList.add('hidden');
+        legalLoading.classList.remove('hidden');
+
+        try {
+          const response = await fetch('/api/claude/analyze-legal-situation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              situation: legalInput.value.trim(),
+              returnJson: legalJson.checked
+            })
+          });
+
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'An error occurred while analyzing the legal situation');
+          }
+
+          if (typeof data.result === 'object') {
+            legalResult.textContent = JSON.stringify(data.result, null, 2);
+          } else {
+            legalResult.textContent = data.result;
+          }
+          
+          legalResultContainer.classList.remove('hidden');
+        } catch (error) {
+          alert('Error: ' + error.message);
+          console.error('Error analyzing legal situation:', error);
+        } finally {
+          legalLoading.classList.add('hidden');
+        }
+      });
+
+      // Copy functionality
+      copyTextResult.addEventListener('click', () => {
+        navigator.clipboard.writeText(textResult.textContent).then(() => {
+          alert('Result copied to clipboard!');
+        });
+      });
+
+      copyImageResult.addEventListener('click', () => {
+        navigator.clipboard.writeText(imageResult.textContent).then(() => {
+          alert('Result copied to clipboard!');
+        });
+      });
+
+      copyLegalResult.addEventListener('click', () => {
+        navigator.clipboard.writeText(legalResult.textContent).then(() => {
+          alert('Result copied to clipboard!');
+        });
+      });
+    });
+  </script>
+</body>
+</html>

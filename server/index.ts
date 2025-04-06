@@ -144,6 +144,13 @@ app.use(express.static(path.join(__dirname, '..'), {
     next();
   });
 
+  // Add route for Claude API test
+  app.get('/claude-test', (req: Request, res: Response) => {
+    console.log('Serving Claude API test page');
+    const filePath = path.join(__dirname, '../claude-test.html');
+    res.sendFile(filePath);
+  });
+
   const server = await registerRoutes(app);
 
   // Global error handler
