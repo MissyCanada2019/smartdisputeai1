@@ -64,6 +64,30 @@ export async function analyzeDocument(
  * @param model The AI model to use ('openai' or 'claude')
  * @returns Analysis response
  */
+export async function analyzeExistingDocument(
+  documentPath: string,
+  model: 'openai' | 'claude' | 'dual' = 'openai'
+): Promise<AIAnalysisResponse> {
+  try {
+    const response = await fetch(`/api/document-analyzer/analyze-existing?path=${encodeURIComponent(documentPath)}&model=${model}`, {
+      method: 'GET'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to analyze document');
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error analyzing existing document:', error);
+    return {
+      success: false,
+      error: error.message || 'An error occurred while analyzing the document',
+    };
+  }
+}
+
 export async function analyzeText(
   text: string,
   model: 'openai' | 'claude' = 'openai'
