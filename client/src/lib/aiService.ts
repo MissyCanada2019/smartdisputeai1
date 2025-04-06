@@ -88,6 +88,42 @@ export async function analyzeExistingDocument(
   }
 }
 
+export async function analyzeExistingDocument(
+  documentPath: string,
+  model: 'openai' | 'claude' | 'dual' = 'openai'
+): Promise<AIAnalysisResponse> {
+  try {
+    let endpoint = '/api/document-analyzer/analyze-existing';
+    
+    if (model === 'dual') {
+      endpoint = '/api/document-analyzer/analyze-existing-dual';
+    } else {
+      endpoint = `/api/document-analyzer/analyze-existing?model=${model}`;
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ documentPath }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to analyze document');
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    console.error('Error analyzing existing document:', error);
+    return {
+      success: false,
+      error: error.message || 'An error occurred while analyzing the document',
+    };
+  }
+}
+
 export async function analyzeText(
   text: string,
   model: 'openai' | 'claude' = 'openai'
