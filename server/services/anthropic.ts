@@ -19,6 +19,57 @@ interface AnalysisResult {
 }
 
 /**
+ * Helper function to determine if an error is related to API credentials
+ * @param error The error object to check
+ * @returns True if the error is likely related to an API key issue
+ */
+function isApiKeyError(error: unknown): boolean {
+  if (typeof error === 'string') {
+    return error.includes('API key') || 
+           error.includes('authentication') || 
+           error.includes('unauthorized') ||
+           error.includes('auth') || 
+           error.includes('credential') || 
+           error.toLowerCase().includes('api key');
+  }
+  
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes('api key') || 
+           message.includes('authentication') || 
+           message.includes('unauthorized') ||
+           message.includes('auth') || 
+           message.includes('credential');
+  }
+  
+  return false;
+}
+
+/**
+ * Format API-related errors with more user-friendly messages
+ * @param error The original error
+ * @returns A formatted error message
+ */
+function formatApiError(error: unknown): string {
+  // Default message if we can't extract specific details
+  let message = 'Anthropic API error: Please check your API key or try again later.';
+  
+  if (error instanceof Error) {
+    if (error.message.includes('401')) {
+      message = 'Anthropic API authorization failed: Your API key appears to be invalid. Please check your credentials.';
+    } else if (error.message.includes('429')) {
+      message = 'Anthropic API rate limit exceeded: Please try again later or adjust your request frequency.';
+    } else if (error.message.includes('500')) {
+      message = 'Anthropic API server error: The service is experiencing issues. Please try again later.';
+    } else {
+      message = `Anthropic API error: ${error.message}`;
+    }
+  }
+  
+  return message;
+}
+
+/**
  * Extracts JSON from Claude's response content
  * @param content The content blocks from Claude's response
  * @returns Parsed JSON object
@@ -52,6 +103,11 @@ function extractJsonFromResponse(content: any[]): any {
  */
 export async function analyzeLegalDocument(text: string, caseContext: string): Promise<AnalysisResult> {
   try {
+    // Validate API key before making the request
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error("Missing Anthropic API key. Please set the ANTHROPIC_API_KEY environment variable.");
+    }
+    
     const prompt = `
     As a legal expert, please analyze this evidence document in the context of the following case:
     
@@ -95,7 +151,18 @@ export async function analyzeLegalDocument(text: string, caseContext: string): P
     return result as AnalysisResult;
   } catch (error) {
     console.error("Error analyzing document with Claude:", error);
-    throw error;
+    
+    // Check if it's an API key related error and format it
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For other errors, wrap with more contextual information
+    if (error instanceof Error) {
+      throw new Error(`Failed to analyze document with Claude: ${error.message}`);
+    } else {
+      throw new Error(`Failed to analyze document with Claude: Unknown error`);
+    }
   }
 }
 
@@ -107,6 +174,16 @@ export async function analyzeLegalDocument(text: string, caseContext: string): P
  */
 export async function analyzeImageDocument(imagePath: string, caseContext: string): Promise<AnalysisResult> {
   try {
+    // Validate API key before making the request
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error("Missing Anthropic API key. Please set the ANTHROPIC_API_KEY environment variable.");
+    }
+    
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      throw new Error(`File not found: ${imagePath}`);
+    }
+    
     const imageData = fs.readFileSync(imagePath);
     const base64Image = imageData.toString('base64');
     
@@ -160,7 +237,23 @@ export async function analyzeImageDocument(imagePath: string, caseContext: strin
     return result as AnalysisResult;
   } catch (error) {
     console.error("Error analyzing image document with Claude:", error);
-    throw error;
+    
+    // Check if it's an API key related error and format it
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For file errors, provide a clear message
+    if (error instanceof Error && error.message.includes('File not found')) {
+      throw error;
+    }
+    
+    // For other errors, wrap with more contextual information
+    if (error instanceof Error) {
+      throw new Error(`Failed to analyze image document with Claude: ${error.message}`);
+    } else {
+      throw new Error(`Failed to analyze image document with Claude: Unknown error`);
+    }
   }
 }
 
@@ -175,6 +268,16 @@ export async function compareEvidenceStrategies(
   caseContext: string
 ): Promise<{ strategy: string, prioritizedEvidence: string[], nextSteps: string[] }> {
   try {
+    // Validate API key before making the request
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error("Missing Anthropic API key. Please set the ANTHROPIC_API_KEY environment variable.");
+    }
+    
+    // Validate input data
+    if (!analyses || analyses.length === 0) {
+      throw new Error("No analysis data provided. At least one document analysis is required.");
+    }
+    
     const analysesJson = JSON.stringify(analyses, null, 2);
     
     const response = await anthropic.messages.create({
@@ -213,7 +316,23 @@ export async function compareEvidenceStrategies(
     return result as { strategy: string, prioritizedEvidence: string[], nextSteps: string[] };
   } catch (error) {
     console.error("Error comparing evidence strategies with Claude:", error);
-    throw error;
+    
+    // Check if it's an API key related error and format it
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For input validation errors, pass through the error
+    if (error instanceof Error && error.message.includes("No analysis data provided")) {
+      throw error;
+    }
+    
+    // For other errors, wrap with more contextual information
+    if (error instanceof Error) {
+      throw new Error(`Failed to compare evidence strategies with Claude: ${error.message}`);
+    } else {
+      throw new Error(`Failed to compare evidence strategies with Claude: Unknown error`);
+    }
   }
 }
 
@@ -224,6 +343,16 @@ export async function compareEvidenceStrategies(
  */
 export async function explainLegalTerminology(legalText: string): Promise<{ explanation: string }> {
   try {
+    // Validate API key before making the request
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error("Missing Anthropic API key. Please set the ANTHROPIC_API_KEY environment variable.");
+    }
+    
+    // Validate input data
+    if (!legalText || legalText.trim() === '') {
+      throw new Error("No legal text provided. Please provide text to explain.");
+    }
+    
     const response = await anthropic.messages.create({
       model: 'claude-3-7-sonnet-20250219',
       max_tokens: 1000,
@@ -250,6 +379,27 @@ export async function explainLegalTerminology(legalText: string): Promise<{ expl
     return result as { explanation: string };
   } catch (error) {
     console.error("Error explaining legal terminology with Claude:", error);
-    throw error;
+    
+    // Check if it's an API key related error and format it
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For input validation errors, pass through the error
+    if (error instanceof Error && error.message.includes("No legal text provided")) {
+      throw error;
+    }
+    
+    // For JSON parsing errors from extractJsonFromResponse
+    if (error instanceof Error && error.message.includes("Failed to parse JSON")) {
+      throw new Error(`Failed to parse Claude's response. The response may not be in the expected JSON format.`);
+    }
+    
+    // For other errors, wrap with more contextual information
+    if (error instanceof Error) {
+      throw new Error(`Failed to explain legal terminology with Claude: ${error.message}`);
+    } else {
+      throw new Error(`Failed to explain legal terminology with Claude: Unknown error`);
+    }
   }
 }
