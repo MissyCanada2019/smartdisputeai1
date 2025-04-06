@@ -64,21 +64,49 @@ export default function Header() {
           <Link href="/" className={`text-gray-600 hover:text-primary font-medium ${location === '/' ? 'text-primary' : ''}`}>
             Home
           </Link>
-          <Link href="/services" className={`text-gray-600 hover:text-primary font-medium ${location === '/services' ? 'text-primary' : ''}`}>
-            Services
-          </Link>
-          <Link href="/paypal-checkout" className={`text-gray-600 hover:text-primary font-medium ${location === '/paypal-checkout' ? 'text-primary' : ''}`}>
-            Pay Online
-          </Link>
-          <Link href="/subscriptions" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscriptions' ? 'text-primary' : ''}`}>
-            Subscriptions
-          </Link>
-          <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
-            My Documents
-          </Link>
+          
+          {/* Services Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/services' || location === '/subscriptions' ? 'text-primary' : ''}`}>
+              Services
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/services">All Services</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/subscriptions">Subscriptions</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/paypal-checkout">Payment Options</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* My Account Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' || location === '/case-analysis' || location === '/evidence-upload' ? 'text-primary' : ''}`}>
+              My Account
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link href="/document-management">My Documents</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/case-analysis">Case Analysis</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/evidence-upload">Evidence Upload</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          {/* Community Link */}
           <Link href="/community" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/community') ? 'text-primary' : ''}`}>
             Community
           </Link>
+          
+          {/* Resources Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/resource-sharing') || location === '/legal-rights-map' ? 'text-primary' : ''}`}>
               Resources
@@ -90,12 +118,13 @@ export default function Header() {
               <DropdownMenuItem asChild>
                 <Link href="/legal-rights-map">Legal Rights Map</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/faq">FAQ</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* AI Assistant and Chat links removed */}
-          <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
-            FAQ
-          </Link>
+          
+          {/* About Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={`text-gray-600 hover:text-primary font-medium ${location === '/about' || location === '/for-agencies' ? 'text-primary' : ''}`}>
               About
@@ -197,36 +226,69 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72">
               <div className="flex flex-col space-y-4 mt-8">
+                {/* Home Link */}
                 <SheetClose asChild>
                   <Link href="/" className={`text-gray-600 hover:text-primary font-medium ${location === '/' ? 'text-primary' : ''}`}>
                     Home
                   </Link>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/services" className={`text-gray-600 hover:text-primary font-medium ${location === '/services' ? 'text-primary' : ''}`}>
-                    Services
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/paypal-checkout" className={`text-gray-600 hover:text-primary font-medium ${location === '/paypal-checkout' ? 'text-primary' : ''}`}>
-                    Pay Online
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/subscriptions" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscriptions' ? 'text-primary' : ''}`}>
-                    Subscriptions
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
-                    My Documents
-                  </Link>
-                </SheetClose>
+                
+                {/* Services Section */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">Services:</p>
+                  <div className="ml-2 space-y-2">
+                    <SheetClose asChild>
+                      <Link href="/services" className={`text-gray-600 hover:text-primary font-medium ${location === '/services' ? 'text-primary' : ''}`}>
+                        All Services
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/subscriptions" className={`text-gray-600 hover:text-primary font-medium ${location === '/subscriptions' ? 'text-primary' : ''}`}>
+                        Subscriptions
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/paypal-checkout" className={`text-gray-600 hover:text-primary font-medium ${location === '/paypal-checkout' ? 'text-primary' : ''}`}>
+                        Payment Options
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </div>
+                
+                {/* My Account Section */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-600">My Account:</p>
+                  <div className="ml-2 space-y-2">
+                    <SheetClose asChild>
+                      <Link href="/document-management" className={`text-gray-600 hover:text-primary font-medium ${location === '/document-management' ? 'text-primary' : ''}`}>
+                        My Documents
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/case-analysis" className={`text-gray-600 hover:text-primary font-medium ${location === '/case-analysis' ? 'text-primary' : ''}`}>
+                        Case Analysis
+                      </Link>
+                    </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/evidence-upload" className={`text-gray-600 hover:text-primary font-medium ${location === '/evidence-upload' ? 'text-primary' : ''}`}>
+                        Evidence Upload
+                      </Link>
+                    </SheetClose>
+                  </div>
+                </div>
+                
+                {/* Community Link */}
                 <SheetClose asChild>
                   <Link href="/community" className={`text-gray-600 hover:text-primary font-medium ${location.startsWith('/community') ? 'text-primary' : ''}`}>
                     Community
                   </Link>
                 </SheetClose>
+                
+                {/* Resources Section */}
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-600">Resources:</p>
                   <div className="ml-2 space-y-2">
@@ -241,14 +303,16 @@ export default function Header() {
                         Legal Rights Map
                       </Link>
                     </SheetClose>
+                    <div className="h-2"></div>
+                    <SheetClose asChild>
+                      <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
+                        FAQ
+                      </Link>
+                    </SheetClose>
                   </div>
                 </div>
-                {/* AI Assistant and Chat links removed from mobile menu */}
-                <SheetClose asChild>
-                  <Link href="/faq" className={`text-gray-600 hover:text-primary font-medium ${location === '/faq' ? 'text-primary' : ''}`}>
-                    FAQ
-                  </Link>
-                </SheetClose>
+                
+                {/* About Section */}
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-600">About:</p>
                   <div className="ml-2 space-y-2">
@@ -265,6 +329,8 @@ export default function Header() {
                     </SheetClose>
                   </div>
                 </div>
+                
+                {/* Tutorials Link */}
                 <SheetClose asChild>
                   <Link href="/onboarding" className={`text-gray-600 hover:text-primary font-medium ${location === '/onboarding' ? 'text-primary' : ''}`}>
                     Tutorials
