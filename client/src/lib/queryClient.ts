@@ -42,47 +42,123 @@ export async function apiRequest(
       // Setup completion handlers
       xhr.addEventListener('load', () => {
         try {
-          // Create a Response object to match fetch API
-          const responseData = xhr.response;
+          console.log(`XHR request completed with status: ${xhr.status}, responseType: ${xhr.responseType}`);
+          
+          // Get content type from headers
           const contentType = xhr.getResponseHeader('Content-Type') || 'application/json';
-          
-          // Create a blob to construct the Response
-          const blob = new Blob(
-            [contentType.includes('json') ? JSON.stringify(responseData) : responseData], 
-            { type: contentType }
-          );
-          
-          const response = new Response(blob, {
-            status: xhr.status,
-            statusText: xhr.statusText,
-            headers: new Headers({
-              'Content-Type': contentType
-            })
-          });
+          console.log(`Response Content-Type: ${contentType}`);
           
           if (xhr.status >= 200 && xhr.status < 300) {
+            // For successful responses, attempt to create a Response object
+            let responseBody;
+            let responseData = xhr.response;
+            
+            // If we have responseText but no parsed response (when responseType is '')
+            if (xhr.responseText && (!responseData || responseData === '')) {
+              console.log(`Using responseText (length: ${xhr.responseText.length})`);
+              // Try to parse as JSON if content type suggests JSON
+              if (contentType.includes('application/json')) {
+                try {
+                  responseData = JSON.parse(xhr.responseText);
+                  console.log('Successfully parsed response text as JSON');
+                } catch (e) {
+                  console.warn('Failed to parse response as JSON despite Content-Type', e);
+                  responseData = xhr.responseText;
+                }
+              } else {
+                // Use as text for non-JSON content types
+                responseData = xhr.responseText;
+              }
+            }
+            
+            // Prepare the response body based on the type of data
+            if (typeof responseData === 'object' && responseData !== null) {
+              console.log('Creating Response with JSON data');
+              responseBody = JSON.stringify(responseData);
+            } else if (responseData instanceof Blob) {
+              console.log('Creating Response with Blob data');
+              responseBody = responseData;
+            } else {
+              console.log('Creating Response with text data');
+              responseBody = String(responseData || '');
+            }
+            
+            // Create the final Response object
+            const response = new Response(responseBody, {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              headers: new Headers({
+                'Content-Type': contentType
+              })
+            });
+            
             resolve(response);
           } else {
-            reject(new Error(`Request failed with status ${xhr.status}`));
+            // Detailed error logging for non-2xx responses
+            console.error(`XHR request failed with status ${xhr.status}: ${xhr.statusText}`);
+            
+            // Try to extract error details from response
+            let errorDetail = '';
+            try {
+              if (xhr.responseText) {
+                errorDetail = xhr.responseText.substring(0, 200);
+                if (xhr.responseText.length > 200) errorDetail += '...';
+              }
+            } catch (e) {
+              errorDetail = 'Error details unavailable';
+            }
+            
+            console.error(`Error response body: ${errorDetail}`);
+            reject(new Error(`Request failed with status ${xhr.status}: ${xhr.statusText}`));
           }
         } catch (error) {
-          // If anything goes wrong, reject with the error
+          // Log the specific error to help debugging
+          console.error('Error processing XHR response:', error);
           reject(error);
         }
       });
       
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error occurred'));
+      xhr.addEventListener('abort', () => {
+        console.warn('XHR request was aborted');
+        reject(new Error('Request was aborted'));
       });
       
-      xhr.addEventListener('abort', () => {
-        reject(new Error('Request was aborted'));
+      // Set up error handler logging
+      xhr.addEventListener('error', (event) => {
+        console.error('XHR network error:', event);
+        reject(new Error('Network error occurred'));
       });
       
       // Open and send the request
       xhr.open(method, apiUrl);
-      xhr.responseType = 'json'; // Change from 'blob' to 'json' to match expected response
+      
+      // Don't set responseType to allow automatic handling based on Content-Type
+      // This helps with text/plain or other non-JSON responses
+      xhr.responseType = '';
+      
       xhr.withCredentials = true;
+      
+      console.log(`Sending FormData with ${data instanceof FormData ? (data.getAll('documents')?.length || 0) : 0} document files`);
+      if (data instanceof FormData) {
+        // More safely check for documents
+        const documents = data.getAll('documents');
+        if (documents && documents.length > 0) {
+          const firstDoc = documents[0];
+          if (firstDoc instanceof File) {
+            console.log(`First document name: ${firstDoc.name}, type: ${firstDoc.type}, size: ${firstDoc.size} bytes`);
+          } else {
+            console.log(`First document is not a File object: ${typeof firstDoc}`);
+          }
+          console.log(`Document count: ${documents.length}`);
+        }
+        
+        // Log all FormData keys for debugging
+        console.log('FormData contains keys:');
+        for (const key of Array.from(data.keys())) {
+          console.log(` - ${key}: ${data.getAll(key).length} values`);
+        }
+      }
+      
       xhr.send(data as FormData);
     });
   }

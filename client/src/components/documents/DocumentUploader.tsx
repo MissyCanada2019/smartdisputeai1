@@ -31,6 +31,10 @@ export default function DocumentUploader({
   const { toast } = useToast();
 
   const handleFilesSelected = (selectedFiles: File[]) => {
+    console.log(`Selected ${selectedFiles.length} files for upload`);
+    selectedFiles.forEach((file, index) => {
+      console.log(`File ${index + 1}: ${file.name}, size: ${file.size}, type: ${file.type}`);
+    });
     setFiles(selectedFiles);
   };
 
@@ -78,7 +82,9 @@ export default function DocumentUploader({
       }
       
       if (folderId) {
-        formData.append('folderId', folderId.toString());
+        // Make sure folderId is properly converted to string
+        console.log(`Setting folderId in formData: ${folderId} (type: ${typeof folderId})`);
+        formData.append('folderId', String(folderId));
       }
 
       console.log(`Uploading ${files.length} files with total size: ${(totalSize / (1024 * 1024)).toFixed(2)}MB`);
