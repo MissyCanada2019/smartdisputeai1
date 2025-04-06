@@ -6,9 +6,17 @@ import { MemStorage } from "./storage";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import session from "express-session";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { authenticateUser, getSafeUser } from "./auth";
+import MemoryStore from "memorystore";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Create the session store
+const SessionStore = MemoryStore(session);
 
 const app = express();
 // Increase payload size limits for JSON and URL encoded data
@@ -74,6 +82,67 @@ app.use(express.static(path.join(__dirname, '..'), {
   } catch (error) {
     log("Error seeding database:", error instanceof Error ? error.message : String(error));
   }
+
+  // Set up session handling
+  app.use(session({
+    store: new SessionStore({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    secret: process.env.SESSION_SECRET || 'smartdispute-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true
+    }
+  }));
+
+  // Initialize Passport
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Configure passport to use local strategy
+  passport.use(new LocalStrategy(
+    async (username, password, done) => {
+      try {
+        const user = await authenticateUser(storage, username, password);
+        if (!user) {
+          return done(null, false, { message: 'Incorrect username or password' });
+        }
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
+    }
+  ));
+
+  // Serialize user to the session
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  // Deserialize user from the session
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(new Error('User not found'));
+      }
+      done(null, getSafeUser(user));
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  // Authentication middleware
+  app.use((req: any, _res: Response, next: NextFunction) => {
+    // Add isAuthenticated method to request object
+    req.isAuthenticated = function() {
+      return this.user != null;
+    };
+    next();
+  });
 
   const server = await registerRoutes(app);
 
