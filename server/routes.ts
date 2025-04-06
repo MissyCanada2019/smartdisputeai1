@@ -2843,8 +2843,34 @@ const subscription = await stripe.subscriptions.create({
         }
       }
       
-      const { query, analysisType = 'standard' } = req.body;
+      // Extract request parameters
+      const { 
+        query, 
+        analysisType = 'standard',
+        preferredModel = 'auto' // 'auto', 'claude', or 'openai'
+      } = req.body;
+      
       const fileExt = path.extname(evidenceFile.originalName).toLowerCase();
+      
+      // Log the API keys (existence only, not the actual values)
+      console.log('API Keys Status:');
+      console.log('ANTHROPIC_API_KEY:', process.env.ANTHROPIC_API_KEY ? 'Present' : 'Missing');
+      console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+      
+      // Create standard query if none was provided
+      const standardQuery = `
+        This is a legal document related to a case in Canada. 
+        Please analyze it thoroughly as a legal professional and provide:
+        1. A brief summary of the document
+        2. Key facts or points from the document
+        3. Potential legal implications
+        4. Recommendations for next steps
+        
+        Focus specifically on Canadian law context, especially related to housing/tenant disputes
+        or children's aid society matters, depending on what's most relevant to this document.
+      `;
+      
+      const userQuery = query || standardQuery;
       
       // Create result object to return
       let analysisResult = {
@@ -2854,6 +2880,7 @@ const subscription = await stripe.subscriptions.create({
         fileType: evidenceFile.fileType,
         analysisType: analysisType,
         analysisDate: new Date(),
+        source: 'pending',
         results: {
           summary: "",
           keyPoints: [] as string[],
@@ -2861,210 +2888,528 @@ const subscription = await stripe.subscriptions.create({
           recommendations: "",
           fullText: ""
         },
-        status: 'completed'
+        status: 'pending',
+        errors: [] as {model: string, message: string, details?: any}[]
       };
       
-      try {
-        // Import the Anthropic Claude service
-        const anthropicService = await import('./anthropicService');
+      const fileInfo = {
+        name: evidenceFile.originalName,
+        type: evidenceFile.fileType,
+        size: evidenceFile.fileSize,
+        extension: fileExt,
+        description: evidenceFile.description || "",
+        tags: evidenceFile.tags || []
+      };
+      
+      // Flag to track if any analysis was successful
+      let analysisSucceeded = false;
+      let analysisText = "";
+      
+      // Determine if we have text content or need to process an image
+      const hasTextContent = !!evidenceFile.textContent;
+      const hasFilePath = !!evidenceFile.filePath;
+      
+      // Flag for whether to try Claude first or OpenAI first
+      const tryClaudeFirst = preferredModel === 'claude' || 
+                            (preferredModel === 'auto' && 
+                            process.env.ANTHROPIC_API_KEY);
+    
+      // Create a function to process the analysis text
+      const processAnalysisText = (text: string) => {
+        // Update analysis results
+        analysisResult.results.fullText = text;
+        analysisResult.results.summary = text.substring(0, 200) + "...";
         
-        // Create standard query if none was provided
-        const standardQuery = `
-          This is a legal document related to a case in Canada. 
-          Please analyze it thoroughly as a legal professional and provide:
-          1. A brief summary of the document
-          2. Key facts or points from the document
-          3. Potential legal implications
-          4. Recommendations for next steps
+        // Try to extract key points, implications and recommendations
+        const sections = text.split('\n\n');
+        analysisResult.results.keyPoints = sections
+          .filter(s => s.includes("fact") || s.includes("point") || s.includes("key"))
+          .slice(0, 3)
+          .map(s => s.substring(0, 100));
           
-          Focus specifically on Canadian law context, especially related to housing/tenant disputes
-          or children's aid society matters, depending on what's most relevant to this document.
-        `;
+        const legalSection = sections.find(s => 
+          s.toLowerCase().includes("legal") || 
+          s.toLowerCase().includes("implication"));
+          
+        if (legalSection) {
+          analysisResult.results.legalImplications = legalSection;
+        }
         
-        const userQuery = query || standardQuery;
+        const recommendationSection = sections.find(s => 
+          s.toLowerCase().includes("recommend") || 
+          s.toLowerCase().includes("next steps") ||
+          s.toLowerCase().includes("action"));
+          
+        if (recommendationSection) {
+          analysisResult.results.recommendations = recommendationSection;
+        }
         
-        // Decide which analysis method to use based on file content
-        if (evidenceFile.textContent) {
-          // Use text analysis for documents with extracted text
-          console.log(`Analyzing text content for file ${id} with Claude`);
-          
-          // Call Claude API with the document text
-          const analysisText = await anthropicService.analyzeDocumentWithClaude(
-            evidenceFile.textContent,
-            userQuery
-          );
-          
-          // Update analysis results
-          analysisResult.results.fullText = analysisText;
-          analysisResult.results.summary = analysisText.substring(0, 200) + "...";
-          
-          // Try to extract key points, implications and recommendations
-          // This is simplified - in practice you might use more sophisticated parsing
-          const sections = analysisText.split('\n\n');
-          analysisResult.results.keyPoints = sections
-            .filter(s => s.includes("fact") || s.includes("point") || s.includes("key"))
-            .slice(0, 3)
-            .map(s => s.substring(0, 100));
-            
-          const legalSection = sections.find(s => 
-            s.toLowerCase().includes("legal") || 
-            s.toLowerCase().includes("implication"));
-            
-          if (legalSection) {
-            analysisResult.results.legalImplications = legalSection;
-          }
-          
-          const recommendationSection = sections.find(s => 
-            s.toLowerCase().includes("recommend") || 
-            s.toLowerCase().includes("next steps") ||
-            s.toLowerCase().includes("action"));
-            
-          if (recommendationSection) {
-            analysisResult.results.recommendations = recommendationSection;
-          }
-          
-        } else if (evidenceFile.filePath) {
-          // For files without extracted text, use image analysis
+        return text;
+      };
+      
+      // Try with text content first if available
+      if (hasTextContent) {
+        console.log(`Using text content analysis for file ${id}`);
+        
+        // Try Claude first if preferred or auto
+        if (tryClaudeFirst) {
           try {
-            const fs = await import('fs/promises');
-            const path = await import('path');
-            const fullPath = path.join(process.cwd(), evidenceFile.filePath);
+            // Import the Anthropic Claude service
+            const anthropicService = await import('./anthropicService');
             
-            // Read the file and convert to base64
-            const fileData = await fs.readFile(fullPath);
-            const base64Data = fileData.toString('base64');
-            
-            // Determine media type based on file extension
-            const mediaType = fileExt === '.pdf' ? 'application/pdf' : 
-                             fileExt === '.png' ? 'image/png' :
-                             fileExt === '.jpg' || fileExt === '.jpeg' ? 'image/jpeg' :
-                             'application/octet-stream';
-            
-            // Create a data URL with correct media type
-            const dataUrl = `data:${mediaType};base64,${base64Data}`;
-            
-            // Use Claude's image analysis
-            console.log(`Analyzing image for file ${id} (${evidenceFile.filePath}) with Claude`);
-            const analysisText = await anthropicService.analyzeImageWithClaude(
-              dataUrl,
+            console.log(`Analyzing text content with Claude (${evidenceFile.textContent.length} chars)`);
+            // Call Claude API with the document text
+            analysisText = await anthropicService.analyzeDocumentWithClaude(
+              evidenceFile.textContent,
               userQuery
             );
             
-            // Update analysis results
-            analysisResult.results.fullText = analysisText;
-            analysisResult.results.summary = analysisText.substring(0, 200) + "...";
+            // Process the analysis
+            processAnalysisText(analysisText);
+            analysisSucceeded = true;
+            analysisResult.source = 'claude';
+            console.log('Claude analysis succeeded');
+          } catch (claudeError: any) {
+            console.error("Error using Claude for text analysis:", claudeError);
+            analysisResult.errors.push({
+              model: 'claude',
+              message: `Claude text analysis failed: ${claudeError.message}`,
+              details: claudeError
+            });
             
-            // Try to extract sections (simple approach)
-            const sections = analysisText.split('\n\n');
-            analysisResult.results.keyPoints = sections
-              .filter(s => s.includes("fact") || s.includes("point") || s.includes("key"))
-              .slice(0, 3)
-              .map(s => s.substring(0, 100));
-              
-            const legalSection = sections.find(s => 
-              s.toLowerCase().includes("legal") || 
-              s.toLowerCase().includes("implication"));
-              
-            if (legalSection) {
-              analysisResult.results.legalImplications = legalSection;
-            }
-            
-            const recommendationSection = sections.find(s => 
-              s.toLowerCase().includes("recommend") || 
-              s.toLowerCase().includes("next steps") ||
-              s.toLowerCase().includes("action"));
-              
-            if (recommendationSection) {
-              analysisResult.results.recommendations = recommendationSection;
-            }
-          } catch (imageError) {
-            console.error('Error during Claude image analysis:', imageError);
-            
-            // Fall back to OpenAI if Claude image analysis fails
+            // Fall back to OpenAI
             try {
-              console.log("Falling back to OpenAI analysis");
-              
-              // Create a description of the file based on metadata
-              const fileInfo = {
-                name: evidenceFile.originalName,
-                type: evidenceFile.fileType,
-                size: evidenceFile.fileSize,
-                extension: fileExt,
-                description: evidenceFile.description || "",
-                tags: evidenceFile.tags || []
-              };
-              
               const openai = new OpenAI({
                 apiKey: process.env.OPENAI_API_KEY,
               });
               
-              const prompt = `
-                I have uploaded a file as evidence for a legal case. Based on the available information, 
-                please analyze this file and provide insights on what legal documents or forms might be most 
-                relevant to my situation. The file has the following properties:
-                
-                File name: ${fileInfo.name}
-                File type: ${fileInfo.type}
-                Description: ${fileInfo.description || "No description provided"}
-                Tags: ${fileInfo.tags?.join(", ") || "No tags provided"}
-                
-                Please analyze what this evidence might suggest about my legal situation and what Canadian legal 
-                forms or templates would be most appropriate.
-              `;
-              
+              console.log('Falling back to OpenAI for text analysis');
               const response = await openai.chat.completions.create({
-                model: "gpt-4o",  // Using the latest OpenAI model
+                model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
                 messages: [
-                  { role: "system", content: "You are a legal assistant specializing in Canadian law. Your task is to analyze evidence and suggest appropriate legal documents and actions." },
-                  { role: "user", content: prompt }
+                  { 
+                    role: "system", 
+                    content: "You are a legal assistant specializing in Canadian law. Your task is to analyze legal documents and provide insights."
+                  },
+                  { 
+                    role: "user", 
+                    content: `${userQuery}\n\nHere is the document content:\n\n${evidenceFile.textContent}`
+                  }
                 ],
-                max_tokens: 500,
+                max_tokens: 1500,
               });
               
-              // Update results with OpenAI response
-              const analysisText = response.choices[0].message.content || "";
-              analysisResult.results.fullText = analysisText;
-              analysisResult.results.summary = "Analysis completed using metadata (image content could not be processed)";
-              analysisResult.results.keyPoints = ["Based on file metadata only", "Full content analysis unavailable", "See full text for details"];
-            } catch (openaiError) {
-              console.error("OpenAI fallback also failed:", openaiError);
-              
-              // Simplest fallback - just provide basic information
-              analysisResult.results.fullText = `Analysis of file ${evidenceFile.originalName}:\n` +
-                                  `This file type (${fileExt}) appears to be relevant for your case, but content could not be analyzed. ` +
-                                  `Please review the document manually.`;
-              analysisResult.results.summary = "File content could not be analyzed automatically";
-              analysisResult.results.keyPoints = ["Automatic analysis failed", "Manual review required"];
-              analysisResult.status = 'failed';
+              analysisText = response.choices[0].message.content || "";
+              processAnalysisText(analysisText);
+              analysisSucceeded = true;
+              analysisResult.source = 'openai';
+              console.log('OpenAI text analysis succeeded');
+            } catch (openaiError: any) {
+              console.error("OpenAI text analysis also failed:", openaiError);
+              analysisResult.errors.push({
+                model: 'openai',
+                message: `OpenAI text analysis failed: ${openaiError.message}`,
+                details: openaiError
+              });
             }
           }
         } else {
-          throw new Error("File has no content to analyze");
+          // Try OpenAI first
+          try {
+            const openai = new OpenAI({
+              apiKey: process.env.OPENAI_API_KEY,
+            });
+            
+            console.log('Analyzing text with OpenAI');
+            const response = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+              messages: [
+                { 
+                  role: "system", 
+                  content: "You are a legal assistant specializing in Canadian law. Your task is to analyze legal documents and provide insights."
+                },
+                { 
+                  role: "user", 
+                  content: `${userQuery}\n\nHere is the document content:\n\n${evidenceFile.textContent}`
+                }
+              ],
+              max_tokens: 1500,
+            });
+            
+            analysisText = response.choices[0].message.content || "";
+            processAnalysisText(analysisText);
+            analysisSucceeded = true;
+            analysisResult.source = 'openai';
+            console.log('OpenAI text analysis succeeded');
+          } catch (openaiError: any) {
+            console.error("Error using OpenAI for text analysis:", openaiError);
+            analysisResult.errors.push({
+              model: 'openai',
+              message: `OpenAI text analysis failed: ${openaiError.message}`,
+              details: openaiError
+            });
+            
+            // Fall back to Claude
+            try {
+              const anthropicService = await import('./anthropicService');
+              
+              console.log('Falling back to Claude for text analysis');
+              analysisText = await anthropicService.analyzeDocumentWithClaude(
+                evidenceFile.textContent,
+                userQuery
+              );
+              
+              processAnalysisText(analysisText);
+              analysisSucceeded = true;
+              analysisResult.source = 'claude';
+              console.log('Claude text analysis succeeded as fallback');
+            } catch (claudeError: any) {
+              console.error("Claude text analysis also failed:", claudeError);
+              analysisResult.errors.push({
+                model: 'claude',
+                message: `Claude text analysis failed: ${claudeError.message}`,
+                details: claudeError
+              });
+            }
+          }
         }
+      } 
+      // Try with file path if text content is not available
+      else if (hasFilePath) {
+        console.log(`Using image/file analysis for ${evidenceFile.filePath}`);
+        
+        // Read the file and convert to base64
+        try {
+          const fs = await import('fs/promises');
+          const path = await import('path');
+          const fullPath = path.join(process.cwd(), evidenceFile.filePath);
+          
+          console.log(`Reading file from: ${fullPath}`);
+          const fileData = await fs.readFile(fullPath);
+          const base64Data = fileData.toString('base64');
+          
+          // Determine media type based on file extension
+          const mediaType = fileExt === '.pdf' ? 'application/pdf' : 
+                           fileExt === '.png' ? 'image/png' :
+                           fileExt === '.jpg' || fileExt === '.jpeg' ? 'image/jpeg' :
+                           'application/octet-stream';
+          
+          // Create a data URL with correct media type
+          const dataUrl = `data:${mediaType};base64,${base64Data}`;
+          
+          // Try Claude's multimodal capabilities first if preferred
+          if (tryClaudeFirst) {
+            try {
+              const anthropicService = await import('./anthropicService');
+              
+              console.log(`Analyzing file with Claude multimodal (file size: ${fileData.length} bytes)`);
+              analysisText = await anthropicService.analyzeImageWithClaude(
+                dataUrl,
+                userQuery
+              );
+              
+              processAnalysisText(analysisText);
+              analysisSucceeded = true;
+              analysisResult.source = 'claude';
+              console.log('Claude multimodal analysis succeeded');
+            } catch (claudeError: any) {
+              console.error("Error using Claude for image analysis:", claudeError);
+              analysisResult.errors.push({
+                model: 'claude',
+                message: `Claude image analysis failed: ${claudeError.message}`,
+                details: claudeError
+              });
+              
+              // Fall back to OpenAI
+              try {
+                const openai = new OpenAI({
+                  apiKey: process.env.OPENAI_API_KEY,
+                });
+                
+                // For image analysis with OpenAI
+                if (['.jpg', '.jpeg', '.png'].includes(fileExt)) {
+                  console.log('Falling back to OpenAI for image analysis');
+                  
+                  const response = await openai.chat.completions.create({
+                    model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                    messages: [
+                      { 
+                        role: "system", 
+                        content: "You are a legal assistant specializing in Canadian law. Your task is to analyze images of legal documents."
+                      },
+                      { 
+                        role: "user", 
+                        content: [
+                          {
+                            type: "text",
+                            text: userQuery
+                          },
+                          {
+                            type: "image_url",
+                            image_url: {
+                              url: dataUrl
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    max_tokens: 1500,
+                  });
+                  
+                  analysisText = response.choices[0].message.content || "";
+                  processAnalysisText(analysisText);
+                  analysisSucceeded = true;
+                  analysisResult.source = 'openai';
+                  console.log('OpenAI image analysis succeeded');
+                } else {
+                  // For non-image files, fall back to metadata analysis
+                  console.log('File is not an image, using metadata analysis with OpenAI');
+                  
+                  const prompt = `
+                    I have uploaded a file as evidence for a legal case. Based on the available information, 
+                    please analyze this file and provide insights on what legal documents or forms might be most 
+                    relevant to my situation. The file has the following properties:
+                    
+                    File name: ${fileInfo.name}
+                    File type: ${fileInfo.type}
+                    Description: ${fileInfo.description || "No description provided"}
+                    Tags: ${fileInfo.tags?.join(", ") || "No tags provided"}
+                    
+                    Please analyze what this evidence might suggest about my legal situation and what Canadian legal 
+                    forms or templates would be most appropriate.
+                  `;
+                  
+                  const response = await openai.chat.completions.create({
+                    model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                    messages: [
+                      { 
+                        role: "system", 
+                        content: "You are a legal assistant specializing in Canadian law. Your task is to analyze evidence and suggest appropriate legal documents and actions."
+                      },
+                      { role: "user", content: prompt }
+                    ],
+                    max_tokens: 1000,
+                  });
+                  
+                  analysisText = response.choices[0].message.content || "";
+                  processAnalysisText(analysisText);
+                  analysisSucceeded = true;
+                  analysisResult.source = 'openai-metadata';
+                  console.log('OpenAI metadata analysis succeeded');
+                }
+              } catch (openaiError: any) {
+                console.error("OpenAI fallback also failed:", openaiError);
+                analysisResult.errors.push({
+                  model: 'openai',
+                  message: `OpenAI analysis failed: ${openaiError.message}`,
+                  details: openaiError
+                });
+              }
+            }
+          } else {
+            // Try OpenAI first for image analysis
+            try {
+              const openai = new OpenAI({
+                apiKey: process.env.OPENAI_API_KEY,
+              });
+              
+              // For image analysis with OpenAI
+              if (['.jpg', '.jpeg', '.png'].includes(fileExt)) {
+                console.log('Analyzing image with OpenAI');
+                
+                const response = await openai.chat.completions.create({
+                  model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                  messages: [
+                    { 
+                      role: "system", 
+                      content: "You are a legal assistant specializing in Canadian law. Your task is to analyze images of legal documents."
+                    },
+                    { 
+                      role: "user", 
+                      content: [
+                        {
+                          type: "text",
+                          text: userQuery
+                        },
+                        {
+                          type: "image_url",
+                          image_url: {
+                            url: dataUrl
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  max_tokens: 1500,
+                });
+                
+                analysisText = response.choices[0].message.content || "";
+                processAnalysisText(analysisText);
+                analysisSucceeded = true;
+                analysisResult.source = 'openai';
+                console.log('OpenAI image analysis succeeded');
+              } else {
+                // For non-image files, use metadata analysis
+                console.log('File is not an image, using metadata analysis with OpenAI');
+                
+                const prompt = `
+                  I have uploaded a file as evidence for a legal case. Based on the available information, 
+                  please analyze this file and provide insights on what legal documents or forms might be most 
+                  relevant to my situation. The file has the following properties:
+                  
+                  File name: ${fileInfo.name}
+                  File type: ${fileInfo.type}
+                  Description: ${fileInfo.description || "No description provided"}
+                  Tags: ${fileInfo.tags?.join(", ") || "No tags provided"}
+                  
+                  Please analyze what this evidence might suggest about my legal situation and what Canadian legal 
+                  forms or templates would be most appropriate.
+                `;
+                
+                const response = await openai.chat.completions.create({
+                  model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+                  messages: [
+                    { 
+                      role: "system", 
+                      content: "You are a legal assistant specializing in Canadian law. Your task is to analyze evidence and suggest appropriate legal documents and actions."
+                    },
+                    { role: "user", content: prompt }
+                  ],
+                  max_tokens: 1000,
+                });
+                
+                analysisText = response.choices[0].message.content || "";
+                processAnalysisText(analysisText);
+                analysisSucceeded = true;
+                analysisResult.source = 'openai-metadata';
+                console.log('OpenAI metadata analysis succeeded');
+              }
+            } catch (openaiError: any) {
+              console.error("Error using OpenAI for image/file analysis:", openaiError);
+              analysisResult.errors.push({
+                model: 'openai',
+                message: `OpenAI image/file analysis failed: ${openaiError.message}`,
+                details: openaiError
+              });
+              
+              // Fall back to Claude
+              try {
+                const anthropicService = await import('./anthropicService');
+                
+                console.log('Falling back to Claude for image/file analysis');
+                analysisText = await anthropicService.analyzeImageWithClaude(
+                  dataUrl,
+                  userQuery
+                );
+                
+                processAnalysisText(analysisText);
+                analysisSucceeded = true;
+                analysisResult.source = 'claude';
+                console.log('Claude image/file analysis succeeded as fallback');
+              } catch (claudeError: any) {
+                console.error("Claude fallback also failed:", claudeError);
+                analysisResult.errors.push({
+                  model: 'claude',
+                  message: `Claude image/file analysis failed: ${claudeError.message}`,
+                  details: claudeError
+                });
+              }
+            }
+          }
+        } catch (fileReadError: any) {
+          console.error("Error reading file for analysis:", fileReadError);
+          analysisResult.errors.push({
+            model: 'file-system',
+            message: `File reading failed: ${fileReadError.message}`,
+            details: fileReadError
+          });
+          
+          // Fall back to metadata-only analysis with OpenAI
+          try {
+            console.log('Falling back to metadata-only analysis with OpenAI after file read error');
+            
+            const openai = new OpenAI({
+              apiKey: process.env.OPENAI_API_KEY,
+            });
+            
+            const prompt = `
+              I have uploaded a file as evidence for a legal case. Based on the available information, 
+              please analyze this file and provide insights on what legal documents or forms might be most 
+              relevant to my situation. The file has the following properties:
+              
+              File name: ${fileInfo.name}
+              File type: ${fileInfo.type}
+              Description: ${fileInfo.description || "No description provided"}
+              Tags: ${fileInfo.tags?.join(", ") || "No tags provided"}
+              
+              Please analyze what this evidence might suggest about my legal situation and what Canadian legal 
+              forms or templates would be most appropriate.
+            `;
+            
+            const response = await openai.chat.completions.create({
+              model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+              messages: [
+                { 
+                  role: "system", 
+                  content: "You are a legal assistant specializing in Canadian law. Your task is to analyze evidence and suggest appropriate legal documents and actions."
+                },
+                { role: "user", content: prompt }
+              ],
+              max_tokens: 1000,
+            });
+            
+            analysisText = response.choices[0].message.content || "";
+            analysisResult.results.fullText = analysisText;
+            analysisResult.results.summary = "Analysis based on file metadata only (file content could not be read)";
+            analysisResult.results.keyPoints = ["Based on metadata only", "File content unavailable", "See analysis for details"];
+            analysisSucceeded = true;
+            analysisResult.source = 'openai-metadata';
+            console.log('OpenAI metadata-only analysis succeeded after file read error');
+          } catch (openaiError: any) {
+            console.error("OpenAI metadata analysis also failed:", openaiError);
+            analysisResult.errors.push({
+              model: 'openai',
+              message: `OpenAI metadata analysis failed: ${openaiError.message}`,
+              details: openaiError
+            });
+          }
+        }
+      } else {
+        // No content and no file path - cannot analyze
+        analysisResult.errors.push({
+          model: 'file-system',
+          message: "File has no content to analyze (no text content and no file path)"
+        });
+      }
+      
+      // Update the analysis result status based on success or failure
+      if (analysisSucceeded) {
+        analysisResult.status = 'completed';
         
         // Store the analyzed content in storage
-        const analyzedContent = analysisResult.results.fullText;
-        const updatedFile = await storage.updateEvidenceAnalysis(id, analyzedContent);
+        const updatedFile = await storage.updateEvidenceAnalysis(id, analysisResult.results.fullText);
         
         if (!updatedFile) {
-          throw new Error("Failed to update evidence analysis in storage");
+          analysisResult.errors.push({
+            model: 'storage',
+            message: "Failed to update evidence analysis in storage"
+          });
         }
         
         // Return complete analysis results
         res.json(analysisResult);
-        
-      } catch (analysisError: any) {
-        console.error("Error analyzing file with AI:", analysisError);
-        
-        // Update the analysis with error information
+      } else {
+        // All analysis methods failed
         analysisResult.status = 'failed';
-        analysisResult.results.summary = "Analysis failed: " + (analysisError.message || "Unknown error");
-        analysisResult.results.fullText = `Error analyzing document: ${analysisError.message}\n` +
-                                         `Please try again later or contact support.`;
+        analysisResult.results.summary = "All analysis methods failed";
+        analysisResult.results.fullText = `We were unable to analyze this document using any of our AI services.\n\n` +
+                                         `Errors encountered:\n` +
+                                         analysisResult.errors.map(e => `- ${e.model}: ${e.message}`).join('\n');
         
         res.status(500).json({
           error: "Analysis failed",
-          message: analysisError.message,
+          message: "All analysis methods failed",
+          errors: analysisResult.errors,
           analysis: analysisResult
         });
       }
@@ -3072,7 +3417,8 @@ const subscription = await stripe.subscriptions.create({
       console.error("Error processing evidence file analysis request:", error);
       res.status(500).json({ 
         message: `Error analyzing evidence file: ${error.message}`,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        error
       });
     }
   });

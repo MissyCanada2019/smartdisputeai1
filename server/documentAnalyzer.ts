@@ -241,11 +241,12 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
         }
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error analyzing document:", error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred while analyzing the document";
       return res.status(500).json({ 
         success: false, 
-        error: error.message || "An error occurred while analyzing the document" 
+        error: errorMessage
       });
     }
   });
@@ -276,11 +277,12 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
         model
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error analyzing text:", error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred while analyzing the text";
       return res.status(500).json({ 
         success: false, 
-        error: error.message || "An error occurred while analyzing the text" 
+        error: errorMessage
       });
     }
   });
@@ -350,11 +352,12 @@ export default function registerDocumentAnalyzerRoutes(storage: IStorage): Route
         path: savedFilePath
       });
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error performing dual analysis:", error);
+      const errorMessage = error instanceof Error ? error.message : "An error occurred while performing dual analysis";
       return res.status(500).json({ 
         success: false, 
-        error: error.message || "An error occurred while performing dual analysis" 
+        error: errorMessage
       });
     }
   });
@@ -479,14 +482,19 @@ Format your response with clear section headings and prioritize actionable advic
         }
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in OpenAI document analysis:", error);
-    console.error("Error details:", error.message);
     
     // More detailed error logging
-    if (error.response) {
-      console.error("API response status:", error.response.status);
-      console.error("API response data:", error.response.data);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+      
+      // Check if it's an API error with response data
+      const apiError = error as any;
+      if (apiError.response) {
+        console.error("API response status:", apiError.response.status);
+        console.error("API response data:", apiError.response.data);
+      }
     }
     
     return "Failed to analyze document. Please try again with a different model or format.";
@@ -601,9 +609,12 @@ Format your response with clear section headings and prioritize actionable advic
         return "Claude analysis failed. Please try using OpenAI instead.";
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in Claude document analysis:", error);
-    console.error("Error details:", error.message);
+    
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+    }
     
     return "Failed to analyze document with Claude. Please try again with a different model or format.";
   }

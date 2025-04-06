@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Brain, Loader2, RefreshCw, FileCheck } from "lucide-react";
+import { FileText, Brain, Loader2, RefreshCw, FileCheck, AlertTriangle, Key } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/forms/FileUpload";
 import AIDocumentComparison from "./AIDocumentComparison";
-import { analyzeDocument, analyzeExistingDocument, AIAnalysisResponse } from "@/lib/aiService";
+import { analyzeDocument, analyzeExistingDocument, analyzeEvidenceFile, AIAnalysisResponse } from "@/lib/aiService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface DocumentAnalyzerProps {
@@ -94,7 +94,7 @@ export default function DocumentAnalyzer({
 
     try {
       // Use our AI service for analysis
-      const data = await analyzeDocument(file, selectedModel, userId.toString());
+      const data = await analyzeDocument(file, selectedModel);
       
       if (data.success) {
         if (selectedModel === 'dual') {
@@ -386,8 +386,31 @@ export default function DocumentAnalyzer({
 
         {result?.error && (
           <div className="mt-4 p-4 bg-red-50 rounded-md border border-red-200">
-            <h4 className="font-medium text-sm mb-2 text-red-700">Analysis Error:</h4>
+            <h4 className="font-medium text-sm mb-2 text-red-700 flex items-center gap-2">
+              {result.error.includes('API key') || result.error.includes('AI service unavailable') ? (
+                <>
+                  <Key className="h-4 w-4" />
+                  API Configuration Error:
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-4 w-4" />
+                  Analysis Error:
+                </>
+              )}
+            </h4>
             <p className="text-sm text-red-600">{result.error}</p>
+            
+            {(result.error.includes('API key') || result.error.includes('AI service unavailable')) && (
+              <div className="mt-3 text-xs bg-white p-3 rounded border border-red-100">
+                <p className="font-medium mb-1">Potential solutions:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>The AI service requires valid API credentials to function</li>
+                  <li>Please contact customer support to ensure API keys are properly configured</li>
+                  <li>Try selecting a different AI model from the dropdown</li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

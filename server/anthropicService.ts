@@ -3,10 +3,89 @@ import Anthropic from '@anthropic-ai/sdk';
 // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025. do not change this unless explicitly requested by the user
 const MODEL = 'claude-3-7-sonnet-20250219';
 
+// Check for API key
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.warn('WARNING: ANTHROPIC_API_KEY environment variable is not set. Claude AI services will not function.');
+}
+
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || 'placeholder_key_for_initialization',
 });
+
+/**
+ * Helper function to determine if an error is related to API credentials
+ * @param error The error object to check
+ * @returns True if the error is likely related to an API key issue
+ */
+function isApiKeyError(error: unknown): boolean {
+  if (!error) return false;
+  
+  // Convert error to string for checking
+  const errorStr = typeof error === 'string' 
+    ? error 
+    : error instanceof Error 
+      ? error.message
+      : JSON.stringify(error);
+  
+  // Check for common API key error patterns
+  const keyErrorPatterns = [
+    'api key',
+    'apikey', 
+    'authentication',
+    'auth',
+    'credential',
+    'unauthorized',
+    'permission denied',
+    'forbidden',
+    'invalid key',
+    'not authorized',
+    'expired key',
+    '401',
+    '403'
+  ];
+  
+  return keyErrorPatterns.some(pattern => 
+    errorStr.toLowerCase().includes(pattern.toLowerCase())
+  );
+}
+
+/**
+ * Format API-related errors with more user-friendly messages
+ * @param error The original error
+ * @returns A formatted error message
+ */
+function formatApiError(error: unknown): string {
+  // If it's an API key error, provide a specific message
+  if (isApiKeyError(error)) {
+    return 'Claude API authentication failed. Please check the ANTHROPIC_API_KEY environment variable.';
+  }
+  
+  // Extract error message based on type
+  const errorMsg = typeof error === 'string' 
+    ? error 
+    : error instanceof Error 
+      ? error.message
+      : 'Unknown Claude API error';
+      
+  // Check for rate limiting
+  if (errorMsg.toLowerCase().includes('rate limit') || 
+      errorMsg.toLowerCase().includes('too many requests') ||
+      errorMsg.includes('429')) {
+    return 'Claude API rate limit exceeded. Please try again later.';
+  }
+  
+  // Check for server errors
+  if (errorMsg.toLowerCase().includes('server error') || 
+      errorMsg.includes('500') || 
+      errorMsg.includes('502') || 
+      errorMsg.includes('503')) {
+    return 'Claude API service error. The service may be temporarily unavailable.';
+  }
+  
+  // For other errors, return the original message
+  return `Claude API error: ${errorMsg}`;
+}
 
 /**
  * Analyzes document text using Anthropic Claude
@@ -20,6 +99,11 @@ export async function analyzeDocumentWithClaude(
 ): Promise<string> {
   try {
     console.log(`Analyzing document with Claude (${text.length} characters)`);
+    
+    // Validate API key is available
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'placeholder_key_for_initialization') {
+      throw new Error('API key not configured. Please set the ANTHROPIC_API_KEY environment variable.');
+    }
     
     // Format the prompt for document analysis
     const prompt = `
@@ -53,9 +137,17 @@ Please provide a comprehensive analysis that covers the key aspects requested.
       .join('\n');
     
     return responseText;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error analyzing document with Claude:', error);
-    throw new Error(`Claude analysis failed: ${error.message || 'Unknown error'}`);
+    
+    // Use our error formatting helper functions
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For other errors, provide standard formatting
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Claude analysis failed: ${errorMessage}`);
   }
 }
 
@@ -71,6 +163,11 @@ export async function analyzeImageWithClaude(
 ): Promise<string> {
   try {
     console.log('Analyzing document image with Claude');
+    
+    // Validate API key is available
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'placeholder_key_for_initialization') {
+      throw new Error('API key not configured. Please set the ANTHROPIC_API_KEY environment variable.');
+    }
     
     // Format media type based on image encoding
     const mediaType = base64Image.startsWith('data:image/png') 
@@ -119,9 +216,17 @@ export async function analyzeImageWithClaude(
       .join('\n');
     
     return responseText;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error analyzing document image with Claude:', error);
-    throw new Error(`Claude image analysis failed: ${error.message || 'Unknown error'}`);
+    
+    // Use our error formatting helper functions
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For other errors, provide standard formatting
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Claude image analysis failed: ${errorMessage}`);
   }
 }
 
@@ -143,6 +248,11 @@ export async function generateLegalAnalysisWithClaude(
     const { caseType, jurisdiction, requestedAnalysis, caseBackground, evidence } = caseDetails;
     
     console.log(`Generating legal analysis with Claude for case type: ${caseType}`);
+    
+    // Validate API key is available
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'placeholder_key_for_initialization') {
+      throw new Error('API key not configured. Please set the ANTHROPIC_API_KEY environment variable.');
+    }
     
     // Format the prompt for legal analysis
     const prompt = `
@@ -184,9 +294,17 @@ Please provide a comprehensive legal analysis that includes:
       .join('\n');
     
     return responseText;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error generating legal analysis with Claude:', error);
-    throw new Error(`Claude legal analysis failed: ${error.message || 'Unknown error'}`);
+    
+    // Use our error formatting helper functions
+    if (isApiKeyError(error)) {
+      throw new Error(formatApiError(error));
+    }
+    
+    // For other errors, provide standard formatting
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Claude legal analysis failed: ${errorMessage}`);
   }
 }
 
