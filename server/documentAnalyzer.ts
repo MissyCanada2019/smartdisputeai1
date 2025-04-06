@@ -508,6 +508,16 @@ async function analyzeDocumentWithClaude(
   type: "text" | "image"
 ): Promise<string> {
   try {
+    // Validate API key before making the request
+    if (!process.env.ANTHROPIC_API_KEY) {
+      throw new Error("Missing Anthropic API key. Please set the ANTHROPIC_API_KEY environment variable.");
+    }
+    
+    // Validate input data
+    if (!content || content.trim() === '') {
+      throw new Error("No content provided for analysis. Please provide valid document content.");
+    }
+    
     // Enhanced prompt instructions with merit weight analysis and legal strategy
     const systemPrompt = `You are a legal document analyzer specialized in evaluating documents for complexity, case merit, and legal strategy. You have expertise in Canadian law, particularly in areas related to tenant rights, landlord disputes, and Children's Aid Society cases.
 
@@ -563,14 +573,28 @@ Format your response with clear section headings and prioritize actionable advic
           }
         }
         
-        return "Unable to generate analysis.";
+        throw new Error("Invalid response format from Claude API");
       } catch (textError) {
         console.error("Error in Claude text analysis:", textError);
-        return "Claude analysis failed. Please try using OpenAI instead.";
+        
+        // Check if it's an API key related error
+        if (textError instanceof Error && 
+            (textError.message.includes("API key") || 
+             textError.message.includes("authentication") || 
+             textError.message.includes("unauthorized"))) {
+          throw new Error("Claude API authentication failed. Please check your API key configuration.");
+        }
+        
+        throw new Error(`Claude text analysis failed: ${textError instanceof Error ? textError.message : "Unknown error"}`);
       }
     } else {
       // For images (PDF, DOC, DOCX), use vision capabilities
       try {
+        // Validate image data
+        if (type === "image" && (!content || content.length < 100)) {
+          throw new Error("Invalid image data provided. The image may be corrupted or empty.");
+        }
+        
         const response = await anthropic.messages.create({
           model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
           max_tokens: 2500,
@@ -603,10 +627,28 @@ Format your response with clear section headings and prioritize actionable advic
           }
         }
         
-        return "Unable to generate analysis.";
+        throw new Error("Invalid response format from Claude API");
       } catch (visionError) {
         console.error("Error in Claude vision analysis:", visionError);
-        return "Claude analysis failed. Please try using OpenAI instead.";
+        
+        // Check if it's an API key related error
+        if (visionError instanceof Error && 
+            (visionError.message.includes("API key") || 
+             visionError.message.includes("authentication") || 
+             visionError.message.includes("unauthorized"))) {
+          throw new Error("Claude API authentication failed. Please check your API key configuration.");
+        }
+        
+        // Check for image-specific errors
+        if (visionError instanceof Error && 
+            (visionError.message.includes("image") || 
+             visionError.message.includes("base64") || 
+             visionError.message.includes("media") ||
+             visionError.message.includes("invalid format"))) {
+          throw new Error("Claude couldn't process the image. The document may be in an unsupported format or corrupted.");
+        }
+        
+        throw new Error(`Claude vision analysis failed: ${visionError instanceof Error ? visionError.message : "Unknown error"}`);
       }
     }
   } catch (error: unknown) {
@@ -614,8 +656,18 @@ Format your response with clear section headings and prioritize actionable advic
     
     if (error instanceof Error) {
       console.error("Error details:", error.message);
+      
+      // Pass through formatted errors from the inner try-catch blocks
+      if (error.message.includes("Claude API authentication") ||
+          error.message.includes("Invalid image data") ||
+          error.message.includes("Missing Anthropic API key") ||
+          error.message.includes("No content provided") ||
+          error.message.includes("Claude couldn't process")) {
+        throw error;
+      }
     }
     
-    return "Failed to analyze document with Claude. Please try again with a different model or format.";
+    // For unhandled errors
+    throw new Error("Failed to analyze document with Claude. Please try again with a different model or format.");
   }
 }
