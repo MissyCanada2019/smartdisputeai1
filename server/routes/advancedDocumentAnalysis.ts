@@ -47,7 +47,7 @@ const upload = multer({
  * Registers advanced document analysis routes to the Express app
  * @param app Express application
  */
-export function registerAdvancedDocumentAnalysisRoutes(app: express.Express) {
+export default function registerAdvancedDocumentAnalysisRoutes(app: express.Express) {
   /**
    * Route for analyzing uploaded documents with advanced NLP
    * POST /api/advanced-analysis/upload

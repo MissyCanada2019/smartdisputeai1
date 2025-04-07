@@ -59,7 +59,6 @@ const loginSchema = z.object({
 // Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import { dirname } from "path";
 import registerDirectEvidenceRoutes from "./directEvidence";
 import registerDocumentAnalyzerRoutes from "./documentAnalyzer";
 // Import PayPal routes
@@ -4716,7 +4715,8 @@ const subscription = await stripe.subscriptions.create({
   app.use("/api/document-analyzer", registerDocumentAnalyzerRoutes(storage));
   
   // Register advanced document analysis routes
-  app.use("/api/advanced-analysis", advancedDocumentAnalysisRoutes);
+  // Register advanced document analysis routes
+  advancedDocumentAnalysisRoutes(app);
   
   // Register PayPal routes
   app.use("/api/paypal", paypalRoutes);
