@@ -4,8 +4,111 @@ from docx import Document
 import os
 import uuid
 import datetime
+from flask import jsonify
 
 app = Flask(__name__)
+
+def get_legal_act(dispute_type, province):
+    """Get the appropriate legal act based on dispute type and province"""
+    legal_acts = {
+        'landlord_tenant': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
+        'landlord_cease_desist': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
+        'credit': {
+            'ON': 'Consumer Reporting Act',
+            'BC': 'Business Practices and Consumer Protection Act',
+            'AB': 'Consumer Protection Act',
+            'QC': 'Act Respecting the Protection of Personal Information in the Private Sector',
+            'MB': 'Consumer Protection Act',
+            'SK': 'Consumer Protection and Business Practices Act',
+            'NS': 'Consumer Reporting Act',
+            'NB': 'Consumer Reporting Act',
+            'NL': 'Consumer Protection and Business Practices Act',
+            'PE': 'Consumer Reporting Act',
+            'NT': 'Consumer Protection Act',
+            'NU': 'Consumer Protection Act',
+            'YT': 'Consumer Protection Act'
+        },
+        'cas': {
+            'ON': 'Child, Youth and Family Services Act',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act (Loi sur la protection de la jeunesse)',
+            'MB': 'Child and Family Services Act',
+            'SK': 'Child and Family Services Act',
+            'NS': 'Children and Family Services Act',
+            'NB': 'Family Services Act',
+            'NL': 'Children, Youth and Families Act',
+            'PE': 'Child Protection Act',
+            'NT': 'Child and Family Services Act',
+            'NU': 'Child and Family Services Act',
+            'YT': 'Child and Family Services Act'
+        },
+        'cas_cease_desist': {
+            'ON': 'Child, Youth and Family Services Act',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act (Loi sur la protection de la jeunesse)',
+            'MB': 'Child and Family Services Act',
+            'SK': 'Child and Family Services Act',
+            'NS': 'Children and Family Services Act',
+            'NB': 'Family Services Act',
+            'NL': 'Children, Youth and Families Act',
+            'PE': 'Child Protection Act',
+            'NT': 'Child and Family Services Act',
+            'NU': 'Child and Family Services Act',
+            'YT': 'Child and Family Services Act'
+        }
+    }
+    
+    return legal_acts.get(dispute_type, {}).get(province, 'applicable provincial legislation')
+
+def get_agency_name(province):
+    """Get the appropriate child services agency name based on province code"""
+    agency_map = {
+        "ON": "Children's Aid Society",
+        "BC": "Ministry of Children and Family Development",
+        "AB": "Children's Services",
+        "QC": "Direction de la protection de la jeunesse (DPJ)",
+        "MB": "Child and Family Services",
+        "SK": "Ministry of Social Services",
+        "NS": "Department of Community Services",
+        "NB": "Department of Social Development",
+        "NL": "Department of Children, Seniors and Social Development",
+        "PE": "Child Protection Services",
+        "NT": "Child and Family Services",
+        "NU": "Department of Family Services",
+        "YT": "Family and Children's Services"
+    }
+    
+    return agency_map.get(province, "Child Protection Agency")
 UPLOAD_FOLDER = 'generated'
 TEMPLATE_FOLDER = 'templates/docs'
 
@@ -37,14 +140,55 @@ def generate():
     recipient_name = request.form.get('recipient_name', 'To Whom It May Concern')
     recipient_address = request.form.get('recipient_address', '')
     user_address = request.form.get('address', '')
-
+    
+    # Language preference for Quebec (default to English)
+    language = request.form.get('language', 'EN')
+    
+    # Get template filename based on dispute type and province
     filename = f"{dispute_type}_{province}.docx"
+    
+    # Special handling for Quebec French templates
+    if province == 'QC' and language == 'FR' and dispute_type == 'cas_cease_desist':
+        filename = f"{dispute_type}_{province}_FR.docx"
+    
     template_path = os.path.join(TEMPLATE_FOLDER, filename)
 
-    # Create a basic template if it doesn't exist yet
+    # Select appropriate template creation function based on dispute type
     if not os.path.exists(template_path):
-        create_basic_template(template_path)
+        if dispute_type == 'landlord_cease_desist':
+            try:
+                # Try to import and use the specialized template creator
+                from create_landlord_cease_desist_template import create_landlord_cease_desist_template
+                create_landlord_cease_desist_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating landlord cease & desist template: {e}")
+                create_basic_template(template_path)
+        elif dispute_type == 'cas_cease_desist':
+            try:
+                # Try to import and use the specialized template creator
+                from create_cas_cease_desist_template import create_cas_cease_desist_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_cease_desist_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS cease & desist template: {e}")
+                create_basic_template(template_path)
+        else:
+            # Fall back to basic template
+            create_basic_template(template_path)
 
+    # Get legal act based on dispute type and province
+    legal_act = get_legal_act(dispute_type, province)
+    
+    # Get agency name for CAS templates
+    agency_name = get_agency_name(province) if dispute_type.startswith('cas') else ''
+
+    # Get cease and desist specific fields if applicable
+    prior_incidents = request.form.get('prior_incidents', '')
+    requested_actions = request.form.get('requested_actions', '')
+    consequences = request.form.get('consequences', '')
+    
     doc = DocxTemplate(template_path)
     context = {
         'name': name,
@@ -54,6 +198,11 @@ def generate():
         'recipient_name': recipient_name,
         'recipient_address': recipient_address,
         'address': user_address,
+        'legal_act': legal_act,
+        'agency_name': agency_name,
+        'prior_incidents': prior_incidents,
+        'requested_actions': requested_actions, 
+        'consequences': consequences,
         'now': lambda: datetime.datetime.now().strftime("%B %d, %Y")
     }
 
@@ -68,15 +217,46 @@ def create_basic_template(path):
     """Create a basic template if none exists"""
     doc = Document()
     doc.add_heading('SmartDispute.ai Generated Document', 0)
+    
+    # Sender information
+    doc.add_heading('Sender Information', level=1)
     doc.add_paragraph('Name: {{ name }}')
     doc.add_paragraph('Email: {{ email }}')
+    if '{{ address }}':
+        doc.add_paragraph('Address: {{ address }}')
     doc.add_paragraph('Date: {{ now() }}')
+    
+    # Recipient information
+    doc.add_heading('Recipient Information', level=1)
+    doc.add_paragraph('To: {{ recipient_name }}')
+    if '{{ recipient_address }}':
+        doc.add_paragraph('{{ recipient_address }}')
+    
+    # Legal information
+    doc.add_heading('Legal References', level=1)
+    doc.add_paragraph('Province: {{ province }}')
+    if '{{ legal_act }}':
+        doc.add_paragraph('Applicable Legislation: {{ legal_act }}')
+    if '{{ agency_name }}':
+        doc.add_paragraph('Agency: {{ agency_name }}')
+    
+    # Issue description
     doc.add_heading('Issue Description', level=1)
     doc.add_paragraph('{{ description }}')
     
-    # Add province-specific section
-    doc.add_heading('Province Information', level=1)
-    doc.add_paragraph('Province: {{ province }}')
+    # Cease and desist specific sections
+    if path.find('cease_desist') != -1:
+        doc.add_heading('Prior Incidents', level=1)
+        doc.add_paragraph('{{ prior_incidents }}')
+        
+        doc.add_heading('Requested Actions', level=1)
+        doc.add_paragraph('{{ requested_actions }}')
+        
+        doc.add_heading('Consequences', level=1)
+        doc.add_paragraph('{{ consequences }}')
+    
+    # Signature
+    doc.add_paragraph('\n\nSincerely,\n\n\n\n{{ name }}')
     
     # Create directory if it doesn't exist
     os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -120,12 +120,44 @@
                 <textarea name="recipient_address" placeholder="Optional: Full address of recipient"></textarea>
             </div>
 
+            {% if province == 'QC' and dispute_type == 'cas_cease_desist' %}
+            <h3>Language Preference</h3>
+            <div class="form-group">
+                <label for="language">Preferred Language:</label>
+                <select name="language">
+                    <option value="EN">English</option>
+                    <option value="FR">French (Français)</option>
+                </select>
+                <p class="tip">For Quebec residents, you can choose to generate your letter in English or French.</p>
+            </div>
+            {% endif %}
+
             <h3>Dispute Details</h3>
             <div class="form-group">
                 <label for="description">Describe the issue in detail:</label>
                 <textarea name="description" required placeholder="Please provide as much detail as possible about your dispute. Include relevant dates, locations, and any supporting information."></textarea>
                 <p class="tip">Be specific and include all relevant facts, dates, amounts, and previous communication details.</p>
             </div>
+            
+            {% if dispute_type.endswith('cease_desist') %}
+            <div class="form-group">
+                <label for="prior_incidents">Describe any prior incidents or communications:</label>
+                <textarea name="prior_incidents" placeholder="Detail any previous incidents, communications, or harassment that led to this cease and desist request."></textarea>
+                <p class="tip">Include dates and specific examples of previous incidents or communications.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="requested_actions">Specific actions you want stopped:</label>
+                <textarea name="requested_actions" placeholder="Clearly list the specific actions or behaviors you want the recipient to stop."></textarea>
+                <p class="tip">Be clear and specific about what actions you want the recipient to cease immediately.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="consequences">Potential consequences if the behavior continues:</label>
+                <textarea name="consequences" placeholder="Outline potential legal actions you may take if the behavior doesn't stop."></textarea>
+                <p class="tip">This may include reporting to authorities, seeking legal counsel, or pursuing civil remedies.</p>
+            </div>
+            {% endif %}
 
             <button type="submit">Generate Letter</button>
         </form>
