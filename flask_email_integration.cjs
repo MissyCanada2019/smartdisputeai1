@@ -88,13 +88,13 @@ SmartDispute.ai Team
  */
 function startFlaskApp(options = {}) {
   const host = options.host || '0.0.0.0';
-  const port = options.port || 5000;
+  const port = options.port || 5050;
   const debug = options.debug !== false;
   
-  const flaskProcess = spawn('python', ['app.py'], {
+  const flaskProcess = spawn('python', ['app-simple.py'], {
     env: {
       ...process.env,
-      FLASK_APP: 'app.py',
+      FLASK_APP: 'app-simple.py',
       FLASK_ENV: debug ? 'development' : 'production',
       FLASK_DEBUG: debug ? '1' : '0',
       FLASK_HOST: host,

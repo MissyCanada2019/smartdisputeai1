@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "docx>=0.2.4",
     "docxtpl>=0.19.1",
     "flask>=3.1.0",
     "pypandoc>=1.15",

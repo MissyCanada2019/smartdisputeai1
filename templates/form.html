@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartDispute.ai - Dispute Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #3498db;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .tip {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Dispute Form for {{ province }} - {{ dispute_type.replace("_", " ").title() }}</h2>
+        
+        <form action="/generate" method="post">
+            <input type="hidden" name="province" value="{{ province }}">
+            <input type="hidden" name="dispute_type" value="{{ dispute_type }}">
+
+            <h3>Your Information</h3>
+            <div class="form-group">
+                <label for="name">Full Name:</label>
+                <input type="text" name="name" required>
+                <p class="tip">Enter your legal name as it should appear on official documents.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address:</label>
+                <input type="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Your Address:</label>
+                <textarea name="address" placeholder="Your current mailing address"></textarea>
+                <p class="tip">Enter your full mailing address as it should appear on the document.</p>
+            </div>
+
+            <h3>Recipient Information</h3>
+            <div class="form-group">
+                <label for="recipient_name">Recipient Name/Organization:</label>
+                <input type="text" name="recipient_name" placeholder="To Whom It May Concern">
+                <p class="tip">Enter the name of the person or organization you're addressing.</p>
+            </div>
+
+            <div class="form-group">
+                <label for="recipient_address">Recipient Address:</label>
+                <textarea name="recipient_address" placeholder="Optional: Full address of recipient"></textarea>
+            </div>
+
+            <h3>Dispute Details</h3>
+            <div class="form-group">
+                <label for="description">Describe the issue in detail:</label>
+                <textarea name="description" required placeholder="Please provide as much detail as possible about your dispute. Include relevant dates, locations, and any supporting information."></textarea>
+                <p class="tip">Be specific and include all relevant facts, dates, amounts, and previous communication details.</p>
+            </div>
+
+            <button type="submit">Generate Letter</button>
+        </form>
+        
+        <a href="/" class="back-link">← Back to Province Selection</a>
+    </div>
+</body>
+</html>
