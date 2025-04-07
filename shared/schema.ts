@@ -148,6 +148,12 @@ export const userDocuments = pgTable("user_documents", {
   paymentStatus: text("payment_status").notNull().default("pending"),
   documentPath: text("document_path"),
   supportingDocuments: text("supporting_documents"),
+  provinceId: integer("province_id").references(() => provinces.id),
+  issueId: integer("issue_id").references(() => legalIssues.id),
+  subIssueId: integer("sub_issue_id").references(() => subIssues.id),
+  documentType: text("document_type"), // e.g., "evidence", "form", "legal_notice", etc.
+  status: text("status").default("draft"), // e.g., "draft", "submitted", "approved", "rejected"
+  tags: text("tags").array(),
 });
 
 export const insertUserDocumentSchema = createInsertSchema(userDocuments).pick({
@@ -155,14 +161,67 @@ export const insertUserDocumentSchema = createInsertSchema(userDocuments).pick({
   templateId: true,
   documentData: true,
   finalPrice: true,
+  provinceId: true,
+  issueId: true,
+  subIssueId: true,
+  documentType: true,
+  status: true,
+  tags: true,
 });
 
-// Document folders for organizing user documents
+// Provinces for document organization
+export const provinces = pgTable("provinces", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  code: text("code").notNull().unique(),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const insertProvinceSchema = createInsertSchema(provinces).pick({
+  name: true,
+  code: true,
+  isActive: true,
+});
+
+// Legal issues (e.g., Housing, CAS, etc.)
+export const legalIssues = pgTable("legal_issues", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const insertLegalIssueSchema = createInsertSchema(legalIssues).pick({
+  name: true,
+  description: true,
+  isActive: true,
+});
+
+// Sub-issues (e.g., Eviction, File Disclosure, etc.)
+export const subIssues = pgTable("sub_issues", {
+  id: serial("id").primaryKey(),
+  issueId: integer("issue_id").notNull().references(() => legalIssues.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const insertSubIssueSchema = createInsertSchema(subIssues).pick({
+  issueId: true,
+  name: true,
+  description: true,
+  isActive: true,
+});
+
+// Document folders for organizing user documents - enhanced with province, issue, and sub-issue
 export const documentFolders = pgTable("document_folders", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   description: text("description"),
+  provinceId: integer("province_id").references(() => provinces.id),
+  issueId: integer("issue_id").references(() => legalIssues.id),
+  subIssueId: integer("sub_issue_id").references(() => subIssues.id),
   isDefault: boolean("is_default").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -172,6 +231,9 @@ export const insertDocumentFolderSchema = createInsertSchema(documentFolders).pi
   userId: true,
   name: true,
   description: true,
+  provinceId: true,
+  issueId: true,
+  subIssueId: true,
   isDefault: true
 });
 
@@ -819,8 +881,8 @@ export const insertReputationHistorySchema = createInsertSchema(reputationHistor
 export type InsertReputationHistory = z.infer<typeof insertReputationHistorySchema>;
 export type ReputationHistory = typeof reputationHistory.$inferSelect;
 
-// Canadian provinces
-export const provinces = [
+// Canadian provinces lookup list
+export const provincesLookup = [
   { value: "AB", label: "Alberta" },
   { value: "BC", label: "British Columbia" },
   { value: "MB", label: "Manitoba" },

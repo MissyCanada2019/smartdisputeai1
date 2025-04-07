@@ -28,6 +28,7 @@ import DocumentSelectionHierarchical from "@/pages/document-selection-hierarchic
 import TemplateCustomization from "@/pages/template-customization";
 import DocumentReview from "@/pages/document-review";
 import DocumentManagement from "@/pages/document-management";
+import DocumentsOrganized from "@/pages/documents-organized";
 import Payment from "@/pages/payment";
 import Success from "@/pages/success";
 import Subscribe from "@/pages/subscribe";
@@ -113,6 +114,11 @@ function Router() {
       <Route path="/document-management">
         <ProtectedRoute>
           <DocumentManagement />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/documents-organized">
+        <ProtectedRoute>
+          <DocumentsOrganized />
         </ProtectedRoute>
       </Route>
       <Route path="/payment">

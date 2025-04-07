@@ -169,12 +169,42 @@ export async function analyzeImageWithClaude(
       throw new Error('API key not configured. Please set the ANTHROPIC_API_KEY environment variable.');
     }
     
-    // Format media type based on image encoding
-    const mediaType = base64Image.startsWith('data:image/png') 
-      ? 'image/png' 
-      : base64Image.startsWith('data:image/jpeg') || base64Image.startsWith('data:image/jpg')
-      ? 'image/jpeg'
-      : 'image/jpeg'; // Default to JPEG if unknown
+    // Claude only supports specific media types for images
+    // We need to use one of these types: "image/jpeg" | "image/png" | "image/gif" | "image/webp"
+    let mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" = 'image/jpeg'; // Default to JPEG
+    
+    // Check for data URL format or file extension hints
+    if (base64Image.startsWith('data:')) {
+      if (base64Image.startsWith('data:image/png')) {
+        mediaType = 'image/png';
+      } else if (base64Image.startsWith('data:image/gif')) {
+        mediaType = 'image/gif';
+      } else if (base64Image.startsWith('data:image/webp')) {
+        mediaType = 'image/webp';
+      }
+      // If it's a PDF or other document format, we still use JPEG type but log the conversion
+      else if (base64Image.startsWith('data:application/pdf') || 
+               base64Image.startsWith('data:application/msword') || 
+               base64Image.startsWith('data:application/vnd.openxmlformats')) {
+        console.log('Document format detected, treating as image/jpeg for Claude compatibility');
+      }
+    } else if (query) {
+      // Try to detect from filename hints in the query
+      const queryLower = query.toLowerCase();
+      if (queryLower.includes('.png')) {
+        mediaType = 'image/png';
+      } else if (queryLower.includes('.gif')) {
+        mediaType = 'image/gif';
+      } else if (queryLower.includes('.webp')) {
+        mediaType = 'image/webp';
+      }
+      // For PDFs and other documents, we're still using image/jpeg
+      else if (queryLower.includes('.pdf') || queryLower.includes('.doc') || queryLower.includes('.docx')) {
+        console.log('Document format mentioned in query, treating as image/jpeg for Claude compatibility');
+      }
+    }
+    
+    console.log(`Using media type ${mediaType} for Claude image analysis`);
     
     // Clean the base64 string if it contains a data URL prefix
     const base64Data = base64Image.includes('base64,') 

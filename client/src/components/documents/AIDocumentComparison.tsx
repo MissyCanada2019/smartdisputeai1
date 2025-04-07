@@ -38,7 +38,7 @@ export default function AIDocumentComparison({
         <div>
           <h2 className="text-2xl font-bold">AI Analysis Comparison</h2>
           <p className="text-gray-600">
-            Compare analysis between OpenAI's GPT-4o and Anthropic's Claude
+            Compare analysis between our trusted AI models for comprehensive insights
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -49,22 +49,22 @@ export default function AIDocumentComparison({
 
       <Tabs defaultValue="openai" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="openai">GPT-4o Analysis</TabsTrigger>
-          <TabsTrigger value="claude">Claude Analysis</TabsTrigger>
-          <TabsTrigger value="comparison">Compare Models</TabsTrigger>
+          <TabsTrigger value="openai">Primary Analysis</TabsTrigger>
+          <TabsTrigger value="claude">Secondary Analysis</TabsTrigger>
+          <TabsTrigger value="comparison">Compare Analyses</TabsTrigger>
         </TabsList>
 
         <TabsContent value="openai">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                OpenAI GPT-4o Analysis
+                Primary AI Analysis
                 <Badge variant="outline" className="ml-2 bg-teal-50 text-teal-700 border-teal-200">
-                  Latest Model
+                  Premium
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Comprehensive legal document analysis powered by GPT-4o
+                Comprehensive legal document analysis by our primary AI engine
               </CardDescription>
             </CardHeader>
             <Separator />
@@ -77,10 +77,10 @@ export default function AIDocumentComparison({
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={() => setActiveTab("claude")}>
-                View Claude Analysis
+                View Secondary Analysis
               </Button>
               <Button variant="outline" onClick={() => setActiveTab("comparison")}>
-                Compare Models
+                Compare Analyses
               </Button>
             </CardFooter>
           </Card>
@@ -90,13 +90,13 @@ export default function AIDocumentComparison({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                Anthropic Claude Analysis
+                Secondary AI Analysis
                 <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
-                  Latest Model
+                  Premium
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Comprehensive legal document analysis powered by Claude-3-7-Sonnet
+                Alternative legal document analysis by our secondary AI engine
               </CardDescription>
             </CardHeader>
             <Separator />
@@ -109,10 +109,10 @@ export default function AIDocumentComparison({
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={() => setActiveTab("openai")}>
-                View GPT-4o Analysis
+                View Primary Analysis
               </Button>
               <Button variant="outline" onClick={() => setActiveTab("comparison")}>
-                Compare Models
+                Compare Analyses
               </Button>
             </CardFooter>
           </Card>
@@ -121,9 +121,9 @@ export default function AIDocumentComparison({
         <TabsContent value="comparison">
           <Card>
             <CardHeader>
-              <CardTitle>Model Comparison</CardTitle>
+              <CardTitle>Analysis Comparison</CardTitle>
               <CardDescription>
-                Compare analyses between GPT-4o and Claude side-by-side
+                Compare different AI perspectives side-by-side for deeper insights
               </CardDescription>
             </CardHeader>
             <Separator />
@@ -142,7 +142,7 @@ export default function AIDocumentComparison({
                       <div className="border rounded-lg p-4 bg-teal-50">
                         <h3 className="text-md font-semibold mb-2 text-teal-700 flex items-center">
                           <span className="inline-block w-3 h-3 bg-teal-600 rounded-full mr-2"></span>
-                          GPT-4o Analysis
+                          Primary Analysis
                         </h3>
                         <div className="h-[400px] overflow-y-auto prose prose-sm max-w-none p-2 bg-white rounded border">
                           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
@@ -154,7 +154,7 @@ export default function AIDocumentComparison({
                       <div className="border rounded-lg p-4 bg-purple-50">
                         <h3 className="text-md font-semibold mb-2 text-purple-700 flex items-center">
                           <span className="inline-block w-3 h-3 bg-purple-600 rounded-full mr-2"></span>
-                          Claude Analysis
+                          Secondary Analysis
                         </h3>
                         <div className="h-[400px] overflow-y-auto prose prose-sm max-w-none p-2 bg-white rounded border">
                           <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
@@ -207,11 +207,11 @@ export default function AIDocumentComparison({
                 <h3 className="text-lg font-semibold mb-3 text-blue-800">Expert Recommendation</h3>
                 <p className="text-sm text-gray-700">
                   For legal documents, we recommend reviewing both analyses as they may highlight different aspects of your case. 
-                  Claude tends to be more conservative in legal assessments, while GPT-4o may provide more creative strategic approaches.
+                  Our secondary analysis tends to be more conservative in legal assessments, while our primary analysis may provide more creative strategic approaches.
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
                   <div className="bg-white p-3 rounded border">
-                    <h4 className="font-medium text-teal-700 mb-1">GPT-4o Strengths:</h4>
+                    <h4 className="font-medium text-teal-700 mb-1">Primary AI Strengths:</h4>
                     <ul className="list-disc pl-4 text-gray-700 space-y-1">
                       <li>More creative problem-solving</li>
                       <li>Stronger at analyzing complex language</li>
@@ -219,7 +219,7 @@ export default function AIDocumentComparison({
                     </ul>
                   </div>
                   <div className="bg-white p-3 rounded border">
-                    <h4 className="font-medium text-purple-700 mb-1">Claude Strengths:</h4>
+                    <h4 className="font-medium text-purple-700 mb-1">Secondary AI Strengths:</h4>
                     <ul className="list-disc pl-4 text-gray-700 space-y-1">
                       <li>More thorough legal assessment</li>
                       <li>Better at identifying risks and weaknesses</li>
@@ -231,10 +231,10 @@ export default function AIDocumentComparison({
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={() => setActiveTab("openai")}>
-                View GPT-4o Analysis
+                View Primary Analysis
               </Button>
               <Button variant="outline" onClick={() => setActiveTab("claude")}>
-                View Claude Analysis
+                View Secondary Analysis
               </Button>
             </CardFooter>
           </Card>

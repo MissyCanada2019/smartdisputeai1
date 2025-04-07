@@ -595,6 +595,32 @@ Format your response with clear section headings and prioritize actionable advic
           throw new Error("Invalid image data provided. The image may be corrupted or empty.");
         }
         
+        // Ensure we have proper base64 format without headers (Claude requires raw base64)
+        let base64Data = content;
+        if (content.includes('base64,')) {
+          base64Data = content.split('base64,')[1];
+        }
+        
+        // Determine the media type - Claude only accepts specific image formats
+        // Only image/jpeg, image/png, image/gif, or image/webp are supported
+        let mediaType: "image/jpeg" | "image/png" | "image/gif" | "image/webp" = 'image/jpeg'; // Default
+        if (filename) {
+          const ext = filename.toLowerCase();
+          if (ext.endsWith('.png')) {
+            mediaType = 'image/png';
+          } else if (ext.endsWith('.gif')) {
+            mediaType = 'image/gif';
+          } else if (ext.endsWith('.webp')) {
+            mediaType = 'image/webp';
+          } 
+          // For PDFs and DOCs, we'll use JPEG but add a special note
+          else if (ext.endsWith('.pdf') || ext.endsWith('.doc') || ext.endsWith('.docx')) {
+            console.log(`Warning: ${ext} format not directly supported by Claude. Using image/jpeg and treating as image.`);
+          }
+        }
+        
+        console.log(`Using media type ${mediaType} for Claude analysis of ${filename || 'document'}`);
+        
         const response = await anthropic.messages.create({
           model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
           max_tokens: 2500,
@@ -611,8 +637,8 @@ Format your response with clear section headings and prioritize actionable advic
                   type: "image",
                   source: {
                     type: "base64",
-                    media_type: "image/jpeg",
-                    data: content
+                    media_type: mediaType,
+                    data: base64Data
                   }
                 }
               ]
@@ -656,6 +682,14 @@ Format your response with clear section headings and prioritize actionable advic
     
     if (error instanceof Error) {
       console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Add more detailed logging for debugging
+      if (type === "image") {
+        console.log("Content length:", content ? content.length : 0);
+        console.log("Is base64 format:", content && content.includes('base64,'));
+        if (filename) console.log("Filename:", filename);
+      }
       
       // Pass through formatted errors from the inner try-catch blocks
       if (error.message.includes("Claude API authentication") ||
@@ -664,6 +698,19 @@ Format your response with clear section headings and prioritize actionable advic
           error.message.includes("No content provided") ||
           error.message.includes("Claude couldn't process")) {
         throw error;
+      }
+      
+      // Check for common API errors
+      if (error.message.includes("400") || error.message.includes("Bad Request")) {
+        throw new Error("Claude API rejected the request. The input may be too large or in an unsupported format.");
+      }
+      
+      if (error.message.includes("413") || error.message.includes("Payload Too Large")) {
+        throw new Error("The document is too large for Claude to process. Try splitting it into smaller sections.");
+      }
+      
+      if (error.message.includes("429") || error.message.includes("Too Many Requests")) {
+        throw new Error("Claude API rate limit exceeded. Please try again in a few minutes.");
       }
     }
     
