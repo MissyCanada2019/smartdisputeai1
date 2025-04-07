@@ -1,0 +1,118 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Document from SmartDispute.ai</mj-title>
+    <mj-font name="Roboto" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" />
+    <mj-attributes>
+      <mj-all font-family="Roboto, Arial, sans-serif" />
+      <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px" />
+      <mj-section padding="0px" />
+    </mj-attributes>
+    <mj-style>
+      .link-nostyle { color: inherit; text-decoration: none }
+      .footer-link { color: #6b7280; text-decoration: underline }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <!-- Header -->
+    <mj-section padding="20px 0">
+      <mj-column width="100%">
+        <mj-image src="{{siteUrl}}/assets/logo-email.png" alt="SmartDispute.ai" width="180px" padding="20px" href="{{siteUrl}}" />
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" border-radius="8px" padding="0">
+      <mj-column width="100%">
+        <!-- Header Banner -->
+        <mj-image src="{{siteUrl}}/assets/email-header.jpg" alt="Document Delivered" width="600px" padding="0" />
+        
+        <!-- Content -->
+        <mj-text padding="30px 40px 0">
+          <h1 style="font-weight: 700; font-size: 24px; line-height: 32px; margin: 0 0 20px;">Your {{documentType}} is Ready</h1>
+          <p>Hello {{name}},</p>
+          <p>Your {{documentType}} has been successfully generated and is attached to this email. This document was created based on the information you provided to SmartDispute.ai on {{documentDate}}.</p>
+        </mj-text>
+        
+        <!-- Document Details -->
+        <mj-section padding="10px 40px">
+          <mj-column background-color="#f9fafb" border-radius="8px" padding="15px">
+            <mj-text font-size="14px" line-height="20px">
+              <strong>Document:</strong> {{documentType}}<br />
+              <strong>Date Created:</strong> {{documentDate}}<br />
+              <strong>Reference ID:</strong> {{documentId}}
+            </mj-text>
+          </mj-column>
+        </mj-section>
+        
+        <!-- Next Steps -->
+        <mj-text padding="20px 40px 0">
+          <h2 style="font-weight: 600; font-size: 18px; margin: 0 0 15px;">Next Steps:</h2>
+          <ol style="padding-left: 20px; margin: 0 0 20px;">
+            <li style="margin-bottom: 10px">Review the attached document carefully</li>
+            <li style="margin-bottom: 10px">Make any necessary edits based on your specific situation</li>
+            <li style="margin-bottom: 10px">Follow the instructions in the document for submission or delivery</li>
+            <li style="margin-bottom: 0">Keep a copy for your records</li>
+          </ol>
+        </mj-text>
+        
+        <!-- CTA -->
+        <mj-button background-color="#4f46e5" color="white" border-radius="4px" font-weight="600" font-size="16px" padding="20px 40px 30px" href="{{dashboardLink}}">
+          Go to Your Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Help Section -->
+    <mj-section background-color="#ffffff" border-radius="8px" margin-top="20px" padding="0">
+      <mj-column width="100%">
+        <mj-text padding="30px 40px 0">
+          <h2 style="font-weight: 600; font-size: 18px; margin: 0 0 15px;">Need Help?</h2>
+          <p>If you have questions about this document or need assistance, we're here to help:</p>
+        </mj-text>
+        
+        <mj-section padding="0 40px 30px">
+          <mj-column width="50%" padding="0">
+            <mj-button background-color="#f3f4f6" color="#4f46e5" border-radius="4px" font-weight="600" font-size="14px" padding="0" href="{{helpLink}}">
+              Get Document Help
+            </mj-button>
+          </mj-column>
+          <mj-column width="50%" padding="0">
+            <mj-button background-color="#f3f4f6" color="#4f46e5" border-radius="4px" font-weight="600" font-size="14px" padding="0" href="{{siteUrl}}/contact">
+              Contact Support
+            </mj-button>
+          </mj-column>
+        </mj-section>
+      </mj-column>
+    </mj-section>
+
+    <!-- Disclaimer -->
+    <mj-section background-color="#ffffff" border-radius="8px" margin-top="20px" padding="0">
+      <mj-column width="100%">
+        <mj-text padding="20px 40px" font-size="12px" color="#6b7280" line-height="18px">
+          <p><strong>Legal Disclaimer:</strong> The document provided is generated based on the information you supplied and is intended as a general guide only. SmartDispute.ai is not a law firm and does not provide legal advice. While we strive to provide accurate and up-to-date information, we recommend consulting with a qualified legal professional for advice specific to your situation.</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="30px 0">
+      <mj-column width="100%">
+        <mj-text align="center" font-size="12px" color="#6b7280" line-height="16px" padding="0 20px">
+          <p style="margin: 0 0 10px;">© {{currentYear}} SmartDispute.ai. All rights reserved.</p>
+          <p style="margin: 0 0 10px;">
+            <a href="{{siteUrl}}/terms" class="footer-link">Terms of Service</a> | 
+            <a href="{{siteUrl}}/privacy" class="footer-link">Privacy Policy</a> | 
+            <a href="{{siteUrl}}/unsubscribe?id={{userId}}" class="footer-link">Unsubscribe</a>
+          </p>
+          <p style="margin: 0;">SmartDispute.ai | 123 Legal Street, Toronto, ON M5V 2K7, Canada</p>
+        </mj-text>
+        
+        <!-- Tracking Pixel -->
+        {{#if trackingPixel}}
+        <mj-image src="{{trackingPixel}}" width="1px" height="1px" padding="0" />
+        {{/if}}
+      </mj-column>
+    </mj-section>
+    
+  </mj-body>
+</mjml>

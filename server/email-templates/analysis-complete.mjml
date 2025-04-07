@@ -1,0 +1,160 @@
+<mjml>
+  <mj-head>
+    <mj-title>Document Analysis Complete - SmartDispute.ai</mj-title>
+    <mj-font name="Roboto" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700" />
+    <mj-attributes>
+      <mj-all font-family="Roboto, Arial, sans-serif" />
+      <mj-text font-weight="400" font-size="16px" color="#000000" line-height="24px" />
+      <mj-section padding="0px" />
+    </mj-attributes>
+    <mj-style>
+      .link-nostyle { color: inherit; text-decoration: none }
+      .footer-link { color: #6b7280; text-decoration: underline }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f3f4f6">
+    <!-- Header -->
+    <mj-section padding="20px 0">
+      <mj-column width="100%">
+        <mj-image src="{{siteUrl}}/assets/logo-email.png" alt="SmartDispute.ai" width="180px" padding="20px" href="{{siteUrl}}" />
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content -->
+    <mj-section background-color="#ffffff" border-radius="8px" padding="0">
+      <mj-column width="100%">
+        <!-- Header Banner -->
+        <mj-image src="{{siteUrl}}/assets/email-analysis.jpg" alt="Analysis Complete" width="600px" padding="0" />
+        
+        <!-- Content -->
+        <mj-text padding="30px 40px 0">
+          <h1 style="font-weight: 700; font-size: 24px; line-height: 32px; margin: 0 0 20px;">Your Document Analysis is Complete</h1>
+          <p>Hello {{name}},</p>
+          <p>Good news! Our AI-powered system has completed the analysis of your document "{{documentName}}". We've extracted key information, identified important deadlines, and provided specific recommendations based on your situation.</p>
+        </mj-text>
+        
+        <!-- Analysis Details -->
+        <mj-section padding="10px 40px">
+          <mj-column background-color="#f9fafb" border-radius="8px" padding="15px">
+            <mj-text font-size="14px" line-height="20px">
+              <strong>Document:</strong> {{documentName}}<br />
+              <strong>Analysis Date:</strong> {{analysisDate}}<br />
+              <strong>Analysis ID:</strong> {{analysisId}}
+            </mj-text>
+          </mj-column>
+        </mj-section>
+        
+        <!-- CTA -->
+        <mj-button background-color="#4f46e5" color="white" border-radius="4px" font-weight="600" font-size="16px" padding="20px 40px" href="{{analysisLink}}">
+          View Full Analysis
+        </mj-button>
+        
+        <!-- Features -->
+        <mj-text padding="10px 40px 0">
+          <h2 style="font-weight: 600; font-size: 18px; margin: 0 0 15px;">What's Included in Your Analysis:</h2>
+        </mj-text>
+        
+        <mj-section padding="0 40px 20px">
+          <mj-column padding="0">
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">✓</div>
+                <div><strong>Key Information Extraction</strong> - Important dates, entities, and legal terms</div>
+              </div>
+            </mj-text>
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">✓</div>
+                <div><strong>Document Complexity Score</strong> - How difficult your document is to understand</div>
+              </div>
+            </mj-text>
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">✓</div>
+                <div><strong>Deadline Tracking</strong> - Important time-sensitive items you need to address</div>
+              </div>
+            </mj-text>
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">✓</div>
+                <div><strong>Personalized Recommendations</strong> - Next steps tailored to your situation</div>
+              </div>
+            </mj-text>
+          </mj-column>
+        </mj-section>
+        
+        <!-- Secondary CTA -->
+        <mj-button background-color="#f3f4f6" color="#4f46e5" border-radius="4px" font-weight="600" font-size="16px" padding="0 40px 30px" href="{{dashboardLink}}">
+          Go to Your Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Upgrade Section (if applicable) -->
+    <mj-section background-color="#ffffff" border-radius="8px" margin-top="20px" padding="0">
+      <mj-column width="100%">
+        <mj-text padding="30px 40px 0">
+          <h2 style="font-weight: 600; font-size: 18px; margin: 0 0 15px;">Need More Advanced Features?</h2>
+          <p>Upgrade to our Premium Plan to access advanced analysis features, including:</p>
+        </mj-text>
+        
+        <mj-section padding="0 40px 20px">
+          <mj-column padding="0">
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">→</div>
+                <div><strong>Jurisdiction-Specific Legal Insights</strong> - Get province-specific legal interpretations</div>
+              </div>
+            </mj-text>
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">→</div>
+                <div><strong>Similar Case Examples</strong> - See how similar situations have been resolved</div>
+              </div>
+            </mj-text>
+            <mj-text font-size="15px" padding="0 0 10px">
+              <div style="display: flex; align-items: flex-start;">
+                <div style="min-width: 24px; margin-right: 10px;">→</div>
+                <div><strong>Priority Support</strong> - Get faster responses from our legal experts</div>
+              </div>
+            </mj-text>
+          </mj-column>
+        </mj-section>
+        
+        <mj-button background-color="#059669" color="white" border-radius="4px" font-weight="600" font-size="16px" padding="0 40px 30px" href="{{siteUrl}}/upgrade">
+          Upgrade to Premium
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Disclaimer -->
+    <mj-section background-color="#ffffff" border-radius="8px" margin-top="20px" padding="0">
+      <mj-column width="100%">
+        <mj-text padding="20px 40px" font-size="12px" color="#6b7280" line-height="18px">
+          <p><strong>Legal Disclaimer:</strong> The analysis provided is generated by our AI systems based on the document you uploaded and is intended as a general guide only. SmartDispute.ai is not a law firm and does not provide legal advice. While we strive to provide accurate and up-to-date information, we recommend consulting with a qualified legal professional for advice specific to your situation.</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section padding="30px 0">
+      <mj-column width="100%">
+        <mj-text align="center" font-size="12px" color="#6b7280" line-height="16px" padding="0 20px">
+          <p style="margin: 0 0 10px;">© {{currentYear}} SmartDispute.ai. All rights reserved.</p>
+          <p style="margin: 0 0 10px;">
+            <a href="{{siteUrl}}/terms" class="footer-link">Terms of Service</a> | 
+            <a href="{{siteUrl}}/privacy" class="footer-link">Privacy Policy</a> | 
+            <a href="{{siteUrl}}/unsubscribe?id={{userId}}" class="footer-link">Unsubscribe</a>
+          </p>
+          <p style="margin: 0;">SmartDispute.ai | 123 Legal Street, Toronto, ON M5V 2K7, Canada</p>
+        </mj-text>
+        
+        <!-- Tracking Pixel -->
+        {{#if trackingPixel}}
+        <mj-image src="{{trackingPixel}}" width="1px" height="1px" padding="0" />
+        {{/if}}
+      </mj-column>
+    </mj-section>
+    
+  </mj-body>
+</mjml>
