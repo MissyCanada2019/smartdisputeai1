@@ -1,0 +1,102 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Legal Dispute Letter</mj-title>
+    <mj-font name="Roboto" href="https://fonts.googleapis.com/css?family=Roboto:300,500"></mj-font>
+    <mj-attributes>
+      <mj-all font-family="Roboto, Arial, sans-serif"></mj-all>
+      <mj-text font-weight="300" font-size="16px" color="#616161" line-height="24px"></mj-text>
+      <mj-section padding="0px"></mj-section>
+    </mj-attributes>
+    <mj-style>
+      .main-section { 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); 
+      }
+      .link-nostyle { color: inherit; text-decoration: none; }
+      .footer-link { color: #546e7a; text-decoration: underline; }
+      .blue-text { color: #1976d2; }
+      .header-top { background-color: #2a4d69; }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f5f5f5">
+    <!-- Header Section -->
+    <mj-section background-color="#2a4d69" padding="20px 0">
+      <mj-column>
+        <mj-text align="center" font-size="28px" color="#ffffff" font-weight="500">
+          SmartDispute.ai
+        </mj-text>
+        <mj-text align="center" font-size="16px" color="#ffffff">
+          AI-Powered Legal Assistance
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Main Content Section -->
+    <mj-section css-class="main-section" background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="20px" font-weight="500" color="#263238">
+          Your Legal Dispute Letter
+        </mj-text>
+        
+        <mj-divider border-color="#eaeaea" border-width="1px" padding="10px 0" />
+        
+        <mj-text>
+          Hello {{recipientName}},
+        </mj-text>
+        
+        <mj-text>
+          Your dispute letter has been processed and is attached to this email. This document has been created based on the information you provided in our system.
+        </mj-text>
+
+        {{#if customMessage}}
+        <mj-text>
+          {{customMessage}}
+        </mj-text>
+        {{/if}}
+        
+        <mj-text font-weight="500">
+          Next Steps:
+        </mj-text>
+        
+        <mj-text>
+          1. Review the attached document carefully
+          2. Print, sign, and date the document where indicated
+          3. Keep a copy for your records
+          4. Send the document to the appropriate recipient(s)
+        </mj-text>
+        
+        <mj-text>
+          If you need to modify the document or have any questions, please log in to your account or contact our support team.
+        </mj-text>
+
+        <mj-button background-color="#2a4d69" color="white" href="{{buttonUrl}}" border-radius="4px">
+          View Your Account
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Reference ID Section -->
+    <mj-section background-color="#eceff1" padding="10px">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#546e7a">
+          Reference ID: {{trackingId}} | Date: {{date}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer Section -->
+    <mj-section padding="20px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#9e9e9e">
+          &copy; {{year}} SmartDispute.ai | All Rights Reserved
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9e9e9e">
+          This email was sent to you because you used our services.
+        </mj-text>
+        <mj-text align="center" font-size="12px" color="#9e9e9e">
+          <a href="{{buttonUrl}}/privacy-policy" class="footer-link">Privacy Policy</a> | 
+          <a href="{{buttonUrl}}/terms-of-service" class="footer-link">Terms of Service</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
