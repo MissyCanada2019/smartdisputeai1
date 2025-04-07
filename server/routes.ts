@@ -64,6 +64,8 @@ import registerDirectEvidenceRoutes from "./directEvidence";
 import registerDocumentAnalyzerRoutes from "./documentAnalyzer";
 // Import PayPal routes
 import paypalRoutes from "./paypalRoutes";
+// Import advanced document analysis routes
+import advancedDocumentAnalysisRoutes from "./routes/advancedDocumentAnalysis";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4712,6 +4714,9 @@ const subscription = await stripe.subscriptions.create({
   
   // Register document analyzer routes
   app.use("/api/document-analyzer", registerDocumentAnalyzerRoutes(storage));
+  
+  // Register advanced document analysis routes
+  app.use("/api/advanced-analysis", advancedDocumentAnalysisRoutes);
   
   // Register PayPal routes
   app.use("/api/paypal", paypalRoutes);

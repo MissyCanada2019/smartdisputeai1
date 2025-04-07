@@ -1,20 +1,20 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { extractJsonFromText, extractTextFromContentBlock, validateTextInput } from '../utils/ai-content-helpers';
+import OpenAI from 'openai';
+import { extractJsonFromText, validateTextInput } from '../utils/ai-content-helpers';
 import { DocumentAnalysisResult } from './advancedNlpService';
 
-// Initialize Anthropic client
-const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+// Initialize OpenAI client
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 }) : null;
 
-// The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025. Do not change this unless explicitly requested by the user
-const DEFAULT_MODEL = 'claude-3-7-sonnet-20250219';
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
+const DEFAULT_MODEL = 'gpt-4o';
 
 /**
  * Interface for analysis options
  */
 export interface AnalysisOptions {
-  systemPrompt?: string;
+  systemInstruction?: string;
   temperature?: number;
   maxTokens?: number;
   responseFormat?: 'text' | 'json';
@@ -22,17 +22,17 @@ export interface AnalysisOptions {
 }
 
 /**
- * Generic text analysis function for Claude
+ * Generic text analysis function using OpenAI
  * @param text Text content to analyze
  * @param options Analysis options
- * @returns Analyzed text as string
+ * @returns Analyzed text
  */
 export async function analyzeText(
   text: string,
   options: AnalysisOptions = {}
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
+  if (!openai) {
+    throw new Error('OpenAI API key not configured');
   }
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -40,7 +40,7 @@ export async function analyzeText(
   }
 
   const {
-    systemPrompt,
+    systemInstruction,
     temperature = 0.3,
     maxTokens = 1000,
     responseFormat = 'text',
@@ -48,32 +48,43 @@ export async function analyzeText(
   } = options;
 
   try {
-    const messages = [
-      {
-        role: 'user',
-        content: text
-      }
-    ];
-
-    const response = await anthropic.messages.create({
-      model,
-      max_tokens: maxTokens,
-      temperature,
-      system: systemPrompt,
-      messages: messages
+    const messages = [];
+    
+    if (systemInstruction) {
+      messages.push({
+        role: 'system',
+        content: systemInstruction
+      });
+    }
+    
+    messages.push({
+      role: 'user',
+      content: text
     });
 
-    // Extract text content from response
-    const content = response.content;
-    return extractTextFromContentBlock(content);
+    const requestOptions: any = {
+      model,
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+    };
+
+    // Add JSON response format if specified
+    if (responseFormat === 'json') {
+      requestOptions.response_format = { type: 'json_object' };
+    }
+
+    const response = await openai.chat.completions.create(requestOptions);
+
+    return response.choices[0].message.content || '';
   } catch (error: any) {
-    console.error('Anthropic API error:', error);
-    throw new Error(`Anthropic analysis failed: ${error.message}`);
+    console.error('OpenAI API error:', error);
+    throw new Error(`OpenAI analysis failed: ${error.message}`);
   }
 }
 
 /**
- * Analyzes a document with Claude
+ * Analyzes a document with OpenAI
  * @param text The document text to analyze
  * @param documentType Optional document type for more targeted analysis
  * @param jurisdiction Optional jurisdiction for more targeted analysis
@@ -84,8 +95,8 @@ export async function analyzeDocument(
   documentType: string | null = null,
   jurisdiction: string = 'Ontario'
 ): Promise<DocumentAnalysisResult> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
+  if (!openai) {
+    throw new Error('OpenAI API key not configured');
   }
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -93,7 +104,7 @@ export async function analyzeDocument(
   }
 
   // Build system instruction with context
-  let systemPrompt = `
+  let systemInstruction = `
 You are a specialized legal document analyzer focusing on Canadian legal documents. Your task is to analyze the provided document text and extract key information in a structured format.
 
 Your analysis should be detailed and specific to Canadian legal systems, with particular attention to provincial jurisdictions. Consider the nature of the document and its implications for the party who likely needs assistance.
@@ -112,11 +123,11 @@ Your analysis should be thorough but focused on what would be most important for
 `;
   
   if (documentType) {
-    systemPrompt += `\nThis document appears to be a ${documentType}. Please analyze it with this context in mind.`;
+    systemInstruction += `\nThis document appears to be a ${documentType}. Please analyze it with this context in mind.`;
   }
   
   if (jurisdiction) {
-    systemPrompt += `\nThis document is from ${jurisdiction}, Canada. Please consider relevant provincial laws in your analysis.`;
+    systemInstruction += `\nThis document is from ${jurisdiction}, Canada. Please consider relevant provincial laws in your analysis.`;
   }
 
   try {
@@ -152,21 +163,28 @@ Your analysis should be thorough but focused on what would be most important for
 Here is the document text:
 ${processedText}`;
 
-    const response = await anthropic.messages.create({
+    const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
-      max_tokens: 2048,
-      temperature: 0.3,
-      system: systemPrompt,
       messages: [
+        { role: 'system', content: systemInstruction },
         { role: 'user', content: userMessage }
-      ]
+      ],
+      response_format: { type: 'json_object' },
+      temperature: 0.3,
+      max_tokens: 2048
     });
 
-    const contentText = extractTextFromContentBlock(response.content);
-    const jsonResponse = extractJsonFromText(contentText);
+    const contentText = response.choices[0].message.content || '';
+    let jsonResponse;
     
-    if (!jsonResponse) {
-      throw new Error('Failed to extract structured data from Anthropic response');
+    try {
+      jsonResponse = JSON.parse(contentText);
+    } catch (parseError) {
+      jsonResponse = extractJsonFromText(contentText);
+      
+      if (!jsonResponse) {
+        throw new Error('Failed to extract structured data from OpenAI response');
+      }
     }
     
     // Construct a structured document analysis result
@@ -188,13 +206,13 @@ ${processedText}`;
     
     return result;
   } catch (error: any) {
-    console.error('Anthropic document analysis error:', error);
-    throw new Error(`Anthropic document analysis failed: ${error.message}`);
+    console.error('OpenAI document analysis error:', error);
+    throw new Error(`OpenAI document analysis failed: ${error.message}`);
   }
 }
 
 /**
- * Analyze an image with Claude
+ * Analyze an image using OpenAI Vision
  * @param base64Image Base64-encoded image data
  * @param prompt Text prompt for the analysis
  * @returns Analysis text
@@ -203,8 +221,8 @@ export async function analyzeImage(
   base64Image: string,
   prompt: string = 'Analyze this image and describe what you see in detail.'
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
+  if (!openai) {
+    throw new Error('OpenAI API key not configured');
   }
 
   if (!base64Image) {
@@ -212,34 +230,29 @@ export async function analyzeImage(
   }
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
-      max_tokens: 1024,
       messages: [
         {
           role: 'user',
           content: [
+            { type: 'text', text: prompt },
             {
-              type: 'text',
-              text: prompt
-            },
-            {
-              type: 'image',
-              source: {
-                type: 'base64',
-                media_type: 'image/jpeg',
-                data: base64Image
+              type: 'image_url',
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`
               }
             }
           ]
         }
-      ]
+      ],
+      max_tokens: 1024
     });
 
-    return extractTextFromContentBlock(response.content);
+    return response.choices[0].message.content || '';
   } catch (error: any) {
-    console.error('Anthropic image analysis error:', error);
-    throw new Error(`Anthropic image analysis failed: ${error.message}`);
+    console.error('OpenAI image analysis error:', error);
+    throw new Error(`OpenAI image analysis failed: ${error.message}`);
   }
 }
 
@@ -257,15 +270,15 @@ export async function analyzeLegalSituation(
   documentType?: string,
   jurisdiction: string = 'Ontario'
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
+  if (!openai) {
+    throw new Error('OpenAI API key not configured');
   }
 
   if (!userDescription || userDescription.trim().length === 0) {
     throw new Error('User description is required');
   }
 
-  const systemPrompt = `
+  const systemInstruction = `
 You are a legal assistance AI specialized in Canadian law, particularly for ${jurisdiction}.
 Your goal is to provide helpful information and guidance to individuals who may not be able to afford legal representation.
 
@@ -286,12 +299,10 @@ Be empathetic, clear, and practical in your guidance.
 `;
 
   try {
-    const messages = [];
-    
-    messages.push({
-      role: 'user',
-      content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}`
-    });
+    const messages = [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}` }
+    ];
 
     // Add document context if provided
     if (documentText && documentText.trim().length > 0) {
@@ -301,17 +312,16 @@ Be empathetic, clear, and practical in your guidance.
       });
     }
 
-    const response = await anthropic.messages.create({
+    const response = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
-      max_tokens: 2048,
+      messages,
       temperature: 0.4,
-      system: systemPrompt,
-      messages
+      max_tokens: 2048
     });
 
-    return extractTextFromContentBlock(response.content);
+    return response.choices[0].message.content || '';
   } catch (error: any) {
-    console.error('Anthropic legal situation analysis error:', error);
-    throw new Error(`Anthropic legal analysis failed: ${error.message}`);
+    console.error('OpenAI legal situation analysis error:', error);
+    throw new Error(`OpenAI legal analysis failed: ${error.message}`);
   }
 }
