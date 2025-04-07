@@ -128,7 +128,7 @@
                 <textarea name="recipient_address" placeholder="Optional: Full address of recipient"></textarea>
             </div>
 
-            {% if province == 'QC' and (dispute_type == 'cas_cease_desist' or dispute_type == 'cas_worker_reassignment') %}
+            {% if province == 'QC' and (dispute_type.startswith('cas_') or dispute_type == 'sublease_agreement') %}
             <h3>Language Preference</h3>
             <div class="form-group">
                 <label for="language">Preferred Language:</label>
@@ -184,6 +184,201 @@
                 <label for="previous_attempts">Previous attempts to resolve the issue:</label>
                 <textarea name="previous_attempts" placeholder="Describe any prior attempts to address these concerns with the agency or worker."></textarea>
                 <p class="tip">Include dates of any emails, phone calls, or meetings where you tried to resolve issues.</p>
+            </div>
+            
+            <h3>Payment Information</h3>
+            <div class="info-box">
+                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method">
+                    <option value="paypal">PayPal</option>
+                    <option value="credit_card">Credit Card</option>
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'cas_answer_plan' %}
+            <div class="form-group">
+                <label for="case_number">CAS/Child Protection Case Number (if known):</label>
+                <input type="text" name="case_number" placeholder="Optional: Your case/file number">
+            </div>
+            
+            <div class="form-group">
+                <label for="plan_date">Date of Plan of Care/Service Plan:</label>
+                <input type="text" name="plan_date" placeholder="e.g., May 15, 2025">
+                <p class="tip">Enter the date shown on the Plan of Care or Service Plan document you received.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="alternative_plan">Your Alternative Plan Proposal:</label>
+                <textarea name="alternative_plan" placeholder="Describe your alternative proposal for addressing the concerns raised in the official plan."></textarea>
+                <p class="tip">Be specific, realistic, and demonstrate how your proposal addresses the agency's concerns about child safety.</p>
+            </div>
+            
+            <h3>Payment Information</h3>
+            <div class="info-box">
+                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method">
+                    <option value="paypal">PayPal</option>
+                    <option value="credit_card">Credit Card</option>
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'cas_records_request' %}
+            <div class="form-group">
+                <label for="specific_records">Specific Records Requested:</label>
+                <textarea name="specific_records" placeholder="List the specific records you are requesting (e.g., all case notes from January-March 2025, assessment reports, etc.)"></textarea>
+                <p class="tip">Be as specific as possible about what records you need. Include date ranges if applicable.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="purpose">Purpose of Request:</label>
+                <select name="purpose">
+                    <option value="review">To review my/my child's file</option>
+                    <option value="legal">For legal proceedings</option>
+                    <option value="correction">To correct inaccurate information</option>
+                    <option value="other">Other (specify in description)</option>
+                </select>
+            </div>
+            
+            <h3>Payment Information</h3>
+            <div class="info-box">
+                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method">
+                    <option value="paypal">PayPal</option>
+                    <option value="credit_card">Credit Card</option>
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'cas_appeal' %}
+            <div class="form-group">
+                <label for="decision_date">Date of Decision Being Appealed:</label>
+                <input type="text" name="decision_date" placeholder="e.g., April 2, 2025">
+                <p class="tip">Enter the date of the agency decision you are appealing.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="decision_details">Decision Details:</label>
+                <textarea name="decision_details" placeholder="Describe the specific decision you are appealing and who made it."></textarea>
+                <p class="tip">Clearly specify what decision was made and by whom.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="appeal_grounds">Grounds for Appeal:</label>
+                <textarea name="appeal_grounds" placeholder="Explain the legal or factual reasons why the decision should be overturned or modified."></textarea>
+                <p class="tip">Be specific about why you believe the decision was wrong, unreasonable, or procedurally unfair.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="requested_remedy">Requested Remedy:</label>
+                <textarea name="requested_remedy" placeholder="What specific outcome are you seeking from this appeal?"></textarea>
+                <p class="tip">Clearly state what you want to happen as a result of your appeal.</p>
+            </div>
+            
+            <h3>Payment Information</h3>
+            <div class="info-box">
+                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method">
+                    <option value="paypal">PayPal</option>
+                    <option value="credit_card">Credit Card</option>
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'repair_notice' %}
+            <div class="form-group">
+                <label for="repair_issues">Repair Issues:</label>
+                <textarea name="repair_issues" placeholder="List all repair issues that need to be addressed"></textarea>
+                <p class="tip">Be specific about each repair issue, its location, and when it was first noticed.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="prior_notifications">Prior Repair Notifications:</label>
+                <textarea name="prior_notifications" placeholder="Describe any previous notifications to the landlord about these issues"></textarea>
+                <p class="tip">Include dates of prior notifications and the landlord's response.</p>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'intent_to_vacate' %}
+            <div class="form-group">
+                <label for="move_out_date">Intended Move-Out Date:</label>
+                <input type="text" name="move_out_date" placeholder="e.g., May 31, 2025">
+                <p class="tip">This should comply with your lease's notice period requirements.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="tenancy_details">Tenancy Details:</label>
+                <textarea name="tenancy_details" placeholder="Include details about your current lease (start date, monthly rent, etc.)"></textarea>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'termination_notice' %}
+            <div class="form-group">
+                <label for="termination_date">Termination Date:</label>
+                <input type="text" name="termination_date" placeholder="e.g., May 31, 2025">
+            </div>
+            
+            <div class="form-group">
+                <label for="termination_reason">Reason for Termination:</label>
+                <select name="termination_reason">
+                    <option value="lease_end">End of lease term</option>
+                    <option value="moving">Moving to a new location</option>
+                    <option value="other">Other (please specify in description)</option>
+                </select>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'sublease_agreement' %}
+            <div class="form-group">
+                <label for="subtenant_name">Subtenant's Full Name:</label>
+                <input type="text" name="subtenant_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="property_address">Rental Property Address:</label>
+                <textarea name="property_address" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="sublease_start">Sublease Start Date:</label>
+                <input type="text" name="sublease_start" placeholder="e.g., June 1, 2025" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="sublease_end">Sublease End Date:</label>
+                <input type="text" name="sublease_end" placeholder="e.g., August 31, 2025" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="monthly_rent">Monthly Rent Amount:</label>
+                <input type="text" name="monthly_rent" placeholder="e.g., $1,500.00" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="security_deposit">Security Deposit Amount:</label>
+                <input type="text" name="security_deposit" placeholder="e.g., $1,500.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="utilities_included">Utilities Included:</label>
+                <textarea name="utilities_included" placeholder="List any utilities included in the rent"></textarea>
             </div>
             
             <h3>Payment Information</h3>

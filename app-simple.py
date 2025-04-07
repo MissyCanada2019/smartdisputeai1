@@ -43,6 +43,66 @@ def get_legal_act(dispute_type, province):
             'NU': 'Residential Tenancies Act',
             'YT': 'Residential Landlord and Tenant Act'
         },
+        'repair_notice': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
+        'intent_to_vacate': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
+        'termination_notice': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
+        'sublease_agreement': {
+            'ON': 'Residential Tenancies Act',
+            'BC': 'Residential Tenancy Act',
+            'AB': 'Residential Tenancies Act',
+            'QC': 'Civil Code of Québec (sections governing residential leases)',
+            'MB': 'Residential Tenancies Act',
+            'SK': 'Residential Tenancies Act',
+            'NS': 'Residential Tenancies Act',
+            'NB': 'Residential Tenancies Act',
+            'NL': 'Residential Tenancies Act',
+            'PE': 'Rental of Residential Property Act',
+            'NT': 'Residential Tenancies Act',
+            'NU': 'Residential Tenancies Act',
+            'YT': 'Residential Landlord and Tenant Act'
+        },
         'credit': {
             'ON': 'Consumer Reporting Act',
             'BC': 'Business Practices and Consumer Protection Act',
@@ -89,6 +149,51 @@ def get_legal_act(dispute_type, province):
             'YT': 'Child and Family Services Act'
         },
         'cas_worker_reassignment': {
+            'ON': 'Child, Youth and Family Services Act, 2017',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act',
+            'MB': 'Child and Family Services Act (Manitoba)',
+            'SK': 'The Child and Family Services Act',
+            'NS': 'Children and Family Services Act (Nova Scotia)',
+            'NB': 'Family Services Act (New Brunswick)',
+            'NL': 'Children, Youth and Families Act (Newfoundland and Labrador)',
+            'PE': 'Child Protection Act (Prince Edward Island)',
+            'NT': 'Child and Family Services Act (Northwest Territories)',
+            'YT': 'Child and Family Services Act (Yukon)',
+            'NU': 'Child and Family Services Act (Nunavut)'
+        },
+        'cas_answer_plan': {
+            'ON': 'Child, Youth and Family Services Act, 2017',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act',
+            'MB': 'Child and Family Services Act (Manitoba)',
+            'SK': 'The Child and Family Services Act',
+            'NS': 'Children and Family Services Act (Nova Scotia)',
+            'NB': 'Family Services Act (New Brunswick)',
+            'NL': 'Children, Youth and Families Act (Newfoundland and Labrador)',
+            'PE': 'Child Protection Act (Prince Edward Island)',
+            'NT': 'Child and Family Services Act (Northwest Territories)',
+            'YT': 'Child and Family Services Act (Yukon)',
+            'NU': 'Child and Family Services Act (Nunavut)'
+        },
+        'cas_records_request': {
+            'ON': 'Child, Youth and Family Services Act, 2017',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act',
+            'MB': 'Child and Family Services Act (Manitoba)',
+            'SK': 'The Child and Family Services Act',
+            'NS': 'Children and Family Services Act (Nova Scotia)',
+            'NB': 'Family Services Act (New Brunswick)',
+            'NL': 'Children, Youth and Families Act (Newfoundland and Labrador)',
+            'PE': 'Child Protection Act (Prince Edward Island)',
+            'NT': 'Child and Family Services Act (Northwest Territories)',
+            'YT': 'Child and Family Services Act (Yukon)',
+            'NU': 'Child and Family Services Act (Nunavut)'
+        },
+        'cas_appeal': {
             'ON': 'Child, Youth and Family Services Act, 2017',
             'BC': 'Child, Family and Community Service Act',
             'AB': 'Child, Youth and Family Enhancement Act',
@@ -161,6 +266,38 @@ def generate():
     # Language preference for Quebec (default to English)
     language = request.form.get('language', 'EN')
     
+    # Initialize all possible form fields to avoid unbound variable errors
+    # Cease and desist fields
+    prior_incidents = request.form.get('prior_incidents', '')
+    requested_actions = request.form.get('requested_actions', '')
+    consequences = request.form.get('consequences', '')
+    
+    # Worker reassignment fields
+    current_worker_name = request.form.get('current_worker_name', '')
+    description_of_concerns = request.form.get('description_of_concerns', '')
+    previous_attempts = request.form.get('previous_attempts', '')
+    
+    # Repair notice fields
+    repair_issues = request.form.get('repair_issues', '')
+    prior_notifications = request.form.get('prior_notifications', '')
+    
+    # Intent to vacate fields
+    move_out_date = request.form.get('move_out_date', '')
+    tenancy_details = request.form.get('tenancy_details', '')
+    
+    # Termination notice fields
+    termination_date = request.form.get('termination_date', '')
+    termination_reason = request.form.get('termination_reason', '')
+    
+    # Sublease agreement fields
+    subtenant_name = request.form.get('subtenant_name', '')
+    property_address = request.form.get('property_address', '')
+    sublease_start = request.form.get('sublease_start', '')
+    sublease_end = request.form.get('sublease_end', '')
+    monthly_rent = request.form.get('monthly_rent', '')
+    security_deposit = request.form.get('security_deposit', '')
+    utilities_included = request.form.get('utilities_included', '')
+    
     # Get template filename based on dispute type and province
     filename = f"{dispute_type}_{province}.docx"
     
@@ -172,17 +309,48 @@ def generate():
 
     # Select appropriate template creation function based on dispute type
     if not os.path.exists(template_path):
+        # Landlord tenant templates
         if dispute_type == 'landlord_cease_desist':
             try:
-                # Try to import and use the specialized template creator
                 from create_landlord_cease_desist_template import create_landlord_cease_desist_template
                 create_landlord_cease_desist_template(province)
             except (ImportError, Exception) as e:
                 print(f"Error creating landlord cease & desist template: {e}")
                 create_basic_template(template_path)
+        
+        # Tenant notice templates (repair, vacate, termination)
+        elif dispute_type in ['repair_notice', 'intent_to_vacate', 'termination_notice']:
+            try:
+                from create_tenant_notice_templates import (
+                    create_repair_notice_template, 
+                    create_intent_to_vacate_template, 
+                    create_termination_notice_template,
+                )
+                if dispute_type == 'repair_notice':
+                    create_repair_notice_template(province)
+                elif dispute_type == 'intent_to_vacate':
+                    create_intent_to_vacate_template(province)
+                elif dispute_type == 'termination_notice':
+                    create_termination_notice_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating {dispute_type} template: {e}")
+                create_basic_template(template_path)
+                
+        # Sublease agreement template
+        elif dispute_type == 'sublease_agreement':
+            try:
+                from create_sublease_agreement_template import create_sublease_agreement_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_sublease_agreement_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating sublease agreement template: {e}")
+                create_basic_template(template_path)
+        
+        # CAS templates
         elif dispute_type == 'cas_cease_desist':
             try:
-                # Try to import and use the specialized template creator
                 from create_cas_cease_desist_template import create_cas_cease_desist_template, create_french_quebec_template
                 if province == 'QC' and language == 'FR':
                     create_french_quebec_template()
@@ -191,9 +359,9 @@ def generate():
             except (ImportError, Exception) as e:
                 print(f"Error creating CAS cease & desist template: {e}")
                 create_basic_template(template_path)
+                
         elif dispute_type == 'cas_worker_reassignment':
             try:
-                # Try to import and use the specialized template creator
                 from create_cas_worker_reassignment_template import create_cas_worker_reassignment_template, create_french_quebec_template
                 if province == 'QC' and language == 'FR':
                     create_french_quebec_template()
@@ -202,6 +370,40 @@ def generate():
             except (ImportError, Exception) as e:
                 print(f"Error creating CAS worker reassignment template: {e}")
                 create_basic_template(template_path)
+                
+        elif dispute_type == 'cas_answer_plan':
+            try:
+                from create_cas_answer_plan_template import create_cas_answer_plan_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_answer_plan_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS answer and plan template: {e}")
+                create_basic_template(template_path)
+                
+        elif dispute_type == 'cas_records_request':
+            try:
+                from create_cas_records_request_template import create_cas_records_request_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_records_request_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS records request template: {e}")
+                create_basic_template(template_path)
+                
+        elif dispute_type == 'cas_appeal':
+            try:
+                from create_cas_appeal_template import create_cas_appeal_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_appeal_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS appeal template: {e}")
+                create_basic_template(template_path)
+                
         else:
             # Fall back to basic template
             create_basic_template(template_path)
@@ -212,24 +414,24 @@ def generate():
     # Get agency name for CAS templates
     agency_name = get_agency_name(province) if dispute_type.startswith('cas') else ''
 
-    # Get cease and desist specific fields if applicable
-    prior_incidents = request.form.get('prior_incidents', '')
-    requested_actions = request.form.get('requested_actions', '')
-    consequences = request.form.get('consequences', '')
-    
-    # Get worker reassignment specific fields if applicable
-    current_worker_name = request.form.get('current_worker_name', '')
-    description_of_concerns = request.form.get('description_of_concerns', '')
-    previous_attempts = request.form.get('previous_attempts', '')
+    # Get payment method
     payment_method = request.form.get('payment_method', '')
     
     # Check if payment is required
-    requires_payment = dispute_type == 'cas_worker_reassignment'
+    premium_templates = [
+        'cas_worker_reassignment', 
+        'cas_answer_plan', 
+        'cas_records_request', 
+        'cas_appeal',
+        'sublease_agreement'
+    ]
+    requires_payment = dispute_type in premium_templates
     
     # If payment is required but payment processing is not completed
     if requires_payment and not request.args.get('payment_completed'):
         # Store form data in session
         session_data = {
+            # Common fields
             'name': name,
             'email': email,
             'description': description,
@@ -238,10 +440,54 @@ def generate():
             'recipient_name': recipient_name,
             'recipient_address': recipient_address,
             'user_address': user_address,
+            'payment_method': payment_method,
+            'language': request.form.get('language', 'EN'),
+            
+            # Cease and desist fields
+            'prior_incidents': prior_incidents,
+            'requested_actions': requested_actions,
+            'consequences': consequences,
+            
+            # Worker reassignment fields
             'current_worker_name': current_worker_name,
             'description_of_concerns': description_of_concerns,
             'previous_attempts': previous_attempts,
-            'payment_method': payment_method
+            
+            # Repair notice fields
+            'repair_issues': repair_issues,
+            'prior_notifications': prior_notifications,
+            
+            # Intent to vacate fields
+            'move_out_date': move_out_date,
+            'tenancy_details': tenancy_details,
+            
+            # Termination notice fields
+            'termination_date': termination_date,
+            'termination_reason': termination_reason,
+            
+            # Sublease agreement fields
+            'subtenant_name': subtenant_name,
+            'property_address': property_address,
+            'sublease_start': sublease_start,
+            'sublease_end': sublease_end,
+            'monthly_rent': monthly_rent,
+            'security_deposit': security_deposit,
+            'utilities_included': utilities_included,
+            
+            # CAS answer plan fields
+            'case_number': request.form.get('case_number', ''),
+            'plan_date': request.form.get('plan_date', ''),
+            'alternative_plan': request.form.get('alternative_plan', ''),
+            
+            # CAS records request fields
+            'specific_records': request.form.get('specific_records', ''),
+            'purpose': request.form.get('purpose', ''),
+            
+            # CAS appeal fields
+            'decision_date': request.form.get('decision_date', ''),
+            'decision_details': request.form.get('decision_details', ''),
+            'appeal_grounds': request.form.get('appeal_grounds', ''),
+            'requested_remedy': request.form.get('requested_remedy', '')
         }
         
         # Save session data to a temporary file
@@ -256,8 +502,46 @@ def generate():
                                amount='9.99', 
                                payment_method=payment_method))
     
+    # Get form data for all templates
+    # Repair notice fields
+    repair_issues = request.form.get('repair_issues', '')
+    prior_notifications = request.form.get('prior_notifications', '')
+    
+    # Intent to vacate fields
+    move_out_date = request.form.get('move_out_date', '')
+    tenancy_details = request.form.get('tenancy_details', '')
+    
+    # Termination notice fields
+    termination_date = request.form.get('termination_date', '')
+    termination_reason = request.form.get('termination_reason', '')
+    
+    # Sublease agreement fields
+    subtenant_name = request.form.get('subtenant_name', '')
+    property_address = request.form.get('property_address', '')
+    sublease_start = request.form.get('sublease_start', '')
+    sublease_end = request.form.get('sublease_end', '')
+    monthly_rent = request.form.get('monthly_rent', '')
+    security_deposit = request.form.get('security_deposit', '')
+    utilities_included = request.form.get('utilities_included', '')
+    
+    # CAS answer plan fields
+    case_number = request.form.get('case_number', '')
+    plan_date = request.form.get('plan_date', '')
+    alternative_plan = request.form.get('alternative_plan', '')
+    
+    # CAS records request fields
+    specific_records = request.form.get('specific_records', '')
+    request_purpose = request.form.get('purpose', '')
+    
+    # CAS appeal fields
+    decision_date = request.form.get('decision_date', '')
+    decision_details = request.form.get('decision_details', '')
+    appeal_grounds = request.form.get('appeal_grounds', '')
+    requested_remedy = request.form.get('requested_remedy', '')
+    
     doc = DocxTemplate(template_path)
     context = {
+        # Common fields for all templates
         'name': name,
         'email': email,
         'description': description,
@@ -267,12 +551,54 @@ def generate():
         'address': user_address,
         'legal_act': legal_act,
         'agency_name': agency_name,
+        
+        # Cease and desist fields
         'prior_incidents': prior_incidents,
         'requested_actions': requested_actions, 
         'consequences': consequences,
+        
+        # Worker reassignment fields
         'current_worker_name': current_worker_name,
         'description_of_concerns': description_of_concerns,
         'previous_attempts': previous_attempts,
+        
+        # Repair notice fields
+        'repair_issues': repair_issues,
+        'prior_notifications': prior_notifications,
+        
+        # Intent to vacate fields
+        'move_out_date': move_out_date,
+        'tenancy_details': tenancy_details,
+        
+        # Termination notice fields
+        'termination_date': termination_date,
+        'termination_reason': termination_reason,
+        
+        # Sublease agreement fields
+        'subtenant_name': subtenant_name,
+        'property_address': property_address,
+        'sublease_start': sublease_start,
+        'sublease_end': sublease_end,
+        'monthly_rent': monthly_rent,
+        'security_deposit': security_deposit,
+        'utilities_included': utilities_included,
+        
+        # CAS answer plan fields
+        'case_number': case_number,
+        'plan_date': plan_date,
+        'alternative_plan': alternative_plan,
+        
+        # CAS records request fields
+        'specific_records': specific_records,
+        'request_purpose': request_purpose,
+        
+        # CAS appeal fields
+        'decision_date': decision_date,
+        'decision_details': decision_details,
+        'appeal_grounds': appeal_grounds,
+        'requested_remedy': requested_remedy,
+        
+        # Date function
         'now': lambda: datetime.datetime.now().strftime("%B %d, %Y")
     }
 
@@ -314,8 +640,38 @@ def create_basic_template(path):
     doc.add_heading('Issue Description', level=1)
     doc.add_paragraph('{{ description }}')
     
+    # Template type specific sections
+    
+    # Tenant notice templates
+    if path.find('repair_notice') != -1:
+        doc.add_heading('Repair Details', level=1)
+        doc.add_paragraph('Issue to be Repaired: {{ description }}')
+        doc.add_paragraph('Requested Timeline: Within 14 days of receipt of this notice, as required by law')
+        doc.add_paragraph('Consequences of Non-Action: If these repairs are not addressed within the specified timeframe, I reserve the right to pursue all available legal remedies.')
+    
+    elif path.find('intent_to_vacate') != -1:
+        doc.add_heading('Notice to Vacate', level=1)
+        doc.add_paragraph('This letter serves as my official notice of intent to vacate the rental property.')
+        doc.add_paragraph('I will be vacating the property on or before: (date to be filled in)')
+        doc.add_paragraph('I am providing this notice in accordance with the required notice period under provincial law.')
+    
+    elif path.find('termination_notice') != -1:
+        doc.add_heading('Lease Termination', level=1)
+        doc.add_paragraph('This letter serves as my official notice to terminate my tenancy agreement.')
+        doc.add_paragraph('Reason for Termination: {{ description }}')
+        doc.add_paragraph('I am providing this notice in accordance with the required notice period under provincial law.')
+    
+    elif path.find('sublease_agreement') != -1:
+        doc.add_heading('Sublease Terms', level=1)
+        doc.add_paragraph('This document serves as a formal sublease agreement.')
+        doc.add_paragraph('Original Tenant: {{ name }}')
+        doc.add_paragraph('Subtenant: [NAME OF SUBTENANT]')
+        doc.add_paragraph('Sublease Period: From [START DATE] to [END DATE]')
+        doc.add_paragraph('Monthly Rent: $[AMOUNT]')
+        doc.add_paragraph('Please review the terms and conditions outlined in this agreement.')
+    
     # Cease and desist specific sections
-    if path.find('cease_desist') != -1:
+    elif path.find('cease_desist') != -1:
         doc.add_heading('Prior Incidents', level=1)
         doc.add_paragraph('{{ prior_incidents }}')
         
@@ -326,7 +682,7 @@ def create_basic_template(path):
         doc.add_paragraph('{{ consequences }}')
     
     # Worker reassignment specific sections
-    if path.find('worker_reassignment') != -1:
+    elif path.find('worker_reassignment') != -1:
         doc.add_heading('Current CAS Worker', level=1)
         doc.add_paragraph('{{ current_worker_name }}')
         
@@ -335,6 +691,42 @@ def create_basic_template(path):
         
         doc.add_heading('Previous Attempts to Resolve', level=1)
         doc.add_paragraph('{{ previous_attempts }}')
+    
+    # CAS Answer and Plan of Care sections
+    elif path.find('cas_answer_plan') != -1:
+        doc.add_heading('Response to Allegations', level=1)
+        doc.add_paragraph('I am responding to the allegations outlined in the Plan of Care dated [DATE].')
+        doc.add_paragraph('My position regarding these allegations: {{ description }}')
+        
+        doc.add_heading('Proposed Plan of Care', level=1)
+        doc.add_paragraph('I propose the following alternative plan of care:')
+        doc.add_paragraph('1. [DETAILS TO BE FILLED IN]')
+        doc.add_paragraph('2. [DETAILS TO BE FILLED IN]')
+        doc.add_paragraph('3. [DETAILS TO BE FILLED IN]')
+    
+    # CAS Records Request sections
+    elif path.find('cas_records_request') != -1:
+        doc.add_heading('Records Requested', level=1)
+        doc.add_paragraph('Pursuant to applicable privacy legislation, I formally request copies of all records relating to:')
+        doc.add_paragraph('1. [SPECIFIC RECORDS REQUESTED]')
+        doc.add_paragraph('Please provide these records within the timeframe specified by law (typically 30 days).')
+        
+        doc.add_heading('Basis for Request', level=1)
+        doc.add_paragraph('{{ description }}')
+    
+    # CAS Appeal sections
+    elif path.find('cas_appeal') != -1:
+        doc.add_heading('Decision Being Appealed', level=1)
+        doc.add_paragraph('I am formally appealing the decision dated [DATE] regarding:')
+        doc.add_paragraph('{{ description }}')
+        
+        doc.add_heading('Grounds for Appeal', level=1)
+        doc.add_paragraph('1. [GROUNDS FOR APPEAL]')
+        doc.add_paragraph('2. [GROUNDS FOR APPEAL]')
+        
+        doc.add_heading('Requested Remedy', level=1)
+        doc.add_paragraph('I request that the original decision be [overturned/modified] as follows:')
+        doc.add_paragraph('[REQUESTED REMEDY]')
     
     # Signature
     doc.add_paragraph('\n\nSincerely,\n\n\n\n{{ name }}')
@@ -399,25 +791,100 @@ def process_payment():
     
     # Make sure the template exists
     if not os.path.exists(template_path):
-        try:
-            # Try to import and use the specialized template creator
-            from create_cas_worker_reassignment_template import create_cas_worker_reassignment_template, create_french_quebec_template
-            
-            if province == 'QC' and session_data.get('language') == 'FR':
-                create_french_quebec_template()
-            else:
-                create_cas_worker_reassignment_template(province)
-        except (ImportError, Exception) as e:
-            print(f"Error creating CAS worker reassignment template: {e}")
+        # Select appropriate template creation function based on dispute type
+        if dispute_type == 'cas_worker_reassignment':
+            try:
+                from create_cas_worker_reassignment_template import create_cas_worker_reassignment_template, create_french_quebec_template
+                
+                if province == 'QC' and session_data.get('language') == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_worker_reassignment_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS worker reassignment template: {e}")
+                create_basic_template(template_path)
+        
+        elif dispute_type == 'cas_answer_plan':
+            try:
+                from create_cas_answer_plan_template import create_cas_answer_plan_template, create_french_quebec_template
+                if province == 'QC' and session_data.get('language') == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_answer_plan_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS answer and plan template: {e}")
+                create_basic_template(template_path)
+                
+        elif dispute_type == 'cas_records_request':
+            try:
+                from create_cas_records_request_template import create_cas_records_request_template, create_french_quebec_template
+                if province == 'QC' and session_data.get('language') == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_records_request_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS records request template: {e}")
+                create_basic_template(template_path)
+                
+        elif dispute_type == 'cas_appeal':
+            try:
+                from create_cas_appeal_template import create_cas_appeal_template, create_french_quebec_template
+                if province == 'QC' and session_data.get('language') == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_appeal_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS appeal template: {e}")
+                create_basic_template(template_path)
+                
+        elif dispute_type == 'sublease_agreement':
+            try:
+                from create_sublease_agreement_template import create_sublease_agreement_template, create_french_quebec_template
+                if province == 'QC' and session_data.get('language') == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_sublease_agreement_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating sublease agreement template: {e}")
+                create_basic_template(template_path)
+        
+        else:
+            # Fall back to basic template
             create_basic_template(template_path)
     
     # Get legal act and agency name
     legal_act = get_legal_act(dispute_type, province)
     agency_name = get_agency_name(province)
     
+    # Get additional form data from session
+    # CAS answer plan fields
+    case_number = session_data.get('case_number', '')
+    plan_date = session_data.get('plan_date', '')
+    alternative_plan = session_data.get('alternative_plan', '')
+    
+    # CAS records request fields
+    specific_records = session_data.get('specific_records', '')
+    request_purpose = session_data.get('purpose', '')
+    
+    # CAS appeal fields
+    decision_date = session_data.get('decision_date', '')
+    decision_details = session_data.get('decision_details', '')
+    appeal_grounds = session_data.get('appeal_grounds', '')
+    requested_remedy = session_data.get('requested_remedy', '')
+    
+    # Sublease agreement fields
+    subtenant_name = session_data.get('subtenant_name', '')
+    property_address = session_data.get('property_address', '')
+    sublease_start = session_data.get('sublease_start', '')
+    sublease_end = session_data.get('sublease_end', '')
+    monthly_rent = session_data.get('monthly_rent', '')
+    security_deposit = session_data.get('security_deposit', '')
+    utilities_included = session_data.get('utilities_included', '')
+    
     # Create the document
     doc = DocxTemplate(template_path)
     context = {
+        # Common fields for all templates
         'name': name,
         'email': email,
         'description': description,
@@ -427,9 +894,37 @@ def process_payment():
         'address': user_address,
         'legal_act': legal_act,
         'agency_name': agency_name,
+        
+        # Worker reassignment fields
         'current_worker_name': current_worker_name,
         'description_of_concerns': description_of_concerns,
         'previous_attempts': previous_attempts,
+        
+        # CAS answer plan fields
+        'case_number': case_number,
+        'plan_date': plan_date,
+        'alternative_plan': alternative_plan,
+        
+        # CAS records request fields
+        'specific_records': specific_records,
+        'request_purpose': request_purpose,
+        
+        # CAS appeal fields
+        'decision_date': decision_date,
+        'decision_details': decision_details,
+        'appeal_grounds': appeal_grounds,
+        'requested_remedy': requested_remedy,
+        
+        # Sublease agreement fields
+        'subtenant_name': subtenant_name,
+        'property_address': property_address,
+        'sublease_start': sublease_start,
+        'sublease_end': sublease_end,
+        'monthly_rent': monthly_rent,
+        'security_deposit': security_deposit,
+        'utilities_included': utilities_included,
+        
+        # Date function
         'now': lambda: datetime.datetime.now().strftime("%B %d, %Y")
     }
     

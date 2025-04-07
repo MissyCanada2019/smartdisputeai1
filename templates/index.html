@@ -94,12 +94,31 @@
                 <label for="type">Dispute Type:</label>
                 <select name="type" required>
                     <option value="">-- Select Dispute Type --</option>
-                    <option value="landlord_tenant">Landlord/Tenant Dispute</option>
-                    <option value="credit">Credit Dispute</option>
-                    <option value="cas">Children's Aid Society (CAS) Complaint</option>
-                    <option value="landlord_cease_desist">Landlord Cease & Desist</option>
-                    <option value="cas_cease_desist">CAS/Child Services Cease & Desist</option>
-                    <option value="cas_worker_reassignment">CAS Worker Reassignment Request ($9.99)</option>
+                    
+                    <!-- Landlord/Tenant Documents -->
+                    <optgroup label="Landlord/Tenant Documents">
+                        <option value="landlord_tenant">General Landlord/Tenant Dispute</option>
+                        <option value="landlord_cease_desist">Landlord Cease & Desist</option>
+                        <option value="repair_notice">Repair Notice Request</option>
+                        <option value="intent_to_vacate">Intent to Vacate Notice</option>
+                        <option value="termination_notice">Lease Termination Notice</option>
+                        <option value="sublease_agreement">Sublease Agreement ($9.99)</option>
+                    </optgroup>
+                    
+                    <!-- Credit Disputes -->
+                    <optgroup label="Credit Disputes">
+                        <option value="credit">Credit Dispute Letter</option>
+                    </optgroup>
+                    
+                    <!-- Children's Aid Society Documents -->
+                    <optgroup label="Children's Aid Society (CAS) Documents">
+                        <option value="cas">General CAS Complaint</option>
+                        <option value="cas_cease_desist">CAS Cease & Desist</option>
+                        <option value="cas_worker_reassignment">CAS Worker Reassignment Request ($9.99)</option>
+                        <option value="cas_answer_plan">CAS Answer/Plan of Care Response ($9.99)</option>
+                        <option value="cas_records_request">CAS Records Request ($9.99)</option>
+                        <option value="cas_appeal">CAS Decision Appeal ($9.99)</option>
+                    </optgroup>
                 </select>
             </div>
 
