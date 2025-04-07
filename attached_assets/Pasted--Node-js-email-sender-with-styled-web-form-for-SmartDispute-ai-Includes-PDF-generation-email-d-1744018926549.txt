@@ -1,0 +1,121 @@
+// Node.js email sender with styled web form for SmartDispute.ai
+// Includes PDF generation, email delivery, and confirmation message
+// Requires: nodemailer, dotenv, pdfkit, express, body-parser, fs, path
+
+require('dotenv').config();
+const express = require('express');
+const nodemailer = require('nodemailer');
+const PDFDocument = require('pdfkit');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static('public'));
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS
+  }
+});
+
+function generateDisputePDF(fullName, issue, outputPath) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument();
+    const writeStream = fs.createWriteStream(outputPath);
+
+    doc.pipe(writeStream);
+    doc.fontSize(14).text(`To Whom It May Concern,\n`, { lineGap: 10 });
+    doc.text(`My name is ${fullName}, and I am writing to formally dispute the following issue:`, { lineGap: 10 });
+    doc.text(issue, { lineGap: 10 });
+    doc.text(`\nI respectfully request that this matter be investigated and resolved as soon as possible.\n`);
+    doc.text(`\nSincerely,\n${fullName}`);
+    doc.end();
+
+    writeStream.on('finish', () => resolve(outputPath));
+    writeStream.on('error', reject);
+  });
+}
+
+async function sendDisputeLetter(toEmail, fullName, issue) {
+  const pdfPath = path.resolve(__dirname, 'dispute_letter.pdf');
+  await generateDisputePDF(fullName, issue, pdfPath);
+
+  const mailOptions = {
+    from: `SmartDispute.ai <${process.env.GMAIL_USER}>`,
+    to: toEmail,
+    subject: 'Your Legal Dispute Letter is Ready',
+    text: `Hi ${fullName},\n\nAttached is your generated legal dispute letter.\n\nIf you need additional help or want to submit this letter directly to a credit bureau, housing provider, or government agency, please reply to this email.\n\n- SmartDispute.ai`,
+    attachments: [
+      {
+        filename: 'dispute_letter.pdf',
+        path: pdfPath
+      }
+    ]
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully to', toEmail);
+    fs.unlinkSync(pdfPath); // auto-delete PDF after sending
+  } catch (err) {
+    console.error('Error sending email:', err);
+  }
+}
+
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>SmartDispute.ai | Free Legal Letter Generator</title>
+        <style>
+          body { background: #1a1a1a; color: #f0f0f0; font-family: sans-serif; padding: 40px; text-align: center; }
+          input, textarea { width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+          button { background-color: #6f42c1; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+          button:hover { background-color: #5a32a3; }
+          h1 { color: #b48cf5; }
+          form { background: #2a2a2a; padding: 20px; border-radius: 10px; display: inline-block; max-width: 500px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <h1>SmartDispute.ai</h1>
+        <p>Generate and email your legal dispute letter instantly and for free.</p>
+        <form method="POST" action="/send">
+          <input type="text" name="fullName" placeholder="Your Full Name" required><br>
+          <input type="email" name="email" placeholder="Your Email Address" required><br>
+          <textarea name="issue" placeholder="Describe your legal dispute here..." rows="6" required></textarea><br>
+          <button type="submit">Generate & Email Letter</button>
+        </form>
+      </body>
+    </html>
+  `);
+});
+
+app.post('/send', async (req, res) => {
+  const { fullName, email, issue } = req.body;
+  await sendDisputeLetter(email, fullName, issue);
+  res.send(`
+    <html>
+      <head>
+        <style>
+          body { background: #121212; color: #e0e0e0; font-family: sans-serif; padding: 40px; text-align: center; }
+          h2 { color: #b48cf5; }
+        </style>
+      </head>
+      <body>
+        <h2>Thank you, ${fullName}!</h2>
+        <p>Your dispute letter has been sent to <strong>${email}</strong>.</p>
+        <p>Check your inbox and reply if you need further support.</p>
+      </body>
+    </html>
+  `);
+});
+
+app.listen(PORT, () => {
+  console.log(`SmartDispute running on port ${PORT}`);
+});

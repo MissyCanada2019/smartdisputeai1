@@ -502,42 +502,7 @@ def generate():
                                amount='9.99', 
                                payment_method=payment_method))
     
-    # Get form data for all templates
-    # Repair notice fields
-    repair_issues = request.form.get('repair_issues', '')
-    prior_notifications = request.form.get('prior_notifications', '')
-    
-    # Intent to vacate fields
-    move_out_date = request.form.get('move_out_date', '')
-    tenancy_details = request.form.get('tenancy_details', '')
-    
-    # Termination notice fields
-    termination_date = request.form.get('termination_date', '')
-    termination_reason = request.form.get('termination_reason', '')
-    
-    # Sublease agreement fields
-    subtenant_name = request.form.get('subtenant_name', '')
-    property_address = request.form.get('property_address', '')
-    sublease_start = request.form.get('sublease_start', '')
-    sublease_end = request.form.get('sublease_end', '')
-    monthly_rent = request.form.get('monthly_rent', '')
-    security_deposit = request.form.get('security_deposit', '')
-    utilities_included = request.form.get('utilities_included', '')
-    
-    # CAS answer plan fields
-    case_number = request.form.get('case_number', '')
-    plan_date = request.form.get('plan_date', '')
-    alternative_plan = request.form.get('alternative_plan', '')
-    
-    # CAS records request fields
-    specific_records = request.form.get('specific_records', '')
-    request_purpose = request.form.get('purpose', '')
-    
-    # CAS appeal fields
-    decision_date = request.form.get('decision_date', '')
-    decision_details = request.form.get('decision_details', '')
-    appeal_grounds = request.form.get('appeal_grounds', '')
-    requested_remedy = request.form.get('requested_remedy', '')
+    # Form data for all templates was already collected above
     
     doc = DocxTemplate(template_path)
     context = {
