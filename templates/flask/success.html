@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDispute.ai - Document Generated</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800">SmartDispute.ai</h1>
+            <p class="text-xl text-gray-600 mt-2">Legal Dispute Document Generator</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8 text-center">
+            <div class="mb-8">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h2 class="text-2xl font-semibold mt-4">Document Successfully Generated!</h2>
+            </div>
+            
+            <p class="text-gray-700 mb-8">
+                Your dispute letter has been created and is ready for download. You can download it now or access it later through the link sent to your email (if provided).
+            </p>
+            
+            <div class="p-4 bg-gray-50 rounded-md mb-8">
+                <div class="flex items-center justify-center mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-medium">{{ filename }}</span>
+                </div>
+                <a href="/download/{{ filename }}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Download Document
+                </a>
+            </div>
+            
+            <div class="text-gray-700 space-y-4">
+                <h3 class="font-semibold">Next Steps:</h3>
+                <ol class="text-left list-decimal list-inside space-y-2">
+                    <li>Review the document carefully to ensure all details are correct.</li>
+                    <li>Print and sign the document where indicated.</li>
+                    <li>Send the document to the recipient specified in your form.</li>
+                    <li>Keep a copy for your records.</li>
+                    <li>Consider following up if you don't receive a response within the timeframe specified in the document.</li>
+                </ol>
+            </div>
+            
+            <div class="mt-8 text-gray-600 text-sm">
+                <p>Remember, this document is provided for informational purposes only and does not constitute legal advice.</p>
+                <p>For complex legal matters, consider consulting with a qualified legal professional.</p>
+            </div>
+        </div>
+        
+        <!-- Create Another Document Button -->
+        <div class="max-w-2xl mx-auto mt-6 text-center">
+            <a href="/" class="text-blue-600 hover:text-blue-800">← Create Another Document</a>
+        </div>
+    </div>
+</body>
+</html>

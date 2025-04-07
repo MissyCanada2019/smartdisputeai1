@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDispute.ai - Legal Dispute Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-800">SmartDispute.ai</h1>
+            <p class="text-xl text-gray-600 mt-2">Legal Dispute Document Generator</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
+            <h2 class="text-2xl font-semibold mb-6">Create a Dispute Letter</h2>
+            <p class="mb-6 text-gray-700">Select your province and the type of dispute to generate a tailored legal document.</p>
+            
+            <form action="/form" method="GET" id="selectionForm">
+                <div class="mb-6">
+                    <label for="province" class="block mb-2 font-medium text-gray-700">Province:</label>
+                    <select id="province" name="province" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="" selected disabled>Select your province</option>
+                        {% for province in provinces %}
+                        <option value="{{ province }}">{{ province }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-6">
+                    <label for="dispute_type" class="block mb-2 font-medium text-gray-700">Dispute Type:</label>
+                    <select id="dispute_type" name="dispute_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required disabled>
+                        <option value="" selected disabled>Select province first</option>
+                    </select>
+                </div>
+                
+                <div class="mt-8">
+                    <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('province').addEventListener('change', function() {
+            const province = this.value;
+            const disputeTypeSelect = document.getElementById('dispute_type');
+            
+            // Clear current options
+            disputeTypeSelect.innerHTML = '<option value="" selected disabled>Loading...</option>';
+            disputeTypeSelect.disabled = true;
+            
+            // Fetch dispute types for selected province
+            fetch(`/api/dispute-types/${province}`)
+                .then(response => response.json())
+                .then(disputeTypes => {
+                    // Reset dropdown
+                    disputeTypeSelect.innerHTML = '<option value="" selected disabled>Select dispute type</option>';
+                    
+                    // Add new options
+                    disputeTypes.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        disputeTypeSelect.appendChild(option);
+                    });
+                    
+                    // Enable the dropdown
+                    disputeTypeSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching dispute types:', error);
+                    disputeTypeSelect.innerHTML = '<option value="" selected disabled>Error loading options</option>';
+                });
+        });
+    </script>
+</body>
+</html>
