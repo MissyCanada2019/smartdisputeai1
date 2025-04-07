@@ -51,9 +51,15 @@
     <div class="container">
         <h2>Your Dispute Letter is Ready!</h2>
         
+        {% if payment_completed %}
+        <div class="info-box" style="background-color: #e6f7e9; border-color: #c3e6cb;">
+            <p><strong>Payment Successful!</strong> Thank you for your purchase. Your premium CAS Worker Reassignment Letter has been successfully generated.</p>
+        </div>
+        {% else %}
         <div class="info-box">
             <p>Your dispute letter has been successfully generated. You can download it now to print or email to the recipient.</p>
         </div>
+        {% endif %}
         
         <p>Click the button below to download your letter:</p>
         <a href="/generated/{{ filename }}" class="download-button">Download Letter</a>

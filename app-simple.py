@@ -3,10 +3,12 @@ from docxtpl import DocxTemplate
 from docx import Document
 import os
 import uuid
+import json
 import datetime
 from flask import jsonify
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'smartdispute_ai_development_key')
 
 def get_legal_act(dispute_type, province):
     """Get the appropriate legal act based on dispute type and province"""
@@ -85,6 +87,21 @@ def get_legal_act(dispute_type, province):
             'NT': 'Child and Family Services Act',
             'NU': 'Child and Family Services Act',
             'YT': 'Child and Family Services Act'
+        },
+        'cas_worker_reassignment': {
+            'ON': 'Child, Youth and Family Services Act, 2017',
+            'BC': 'Child, Family and Community Service Act',
+            'AB': 'Child, Youth and Family Enhancement Act',
+            'QC': 'Youth Protection Act',
+            'MB': 'Child and Family Services Act (Manitoba)',
+            'SK': 'The Child and Family Services Act',
+            'NS': 'Children and Family Services Act (Nova Scotia)',
+            'NB': 'Family Services Act (New Brunswick)',
+            'NL': 'Children, Youth and Families Act (Newfoundland and Labrador)',
+            'PE': 'Child Protection Act (Prince Edward Island)',
+            'NT': 'Child and Family Services Act (Northwest Territories)',
+            'YT': 'Child and Family Services Act (Yukon)',
+            'NU': 'Child and Family Services Act (Nunavut)'
         }
     }
     
@@ -174,6 +191,17 @@ def generate():
             except (ImportError, Exception) as e:
                 print(f"Error creating CAS cease & desist template: {e}")
                 create_basic_template(template_path)
+        elif dispute_type == 'cas_worker_reassignment':
+            try:
+                # Try to import and use the specialized template creator
+                from create_cas_worker_reassignment_template import create_cas_worker_reassignment_template, create_french_quebec_template
+                if province == 'QC' and language == 'FR':
+                    create_french_quebec_template()
+                else:
+                    create_cas_worker_reassignment_template(province)
+            except (ImportError, Exception) as e:
+                print(f"Error creating CAS worker reassignment template: {e}")
+                create_basic_template(template_path)
         else:
             # Fall back to basic template
             create_basic_template(template_path)
@@ -189,6 +217,45 @@ def generate():
     requested_actions = request.form.get('requested_actions', '')
     consequences = request.form.get('consequences', '')
     
+    # Get worker reassignment specific fields if applicable
+    current_worker_name = request.form.get('current_worker_name', '')
+    description_of_concerns = request.form.get('description_of_concerns', '')
+    previous_attempts = request.form.get('previous_attempts', '')
+    payment_method = request.form.get('payment_method', '')
+    
+    # Check if payment is required
+    requires_payment = dispute_type == 'cas_worker_reassignment'
+    
+    # If payment is required but payment processing is not completed
+    if requires_payment and not request.args.get('payment_completed'):
+        # Store form data in session
+        session_data = {
+            'name': name,
+            'email': email,
+            'description': description,
+            'province': province,
+            'dispute_type': dispute_type,
+            'recipient_name': recipient_name,
+            'recipient_address': recipient_address,
+            'user_address': user_address,
+            'current_worker_name': current_worker_name,
+            'description_of_concerns': description_of_concerns,
+            'previous_attempts': previous_attempts,
+            'payment_method': payment_method
+        }
+        
+        # Save session data to a temporary file
+        session_id = str(uuid.uuid4())
+        session_path = os.path.join(UPLOAD_FOLDER, f"session_{session_id}.json")
+        with open(session_path, 'w') as f:
+            json.dump(session_data, f)
+        
+        # Redirect to payment page
+        return redirect(url_for('payment', 
+                               session_id=session_id, 
+                               amount='9.99', 
+                               payment_method=payment_method))
+    
     doc = DocxTemplate(template_path)
     context = {
         'name': name,
@@ -203,6 +270,9 @@ def generate():
         'prior_incidents': prior_incidents,
         'requested_actions': requested_actions, 
         'consequences': consequences,
+        'current_worker_name': current_worker_name,
+        'description_of_concerns': description_of_concerns,
+        'previous_attempts': previous_attempts,
         'now': lambda: datetime.datetime.now().strftime("%B %d, %Y")
     }
 
@@ -255,6 +325,17 @@ def create_basic_template(path):
         doc.add_heading('Consequences', level=1)
         doc.add_paragraph('{{ consequences }}')
     
+    # Worker reassignment specific sections
+    if path.find('worker_reassignment') != -1:
+        doc.add_heading('Current CAS Worker', level=1)
+        doc.add_paragraph('{{ current_worker_name }}')
+        
+        doc.add_heading('Concerns', level=1)
+        doc.add_paragraph('{{ description_of_concerns }}')
+        
+        doc.add_heading('Previous Attempts to Resolve', level=1)
+        doc.add_paragraph('{{ previous_attempts }}')
+    
     # Signature
     doc.add_paragraph('\n\nSincerely,\n\n\n\n{{ name }}')
     
@@ -264,10 +345,114 @@ def create_basic_template(path):
     doc.save(path)
     print(f"Created basic template at {path}")
 
+@app.route('/payment')
+def payment():
+    """Handle payment page for paid documents"""
+    session_id = request.args.get('session_id')
+    amount = request.args.get('amount', '9.99')
+    payment_method = request.args.get('payment_method', '')
+    
+    return render_template('payment.html', 
+                           session_id=session_id, 
+                           amount=amount, 
+                           payment_method=payment_method)
+
+@app.route('/process-payment', methods=['POST'])
+def process_payment():
+    """Process the payment and generate the document"""
+    session_id = request.form.get('session_id')
+    amount = request.form.get('amount')
+    payment_method = request.form.get('payment_method')
+    
+    # In a real implementation, we would integrate with PayPal or a credit card processor here
+    # For now, we'll simulate a successful payment
+    
+    # Load the stored session data
+    session_path = os.path.join(UPLOAD_FOLDER, f"session_{session_id}.json")
+    if not os.path.exists(session_path):
+        return "Session expired or invalid. Please try again.", 400
+    
+    with open(session_path, 'r') as f:
+        session_data = json.load(f)
+    
+    # Get the necessary data from the session
+    name = session_data.get('name')
+    email = session_data.get('email')
+    description = session_data.get('description')
+    province = session_data.get('province')
+    dispute_type = session_data.get('dispute_type')
+    recipient_name = session_data.get('recipient_name')
+    recipient_address = session_data.get('recipient_address')
+    user_address = session_data.get('user_address')
+    current_worker_name = session_data.get('current_worker_name')
+    description_of_concerns = session_data.get('description_of_concerns')
+    previous_attempts = session_data.get('previous_attempts', '')
+    
+    # Get template filename and path
+    filename = f"{dispute_type}_{province}.docx"
+    template_path = os.path.join(TEMPLATE_FOLDER, filename)
+    
+    # Handle Quebec French template
+    if province == 'QC' and session_data.get('language') == 'FR':
+        filename = f"{dispute_type}_{province}_FR.docx"
+        template_path = os.path.join(TEMPLATE_FOLDER, filename)
+    
+    # Make sure the template exists
+    if not os.path.exists(template_path):
+        try:
+            # Try to import and use the specialized template creator
+            from create_cas_worker_reassignment_template import create_cas_worker_reassignment_template, create_french_quebec_template
+            
+            if province == 'QC' and session_data.get('language') == 'FR':
+                create_french_quebec_template()
+            else:
+                create_cas_worker_reassignment_template(province)
+        except (ImportError, Exception) as e:
+            print(f"Error creating CAS worker reassignment template: {e}")
+            create_basic_template(template_path)
+    
+    # Get legal act and agency name
+    legal_act = get_legal_act(dispute_type, province)
+    agency_name = get_agency_name(province)
+    
+    # Create the document
+    doc = DocxTemplate(template_path)
+    context = {
+        'name': name,
+        'email': email,
+        'description': description,
+        'province': province,
+        'recipient_name': recipient_name,
+        'recipient_address': recipient_address,
+        'address': user_address,
+        'legal_act': legal_act,
+        'agency_name': agency_name,
+        'current_worker_name': current_worker_name,
+        'description_of_concerns': description_of_concerns,
+        'previous_attempts': previous_attempts,
+        'now': lambda: datetime.datetime.now().strftime("%B %d, %Y")
+    }
+    
+    # Render and save the document
+    doc.render(context)
+    output_filename = f"{uuid.uuid4()}.docx"
+    output_path = os.path.join(UPLOAD_FOLDER, output_filename)
+    doc.save(output_path)
+    
+    # Clean up the session file
+    try:
+        os.remove(session_path)
+    except:
+        pass
+    
+    # Redirect to success page
+    return redirect(url_for('success', filename=output_filename, payment='completed'))
+
 @app.route('/success')
 def success():
     filename = request.args.get('filename')
-    return render_template('success.html', filename=filename)
+    payment_completed = request.args.get('payment')
+    return render_template('success.html', filename=filename, payment_completed=payment_completed)
 
 @app.route('/generated/<filename>')
 def download_file(filename):

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmartDispute.ai - Payment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .payment-details {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        .payment-method {
+            margin-top: 30px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .paypal-button {
+            background-color: #0070ba;
+        }
+        .paypal-button:hover {
+            background-color: #003087;
+        }
+        .credit-button {
+            background-color: #2ecc71;
+        }
+        .credit-button:hover {
+            background-color: #27ae60;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .info-box {
+            background-color: #e8f4fd;
+            border: 1px solid #c5e1f9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Complete Your Payment</h2>
+        
+        <div class="info-box">
+            <p>Your document is almost ready! Complete the payment to generate your customized CAS Worker Reassignment letter.</p>
+        </div>
+        
+        <div class="payment-details">
+            <h3>Payment Summary</h3>
+            <p>CAS Worker Reassignment Request Document</p>
+            <div class="amount">${{ amount }}</div>
+        </div>
+        
+        <div class="payment-method">
+            <h3>Select Payment Method</h3>
+            
+            {% if payment_method == 'paypal' %}
+            <form action="/process-payment" method="post">
+                <input type="hidden" name="session_id" value="{{ session_id }}">
+                <input type="hidden" name="amount" value="{{ amount }}">
+                <input type="hidden" name="payment_method" value="paypal">
+                <button type="submit" class="paypal-button">Pay with PayPal</button>
+            </form>
+            {% elif payment_method == 'credit_card' %}
+            <form action="/process-payment" method="post">
+                <input type="hidden" name="session_id" value="{{ session_id }}">
+                <input type="hidden" name="amount" value="{{ amount }}">
+                <input type="hidden" name="payment_method" value="credit_card">
+                <button type="submit" class="credit-button">Pay with Credit Card</button>
+            </form>
+            {% else %}
+            <form action="/process-payment" method="post">
+                <input type="hidden" name="session_id" value="{{ session_id }}">
+                <input type="hidden" name="amount" value="{{ amount }}">
+                <input type="hidden" name="payment_method" value="paypal">
+                <button type="submit" class="paypal-button">Pay with PayPal</button>
+            </form>
+            <form action="/process-payment" method="post" style="margin-top: 10px;">
+                <input type="hidden" name="session_id" value="{{ session_id }}">
+                <input type="hidden" name="amount" value="{{ amount }}">
+                <input type="hidden" name="payment_method" value="credit_card">
+                <button type="submit" class="credit-button">Pay with Credit Card</button>
+            </form>
+            {% endif %}
+        </div>
+        
+        <div class="info-box" style="margin-top: 30px;">
+            <p><strong>Secure Payment:</strong> All payments are processed securely. Your payment information is never stored on our servers.</p>
+        </div>
+        
+        <a href="/" class="back-link">← Cancel and return to home</a>
+    </div>
+</body>
+</html>

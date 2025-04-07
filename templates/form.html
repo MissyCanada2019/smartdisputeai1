@@ -80,6 +80,14 @@
         .back-link:hover {
             text-decoration: underline;
         }
+        .info-box {
+            background-color: #e8f4fd;
+            border: 1px solid #c5e1f9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -120,7 +128,7 @@
                 <textarea name="recipient_address" placeholder="Optional: Full address of recipient"></textarea>
             </div>
 
-            {% if province == 'QC' and dispute_type == 'cas_cease_desist' %}
+            {% if province == 'QC' and (dispute_type == 'cas_cease_desist' or dispute_type == 'cas_worker_reassignment') %}
             <h3>Language Preference</h3>
             <div class="form-group">
                 <label for="language">Preferred Language:</label>
@@ -156,6 +164,39 @@
                 <label for="consequences">Potential consequences if the behavior continues:</label>
                 <textarea name="consequences" placeholder="Outline potential legal actions you may take if the behavior doesn't stop."></textarea>
                 <p class="tip">This may include reporting to authorities, seeking legal counsel, or pursuing civil remedies.</p>
+            </div>
+            {% endif %}
+            
+            {% if dispute_type == 'cas_worker_reassignment' %}
+            <div class="form-group">
+                <label for="current_worker_name">Current CAS Worker's Name:</label>
+                <input type="text" name="current_worker_name" required>
+                <p class="tip">Enter the full name of the CAS worker you're requesting to have reassigned.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="description_of_concerns">Describe your concerns with the current worker:</label>
+                <textarea name="description_of_concerns" required placeholder="Provide specific examples of conduct, communication issues, or other concerns that justify the reassignment request."></textarea>
+                <p class="tip">Be specific, factual, and professional. Include dates and details of incidents that demonstrate why a new worker is needed.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="previous_attempts">Previous attempts to resolve the issue:</label>
+                <textarea name="previous_attempts" placeholder="Describe any prior attempts to address these concerns with the agency or worker."></textarea>
+                <p class="tip">Include dates of any emails, phone calls, or meetings where you tried to resolve issues.</p>
+            </div>
+            
+            <h3>Payment Information</h3>
+            <div class="info-box">
+                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="payment_method">Payment Method:</label>
+                <select name="payment_method">
+                    <option value="paypal">PayPal</option>
+                    <option value="credit_card">Credit Card</option>
+                </select>
             </div>
             {% endif %}
 
