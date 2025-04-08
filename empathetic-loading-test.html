@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empathetic Loading Animations Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      padding: 2rem;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .demo-card {
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .controls {
+      margin-top: 1rem;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+    }
+    h1 {
+      color: #4a4a4a;
+      margin-bottom: 1.5rem;
+    }
+    h3 {
+      color: #6C63FF;
+    }
+    .context-selector {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h1 class="text-center mb-4">Empathetic Loading Animations</h1>
+        <p class="text-center mb-4">
+          These loading animations are designed to reduce stress and anxiety during legal processes,
+          providing supportive and contextual feedback to users while they wait.
+        </p>
+        
+        <!-- Demo Cards -->
+        <div class="card demo-card">
+          <div class="card-header">
+            <h3>Document Generation</h3>
+          </div>
+          <div class="card-body">
+            <div id="document-generation-loader"></div>
+            
+            <div class="controls">
+              <button id="doc-gen-start" class="btn btn-primary">Start</button>
+              <button id="doc-gen-complete" class="btn btn-success" disabled>Complete</button>
+              <button id="doc-gen-reset" class="btn btn-secondary" disabled>Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card demo-card">
+          <div class="card-header">
+            <h3>Document Analysis</h3>
+          </div>
+          <div class="card-body">
+            <div id="document-analysis-loader"></div>
+            
+            <div class="controls">
+              <button id="doc-analysis-start" class="btn btn-primary">Start</button>
+              <button id="doc-analysis-complete" class="btn btn-success" disabled>Complete</button>
+              <button id="doc-analysis-reset" class="btn btn-secondary" disabled>Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card demo-card">
+          <div class="card-header">
+            <h3>Email Sending</h3>
+          </div>
+          <div class="card-body">
+            <div id="email-sending-loader"></div>
+            
+            <div class="controls">
+              <button id="email-start" class="btn btn-primary">Start</button>
+              <button id="email-complete" class="btn btn-success" disabled>Complete</button>
+              <button id="email-reset" class="btn btn-secondary" disabled>Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card demo-card">
+          <div class="card-header">
+            <h3>Payment Processing</h3>
+          </div>
+          <div class="card-body">
+            <div id="payment-processing-loader"></div>
+            
+            <div class="controls">
+              <button id="payment-start" class="btn btn-primary">Start</button>
+              <button id="payment-complete" class="btn btn-success" disabled>Complete</button>
+              <button id="payment-reset" class="btn btn-secondary" disabled>Reset</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Custom Test -->
+        <div class="card demo-card">
+          <div class="card-header">
+            <h3>Custom Test</h3>
+          </div>
+          <div class="card-body">
+            <div class="context-selector">
+              <label for="context-select" class="form-label">Select context:</label>
+              <select id="context-select" class="form-select">
+                <option value="documentGeneration">Document Generation</option>
+                <option value="documentAnalysis">Document Analysis</option>
+                <option value="emailSending">Email Sending</option>
+                <option value="paymentProcessing">Payment Processing</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="show-progress" checked>
+              <label class="form-check-label" for="show-progress">
+                Show progress bar
+              </label>
+            </div>
+            
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="show-supportive" checked>
+              <label class="form-check-label" for="show-supportive">
+                Show supportive messages
+              </label>
+            </div>
+            
+            <div class="mb-3">
+              <label for="duration-input" class="form-label">Duration (ms):</label>
+              <input type="number" id="duration-input" class="form-control" value="8000" min="1000" step="1000">
+            </div>
+            
+            <div id="custom-loader"></div>
+            
+            <div class="controls">
+              <button id="custom-start" class="btn btn-primary">Start</button>
+              <button id="custom-update" class="btn btn-info" disabled>Send Update</button>
+              <button id="custom-complete" class="btn btn-success" disabled>Complete</button>
+              <button id="custom-reset" class="btn btn-secondary" disabled>Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row justify-content-center mt-5">
+      <div class="col-lg-8">
+        <div class="card">
+          <div class="card-header">
+            <h3>Implementation Guide</h3>
+          </div>
+          <div class="card-body">
+            <h5>1. Include the script</h5>
+            <pre><code>&lt;script src="/static/js/empathetic-loading.js"&gt;&lt;/script&gt;</code></pre>
+            
+            <h5>2. Create a container element</h5>
+            <pre><code>&lt;div id="loading-container"&gt;&lt;/div&gt;</code></pre>
+            
+            <h5>3. Initialize and control the loader</h5>
+            <pre><code>// Create the loader
+const loader = window.EmpatheticLoading.create({
+  targetElementId: 'loading-container',
+  context: 'documentGeneration',
+  duration: 5000,
+  showProgressBar: true,
+  showSupportiveMessages: true,
+  onComplete: function() {
+    console.log('Loading complete!');
+  }
+});
+
+// Start the loader
+loader.start();
+
+// Update manually (optional)
+loader.update({
+  percentage: 50,
+  message: "Custom update message",
+  supportiveMessage: "You're doing great!"
+});
+
+// Complete when done
+loader.complete("Your document has been successfully generated!");
+
+// Reset if needed
+loader.reset();
+</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load scripts -->
+  <script src="./static/js/empathetic-loading.js"></script>
+  <script>
+    // Setup demo loaders
+    document.addEventListener('DOMContentLoaded', function() {
+      // Document Generation Loader
+      let docGenLoader;
+      document.getElementById('doc-gen-start').addEventListener('click', function() {
+        docGenLoader = window.EmpatheticLoading.create({
+          targetElementId: 'document-generation-loader',
+          context: 'documentGeneration',
+          duration: 8000
+        }).start();
+        
+        this.disabled = true;
+        document.getElementById('doc-gen-complete').disabled = false;
+        document.getElementById('doc-gen-reset').disabled = false;
+      });
+      
+      document.getElementById('doc-gen-complete').addEventListener('click', function() {
+        docGenLoader.complete("Your document has been successfully generated!");
+        this.disabled = true;
+      });
+      
+      document.getElementById('doc-gen-reset').addEventListener('click', function() {
+        docGenLoader.reset();
+        document.getElementById('doc-gen-start').disabled = false;
+        document.getElementById('doc-gen-complete').disabled = true;
+        this.disabled = true;
+      });
+      
+      // Document Analysis Loader
+      let docAnalysisLoader;
+      document.getElementById('doc-analysis-start').addEventListener('click', function() {
+        docAnalysisLoader = window.EmpatheticLoading.create({
+          targetElementId: 'document-analysis-loader',
+          context: 'documentAnalysis',
+          duration: 10000
+        }).start();
+        
+        this.disabled = true;
+        document.getElementById('doc-analysis-complete').disabled = false;
+        document.getElementById('doc-analysis-reset').disabled = false;
+      });
+      
+      document.getElementById('doc-analysis-complete').addEventListener('click', function() {
+        docAnalysisLoader.complete("Analysis complete! We've found important information in your document.");
+        this.disabled = true;
+      });
+      
+      document.getElementById('doc-analysis-reset').addEventListener('click', function() {
+        docAnalysisLoader.reset();
+        document.getElementById('doc-analysis-start').disabled = false;
+        document.getElementById('doc-analysis-complete').disabled = true;
+        this.disabled = true;
+      });
+      
+      // Email Sending Loader
+      let emailLoader;
+      document.getElementById('email-start').addEventListener('click', function() {
+        emailLoader = window.EmpatheticLoading.create({
+          targetElementId: 'email-sending-loader',
+          context: 'emailSending',
+          duration: 6000
+        }).start();
+        
+        this.disabled = true;
+        document.getElementById('email-complete').disabled = false;
+        document.getElementById('email-reset').disabled = false;
+      });
+      
+      document.getElementById('email-complete').addEventListener('click', function() {
+        emailLoader.complete("Email sent successfully! Your document is on its way.");
+        this.disabled = true;
+      });
+      
+      document.getElementById('email-reset').addEventListener('click', function() {
+        emailLoader.reset();
+        document.getElementById('email-start').disabled = false;
+        document.getElementById('email-complete').disabled = true;
+        this.disabled = true;
+      });
+      
+      // Payment Processing Loader
+      let paymentLoader;
+      document.getElementById('payment-start').addEventListener('click', function() {
+        paymentLoader = window.EmpatheticLoading.create({
+          targetElementId: 'payment-processing-loader',
+          context: 'paymentProcessing',
+          duration: 7000
+        }).start();
+        
+        this.disabled = true;
+        document.getElementById('payment-complete').disabled = false;
+        document.getElementById('payment-reset').disabled = false;
+      });
+      
+      document.getElementById('payment-complete').addEventListener('click', function() {
+        paymentLoader.complete("Payment processed successfully! Thank you for your purchase.");
+        this.disabled = true;
+      });
+      
+      document.getElementById('payment-reset').addEventListener('click', function() {
+        paymentLoader.reset();
+        document.getElementById('payment-start').disabled = false;
+        document.getElementById('payment-complete').disabled = true;
+        this.disabled = true;
+      });
+      
+      // Custom Loader
+      let customLoader;
+      document.getElementById('custom-start').addEventListener('click', function() {
+        const context = document.getElementById('context-select').value;
+        const showProgress = document.getElementById('show-progress').checked;
+        const showSupportive = document.getElementById('show-supportive').checked;
+        const duration = parseInt(document.getElementById('duration-input').value, 10);
+        
+        customLoader = window.EmpatheticLoading.create({
+          targetElementId: 'custom-loader',
+          context: context,
+          duration: duration,
+          showProgressBar: showProgress,
+          showSupportiveMessages: showSupportive
+        }).start();
+        
+        this.disabled = true;
+        document.getElementById('custom-update').disabled = false;
+        document.getElementById('custom-complete').disabled = false;
+        document.getElementById('custom-reset').disabled = false;
+      });
+      
+      document.getElementById('custom-update').addEventListener('click', function() {
+        customLoader.update({
+          percentage: Math.floor(Math.random() * 100),
+          message: "This is a custom update message at " + new Date().toLocaleTimeString(),
+          supportiveMessage: "You're making great progress!"
+        });
+      });
+      
+      document.getElementById('custom-complete').addEventListener('click', function() {
+        customLoader.complete("Process completed successfully!");
+        this.disabled = true;
+        document.getElementById('custom-update').disabled = true;
+      });
+      
+      document.getElementById('custom-reset').addEventListener('click', function() {
+        customLoader.reset();
+        document.getElementById('custom-start').disabled = false;
+        document.getElementById('custom-update').disabled = true;
+        document.getElementById('custom-complete').disabled = true;
+        this.disabled = true;
+      });
+    });
+  </script>
+</body>
+</html>

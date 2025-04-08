@@ -8,6 +8,8 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3WXDJLT2T"></script>
     <!-- Enhanced Analytics Module -->
     <script src="{{ url_for('static', filename='js/analytics-enhanced.js') }}"></script>
+    <!-- Empathetic Loading Animations -->
+    <script src="{{ url_for('static', filename='js/empathetic-loading.js') }}"></script>
     <script>
         // Initialize Analytics with our measurement ID
         window.sdAnalytics.initializeAnalytics('G-S3WXDJLT2T');
@@ -211,8 +213,8 @@
                     <button type="submit" class="download-btn" id="email-send-btn">Send Document via Email</button>
                 </div>
                 
-                <div class="loading" id="loadingIndicator">
-                    Sending email... Please wait.
+                <div id="email-loading-container">
+                    <!-- Empathetic loading animation will be inserted here -->
                 </div>
             </form>
         </div>
@@ -277,8 +279,14 @@
                 document.getElementById('emailSuccess').style.display = 'none';
                 document.getElementById('emailError').style.display = 'none';
                 
-                // Show loading indicator
-                document.getElementById('loadingIndicator').style.display = 'block';
+                // Initialize empathetic loading animation
+                const emailLoader = window.EmpatheticLoading.create({
+                    targetElementId: 'email-loading-container',
+                    context: 'emailSending',
+                    duration: 8000,
+                    showProgressBar: true,
+                    showSupportiveMessages: true
+                }).start();
                 
                 // Track email send attempt with enhanced details
                 window.sdAnalytics.trackFormSubmission('email_send_attempt', {
@@ -290,6 +298,17 @@
                 // Get form data
                 const formData = new FormData(this);
                 
+                // Disable the submit button during processing
+                document.getElementById('email-send-btn').disabled = true;
+                
+                // Update progress halfway through (to create a sense of progress)
+                setTimeout(() => {
+                    emailLoader.update({
+                        percentage: 50,
+                        message: "Securely preparing your document for delivery..."
+                    });
+                }, 2000);
+                
                 // Send AJAX request
                 fetch('/send-email', {
                     method: 'POST',
@@ -297,40 +316,54 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Hide loading indicator
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    
                     if (data.success) {
+                        // Complete loading animation with success message
+                        emailLoader.complete("Email sent successfully! Your document is on its way.");
+                        
                         // Track successful email send with enhanced analytics
                         window.sdAnalytics.trackFormSubmission('email_send_success', {
                             document_type: '{{ document_type|default("legal_document") }}',
                             filename: '{{ filename }}'
                         });
                         
-                        document.getElementById('emailSuccess').style.display = 'block';
-                        document.getElementById('emailForm').reset();
+                        // Show success message after animation completes
+                        setTimeout(() => {
+                            document.getElementById('emailSuccess').style.display = 'block';
+                            document.getElementById('emailForm').reset();
+                            document.getElementById('email-send-btn').disabled = false;
+                        }, 1500);
                     } else {
+                        // Complete loading animation with error message
+                        emailLoader.complete("There was an issue sending your document.");
+                        
                         // Track email send failure with detailed error tracking
                         window.sdAnalytics.trackError('email_send_failed', 
                             data.error || 'Unknown error'
                         );
                         
-                        document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
-                        document.getElementById('emailError').style.display = 'block';
+                        // Show error message after animation completes
+                        setTimeout(() => {
+                            document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
+                            document.getElementById('emailError').style.display = 'block';
+                            document.getElementById('email-send-btn').disabled = false;
+                        }, 1500);
                     }
                 })
                 .catch(error => {
-                    // Hide loading indicator
-                    document.getElementById('loadingIndicator').style.display = 'none';
+                    // Complete loading animation with error message
+                    emailLoader.complete("Connection issue detected. Please try again.");
                     
                     // Track connection error with detailed error reporting
                     window.sdAnalytics.trackError('email_connection_error',
                         'Server connection failed'
                     );
                     
-                    // Show error message
-                    document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
-                    document.getElementById('emailError').style.display = 'block';
+                    // Show error message after animation completes
+                    setTimeout(() => {
+                        document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
+                        document.getElementById('emailError').style.display = 'block';
+                        document.getElementById('email-send-btn').disabled = false;
+                    }, 1500);
                 });
             });
             {% endif %}

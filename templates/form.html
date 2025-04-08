@@ -455,6 +455,9 @@
         </footer>
     </div>
     
+    <!-- Empathetic Loading Animations -->
+    <script src="{{ url_for('static', filename='js/empathetic-loading.js') }}"></script>
+    
     <script>
         // Show/hide conditional fields based on selection
         document.addEventListener('DOMContentLoaded', function() {
@@ -470,6 +473,67 @@
                             detailsGroup.style.display = 'none';
                         }
                     });
+                });
+            }
+            
+            // Add form submission loading animation
+            const documentForm = document.querySelector('form[action="{{ url_for("generate") }}"]');
+            if (documentForm) {
+                documentForm.addEventListener('submit', function(e) {
+                    // Don't prevent default - let the form submit
+                    
+                    // Check if this is a premium document
+                    const isPremium = {{ 'true' if is_premium else 'false' }};
+                    
+                    // Create a modal for our loading animation
+                    const modal = document.createElement('div');
+                    modal.style.position = 'fixed';
+                    modal.style.top = '0';
+                    modal.style.left = '0';
+                    modal.style.width = '100%';
+                    modal.style.height = '100%';
+                    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                    modal.style.display = 'flex';
+                    modal.style.justifyContent = 'center';
+                    modal.style.alignItems = 'center';
+                    modal.style.zIndex = '1000';
+                    
+                    // Create modal content
+                    const modalContent = document.createElement('div');
+                    modalContent.style.backgroundColor = 'white';
+                    modalContent.style.padding = '30px';
+                    modalContent.style.borderRadius = '8px';
+                    modalContent.style.width = '90%';
+                    modalContent.style.maxWidth = '500px';
+                    modalContent.style.boxShadow = '0 4px 20px rgba(0,0,0,0.2)';
+                    
+                    // Create heading
+                    const heading = document.createElement('h2');
+                    heading.textContent = 'Generating Your Document';
+                    heading.style.marginTop = '0';
+                    heading.style.color = '#2d3748';
+                    heading.style.textAlign = 'center';
+                    
+                    // Create container for loader
+                    const loaderContainer = document.createElement('div');
+                    loaderContainer.id = 'document-generation-loader';
+                    
+                    // Assemble modal
+                    modalContent.appendChild(heading);
+                    modalContent.appendChild(loaderContainer);
+                    modal.appendChild(modalContent);
+                    
+                    // Add to body
+                    document.body.appendChild(modal);
+                    
+                    // Start empathetic loader
+                    window.EmpatheticLoading.create({
+                        targetElementId: 'document-generation-loader',
+                        context: 'documentGeneration',
+                        duration: isPremium ? 15000 : 8000, // Longer for premium documents
+                        showProgressBar: true,
+                        showSupportiveMessages: true
+                    }).start();
                 });
             }
             
