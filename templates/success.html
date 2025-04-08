@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Generated | SmartDispute.ai</title>
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT-ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-MEASUREMENT-ID'); // Replace with your GA4 Measurement ID in production
+    </script>
+    <!-- End Google Tag Manager -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -163,8 +172,8 @@
         </div>
         
         <div class="buttons">
-            <a href="{{ url_for('download_file', filename=filename) }}" class="download-btn">Download Document</a>
-            <a href="{{ url_for('index') }}" class="secondary-btn">Create Another Document</a>
+            <a href="{{ url_for('download_file', filename=filename) }}" class="download-btn" id="download-btn">Download Document</a>
+            <a href="{{ url_for('index') }}" class="secondary-btn" id="new-document-btn">Create Another Document</a>
         </div>
         
         {% if email_enabled %}
@@ -199,7 +208,7 @@
                 <input type="hidden" name="filename" value="{{ filename }}">
                 
                 <div class="buttons">
-                    <button type="submit" class="download-btn">Send Document via Email</button>
+                    <button type="submit" class="download-btn" id="email-send-btn">Send Document via Email</button>
                 </div>
                 
                 <div class="loading" id="loadingIndicator">
@@ -219,49 +228,108 @@
         </footer>
     </div>
     
-    {% if email_enabled %}
+    <!-- Google Analytics and Email Script -->
     <script>
-        document.getElementById('emailForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Hide any previous alerts
-            document.getElementById('emailSuccess').style.display = 'none';
-            document.getElementById('emailError').style.display = 'none';
-            
-            // Show loading indicator
-            document.getElementById('loadingIndicator').style.display = 'block';
-            
-            // Get form data
-            const formData = new FormData(this);
-            
-            // Send AJAX request
-            fetch('/send-email', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Hide loading indicator
-                document.getElementById('loadingIndicator').style.display = 'none';
-                
-                if (data.success) {
-                    document.getElementById('emailSuccess').style.display = 'block';
-                    document.getElementById('emailForm').reset();
-                } else {
-                    document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
-                    document.getElementById('emailError').style.display = 'block';
-                }
-            })
-            .catch(error => {
-                // Hide loading indicator
-                document.getElementById('loadingIndicator').style.display = 'none';
-                
-                // Show error message
-                document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
-                document.getElementById('emailError').style.display = 'block';
+        document.addEventListener('DOMContentLoaded', function() {
+            // Track success page view with appropriate event
+            {% if payment_completed %}
+            // If payment was completed, we should track this as a purchase completion
+            gtag('event', 'purchase_success', {
+                event_category: 'conversion',
+                event_label: 'Payment completed'
             });
+            {% else %}
+            // For free documents
+            gtag('event', 'document_generated', {
+                event_category: 'conversion',
+                event_label: 'Document generated'
+            });
+            {% endif %}
+            
+            // Track document download clicks
+            document.getElementById('download-btn').addEventListener('click', function() {
+                gtag('event', 'document_download', {
+                    event_category: 'engagement',
+                    event_label: '{{ filename }}'
+                });
+            });
+            
+            // Track create another document clicks
+            document.getElementById('new-document-btn').addEventListener('click', function() {
+                gtag('event', 'create_another', {
+                    event_category: 'engagement',
+                    event_label: 'From success page'
+                });
+            });
+            
+            {% if email_enabled %}
+            // Handle email form submission
+            document.getElementById('emailForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Hide any previous alerts
+                document.getElementById('emailSuccess').style.display = 'none';
+                document.getElementById('emailError').style.display = 'none';
+                
+                // Show loading indicator
+                document.getElementById('loadingIndicator').style.display = 'block';
+                
+                // Track email send attempt
+                gtag('event', 'send_email_initiated', {
+                    event_category: 'engagement',
+                    event_label: 'Document email'
+                });
+                
+                // Get form data
+                const formData = new FormData(this);
+                
+                // Send AJAX request
+                fetch('/send-email', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading indicator
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    
+                    if (data.success) {
+                        // Track successful email send
+                        gtag('event', 'send_email_success', {
+                            event_category: 'engagement',
+                            event_label: 'Document email sent'
+                        });
+                        
+                        document.getElementById('emailSuccess').style.display = 'block';
+                        document.getElementById('emailForm').reset();
+                    } else {
+                        // Track email send failure
+                        gtag('event', 'send_email_failed', {
+                            event_category: 'engagement',
+                            event_label: data.error || 'Unknown error'
+                        });
+                        
+                        document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
+                        document.getElementById('emailError').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    // Hide loading indicator
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    
+                    // Track connection error
+                    gtag('event', 'send_email_connection_error', {
+                        event_category: 'error',
+                        event_label: 'Server connection failed'
+                    });
+                    
+                    // Show error message
+                    document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
+                    document.getElementById('emailError').style.display = 'block';
+                });
+            });
+            {% endif %}
         });
     </script>
-    {% endif %}
 </body>
 </html>

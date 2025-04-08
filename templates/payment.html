@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment | SmartDispute.ai</title>
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT-ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', 'G-MEASUREMENT-ID'); // Replace with your GA4 Measurement ID in production
+    </script>
+    <!-- End Google Tag Manager -->
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -240,10 +249,29 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Track payment page view
+            gtag('event', 'payment_page_view', {
+                event_category: 'ecommerce',
+                event_label: '{{ document_info.dispute_type }}',
+                value: parseFloat('{{ document_info.price }}')
+            });
+
             // Initialize PayPal buttons if the SDK is loaded
             if (window.paypal) {
                 paypal.Buttons({
                     createOrder: function(data, actions) {
+                        // Track payment initiation
+                        gtag('event', 'begin_checkout', {
+                            currency: 'CAD',
+                            value: parseFloat('{{ document_info.price }}'),
+                            items: [{
+                                item_id: '{{ document_info.dispute_type }}_{{ document_info.province }}',
+                                item_name: '{{ document_info.dispute_type }}',
+                                price: parseFloat('{{ document_info.price }}'),
+                                quantity: 1
+                            }]
+                        });
+                        
                         return actions.order.create({
                             purchase_units: [{
                                 amount: {
@@ -258,6 +286,21 @@
                         document.querySelector('.payment-amount').innerHTML = 'Processing payment...';
                         
                         return actions.order.capture().then(function(details) {
+                            // Track successful payment
+                            gtag('event', 'purchase', {
+                                transaction_id: data.orderID,
+                                value: parseFloat('{{ document_info.price }}'),
+                                currency: 'CAD',
+                                tax: 0,
+                                shipping: 0,
+                                items: [{
+                                    item_id: '{{ document_info.dispute_type }}_{{ document_info.province }}',
+                                    item_name: '{{ document_info.dispute_type }}',
+                                    price: parseFloat('{{ document_info.price }}'),
+                                    quantity: 1
+                                }]
+                            });
+                            
                             // Add order ID to form
                             var orderIdInput = document.createElement('input');
                             orderIdInput.type = 'hidden';
@@ -268,13 +311,45 @@
                             // Submit the form to handle the server-side processing
                             document.getElementById('payment-form').submit();
                         });
+                    },
+                    onCancel: function(data) {
+                        // Track payment cancellation
+                        gtag('event', 'payment_cancelled', {
+                            event_category: 'ecommerce',
+                            event_label: '{{ document_info.dispute_type }}'
+                        });
+                    },
+                    onError: function(err) {
+                        // Track payment errors
+                        gtag('event', 'payment_error', {
+                            event_category: 'ecommerce',
+                            event_label: err
+                        });
+                        
+                        // Show fallback button if PayPal has an error
+                        document.getElementById('fallback-button').style.display = 'block';
+                        console.error('PayPal error:', err);
                     }
                 }).render('#paypal-button-container');
             } else {
+                // Track PayPal SDK loading failure
+                gtag('event', 'payment_method_load_failed', {
+                    event_category: 'ecommerce',
+                    event_label: 'PayPal SDK failed to load'
+                });
+                
                 // Show fallback button if PayPal SDK fails to load
                 document.getElementById('fallback-button').style.display = 'block';
                 console.error('PayPal SDK failed to load');
             }
+            
+            // Track back button clicks
+            document.querySelector('.back-link').addEventListener('click', function() {
+                gtag('event', 'payment_exit', {
+                    event_category: 'ecommerce',
+                    event_label: 'Back to form'
+                });
+            });
         });
     </script>
 </body>
