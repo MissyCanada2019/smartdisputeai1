@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Basic Meta Setup -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SmartDispute.ai - Payment Successful</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3WXDJLT2T"></script>
+    <!-- Enhanced Analytics Module -->
+    <script src="{{ url_for('static', filename='js/analytics-enhanced.js') }}"></script>
+    <script>
+        // Initialize Analytics
+        window.sdAnalytics.initializeAnalytics('G-S3WXDJLT2T');
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .success-container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 30px;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .receipt-container {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #f8f9fa;
+        }
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .receipt-item:last-child {
+            border-bottom: none;
+        }
+        .receipt-total {
+            font-weight: bold;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .brand-name {
+            font-weight: 600;
+            color: #fff;
+        }
+        .action-btn {
+            margin-top: 20px;
+        }
+        .confirmation-message {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .what-next {
+            background-color: #e9f7ef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .what-next h4 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .next-steps {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .next-steps li {
+            padding: 8px 0 8px 25px;
+            position: relative;
+        }
+        .next-steps li:before {
+            content: "\f00c";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: #28a745;
+        }
+        .contact-info {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        .transaction-tag {
+            display: inline-block;
+            background-color: #e9f7ef;
+            color: #28a745;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-container">
+            <div class="header">
+                <h1 class="brand-name">SmartDispute.ai</h1>
+                <p>Your payment was successful!</p>
+            </div>
+            
+            <div class="content">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <div class="confirmation-message">
+                    <h2>Thank You!</h2>
+                    <p>Your legal form has been successfully submitted and your payment has been processed.</p>
+                </div>
+                
+                <div class="receipt-container">
+                    <div class="receipt-header">
+                        <h4>Payment Receipt</h4>
+                        <p id="transaction-date">{{ date|default('April 8, 2025') }}</p>
+                    </div>
+                    
+                    <div class="receipt-item">
+                        <span>Order ID:</span>
+                        <span id="order-id">{{ order_id|default('ORDER-12345678') }} <span class="transaction-tag">Confirmed</span></span>
+                    </div>
+                    
+                    <div class="receipt-item">
+                        <span>Service:</span>
+                        <span>{{ service_name|default('Legal Document Service') }}</span>
+                    </div>
+                    
+                    <div class="receipt-item">
+                        <span>Payment Method:</span>
+                        <span>{{ payment_method|default('PayPal') }}</span>
+                    </div>
+                    
+                    <div class="receipt-total">
+                        <span>Total Amount:</span>
+                        <span id="total-amount">{{ currency|default('CAD') }} ${{ amount|default('49.99') }}</span>
+                    </div>
+                </div>
+                
+                <div class="what-next">
+                    <h4><i class="fas fa-clipboard-list me-2"></i> What's Next?</h4>
+                    <ul class="next-steps">
+                        <li>Your document has been processed and is ready for use</li>
+                        <li>You can download a copy of your document for your records</li>
+                        <li>You'll receive a confirmation email with additional details</li>
+                        <li>Contact our support team if you have any questions</li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid gap-2 action-btn">
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i> Return to Homepage
+                    </a>
+                </div>
+                
+                <div class="contact-info">
+                    <p>If you have any questions, feel free to contact us at 
+                    <a href="mailto:smartdisputecanada@gmail.com">smartdisputecanada@gmail.com</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extract transaction parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('order_id') || '{{ order_id|default("ORDER-" + Math.random().toString(36).substring(2, 10).toUpperCase()) }}';
+        const amount = urlParams.get('amount') || '{{ amount|default("49.99") }}';
+        const currency = urlParams.get('currency') || '{{ currency|default("CAD") }}';
+        const serviceName = urlParams.get('service_name') || '{{ service_name|default("Legal Document Service") }}';
+        const paymentMethod = urlParams.get('payment_method') || '{{ payment_method|default("PayPal") }}';
+        
+        // Update displayed values if they're in URL parameters
+        if (urlParams.has('order_id')) {
+            document.getElementById('order-id').innerHTML = orderId + ' <span class="transaction-tag">Confirmed</span>';
+        }
+        
+        if (urlParams.has('amount') && urlParams.has('currency')) {
+            document.getElementById('total-amount').textContent = `${currency} $${amount}`;
+        }
+        
+        // Set transaction date if not provided
+        if (!document.getElementById('transaction-date').textContent.trim()) {
+            const now = new Date();
+            document.getElementById('transaction-date').textContent = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // Enhanced analytics tracking with our module
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create transaction data structure
+            const transactionData = {
+                transaction_id: orderId,
+                value: parseFloat(amount),
+                currency: currency,
+                payment_method: paymentMethod
+            };
+            
+            // Create item data structure
+            const itemData = {
+                item_id: 'legal-doc-service',
+                item_name: serviceName,
+                price: parseFloat(amount),
+                quantity: 1,
+                item_category: 'Legal Services'
+            };
+            
+            // Track page view with enhanced info
+            window.sdAnalytics.trackPageView('Payment Success', 'Checkout');
+            
+            // Track purchase with our enhanced utility
+            window.sdAnalytics.trackPurchase(transactionData, itemData);
+            
+            // Track general engagement
+            window.sdAnalytics.trackFormSubmission('payment_form_complete', {
+                payment_successful: true,
+                service_type: serviceName
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

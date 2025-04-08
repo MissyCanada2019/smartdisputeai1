@@ -19,11 +19,11 @@
     
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3WXDJLT2T"></script>
+    <!-- Enhanced Analytics Module -->
+    <script src="{{ url_for('static', filename='js/analytics-enhanced.js') }}"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-S3WXDJLT2T');
+        // Initialize Analytics
+        window.sdAnalytics.initializeAnalytics('G-S3WXDJLT2T');
     </script>
     
     <style>
@@ -204,30 +204,26 @@
     <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=CAD"></script>
     
     <script>
-        // Track payment form view
-        gtag('event', 'view_item', {
-            currency: 'CAD',
-            value: 49.99,
-            items: [{
-                item_id: 'doc-analysis-premium',
-                item_name: 'Comprehensive Document Analysis',
-                price: 49.99,
-                quantity: 1,
-                item_category: 'Legal Services'
-            }]
+        // Define the item for tracking
+        const itemData = {
+            item_id: 'doc-analysis-premium',
+            item_name: 'Comprehensive Document Analysis',
+            price: 49.99,
+            quantity: 1,
+            item_category: 'Legal Services'
+        };
+        
+        // Track the page view with enhanced parameters
+        window.sdAnalytics.trackPageView('Payment Page', 'Checkout');
+        
+        // Track view item
+        window.sdAnalytics.trackViewItem(itemData, {
+            currency: 'CAD'
         });
         
         // Begin checkout event
-        gtag('event', 'begin_checkout', {
-            currency: 'CAD',
-            value: 49.99,
-            items: [{
-                item_id: 'doc-analysis-premium',
-                item_name: 'Comprehensive Document Analysis',
-                price: 49.99,
-                quantity: 1,
-                item_category: 'Legal Services'
-            }]
+        window.sdAnalytics.trackBeginCheckout(itemData, {
+            currency: 'CAD'
         });
         
         // PayPal checkout setup
@@ -241,18 +237,10 @@
             
             // Create order
             createOrder: function(data, actions) {
-                // Track add payment info event
-                gtag('event', 'add_payment_info', {
+                // Track add payment info
+                window.sdAnalytics.trackAddPaymentInfo(itemData, 'PayPal', {
                     currency: 'CAD',
-                    value: 49.99,
-                    payment_type: 'paypal',
-                    items: [{
-                        item_id: 'doc-analysis-premium',
-                        item_name: 'Comprehensive Document Analysis',
-                        price: 49.99,
-                        quantity: 1,
-                        item_category: 'Legal Services'
-                    }]
+                    step: 2
                 });
                 
                 return actions.order.create({
@@ -269,30 +257,38 @@
             // On approval
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(orderData) {
-                    // Get order details
+                    // Get complete order details from PayPal response
                     const transaction = orderData.purchase_units[0].payments.captures[0];
                     const orderId = transaction.id;
                     const amount = transaction.amount.value;
                     const currency = transaction.amount.currency_code;
+                    const serviceName = 'Comprehensive Document Analysis';
                     
-                    // Track purchase event with actual transaction data
-                    gtag('event', 'purchase', {
+                    // Create transaction data object for enhanced tracking
+                    const transactionData = {
                         transaction_id: orderId,
                         value: parseFloat(amount),
                         currency: currency,
-                        tax: 0,
-                        shipping: 0,
-                        items: [{
-                            item_id: 'doc-analysis-premium',
-                            item_name: 'Comprehensive Document Analysis',
-                            price: parseFloat(amount),
-                            quantity: 1,
-                            item_category: 'Legal Services'
-                        }]
+                        payment_method: 'PayPal'
+                    };
+                    
+                    // Update item data with actual transaction amount
+                    const updatedItemData = {
+                        ...itemData,
+                        price: parseFloat(amount)
+                    };
+                    
+                    // Track purchase with our enhanced analytics
+                    window.sdAnalytics.trackPurchase(transactionData, updatedItemData);
+                    
+                    // Additional form submission tracking
+                    window.sdAnalytics.trackFormSubmission('payment_complete', {
+                        payment_method: 'PayPal',
+                        service_type: serviceName
                     });
                     
-                    // Redirect to success page with order details
-                    window.location.href = `/payment-success?order_id=${orderId}&amount=${amount}&currency=${currency}`;
+                    // Redirect to success page with full details
+                    window.location.href = `/payment-success?order_id=${orderId}&amount=${amount}&currency=${currency}&service_name=${encodeURIComponent(serviceName)}&payment_method=PayPal`;
                 });
             }
         }).render('#paypal-button-container');

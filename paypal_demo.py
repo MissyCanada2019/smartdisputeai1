@@ -29,12 +29,19 @@ def payment_success():
     amount = request.args.get('amount', '49.99')
     currency = request.args.get('currency', 'CAD')
     date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    service_name = request.args.get('service_name', 'Comprehensive Document Analysis')
+    payment_method = request.args.get('payment_method', 'PayPal')
     
-    return render_template('payment_success.html', 
+    # Use enhanced success template if it exists, otherwise fall back to original
+    template = 'enhanced_payment_success.html' if os.path.exists(os.path.join('templates', 'enhanced_payment_success.html')) else 'payment_success.html'
+    
+    return render_template(template, 
                           order_id=order_id,
                           amount=amount,
                           currency=currency,
-                          date=date)
+                          date=date,
+                          service_name=service_name,
+                          payment_method=payment_method)
 
 if __name__ == '__main__':
     # Check if PayPal client ID is set
