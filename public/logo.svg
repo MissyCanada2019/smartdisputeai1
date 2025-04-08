@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="60" viewBox="0 0 240 60">
+  <style>
+    .logo-text { font-family: 'Arial', sans-serif; font-weight: bold; }
+    .tagline { font-family: 'Arial', sans-serif; font-size: 12px; }
+  </style>
+  <rect x="10" y="10" width="40" height="40" rx="5" fill="#4a5568" />
+  <path d="M20 25h20v5H20zM20 35h20v5H20z" fill="white" />
+  <path d="M30 15v30" stroke="white" stroke-width="2" stroke-dasharray="2,2" />
+  <text x="60" y="35" class="logo-text" fill="#2d3748" font-size="24">SmartDispute.ai</text>
+  <text x="60" y="48" class="tagline" fill="#718096">Empowering Canadians through accessible legal resources</text>
+</svg>

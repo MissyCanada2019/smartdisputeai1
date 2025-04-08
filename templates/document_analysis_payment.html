@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analysis Payment - SmartDispute.ai</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://www.paypal.com/sdk/js?client-id={{ client_id }}&currency=CAD"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #004d99;
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .card-header {
+            background-color: #e9f0f8;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .btn-primary {
+            background-color: #004d99;
+            border-color: #004d99;
+        }
+        .btn-primary:hover {
+            background-color: #003d7a;
+            border-color: #003d7a;
+        }
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #004d99;
+            margin: 1rem 0;
+        }
+        .feature-list {
+            margin: 1.5rem 0;
+        }
+        .feature-list li {
+            margin-bottom: 0.5rem;
+        }
+        .payment-methods {
+            margin: 2rem 0;
+        }
+        footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            background-color: #f1f1f1;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>SmartDispute.ai Document Analysis</h1>
+            <p class="lead">Upgrade to comprehensive AI document analysis</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-earmark-medical"></i> Comprehensive Document Analysis
+                    </div>
+                    <div class="card-body text-center">
+                        <h2>Unlock Premium Analysis</h2>
+                        <div class="price-tag">$4.99</div>
+                        <p class="lead">One-time payment for your uploaded document</p>
+                        
+                        <div class="feature-list">
+                            <h5>Your comprehensive analysis includes:</h5>
+                            <ul class="text-start">
+                                <li><i class="bi bi-diagram-3"></i> Detailed legal implications specific to your situation</li>
+                                <li><i class="bi bi-geo-alt"></i> Province-specific assessment based on local laws</li>
+                                <li><i class="bi bi-shield-exclamation"></i> Legal vulnerabilities identification and risk assessment</li>
+                                <li><i class="bi bi-lightbulb"></i> Strategic response recommendations with actionable steps</li>
+                                <li><i class="bi bi-journal-text"></i> Relevant case law and statutory references</li>
+                                <li><i class="bi bi-search"></i> Expert insights on document interpretation</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="payment-methods">
+                            <h5 class="mb-3">Select Payment Method</h5>
+                            
+                            <form action="/process-document-analysis-payment" method="POST">
+                                <input type="hidden" name="province" value="{{ province }}">
+                                <input type="hidden" name="dispute_type" value="{{ dispute_type }}">
+                                <input type="hidden" name="document_type" value="{{ document_type }}">
+                                <input type="hidden" name="premium" value="true">
+                                
+                                <!-- PayPal Button Container -->
+                                <div id="paypal-button-container" class="mb-4"></div>
+                                
+                                <!-- Credit Card Payment (placeholder) -->
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Pay with Credit Card</h5>
+                                        <p class="card-text text-muted">Credit card processing coming soon.</p>
+                                        <button type="button" class="btn btn-secondary" disabled>Pay with Credit Card</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- For testing purposes -->
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-outline-secondary">Simulate Successful Payment (Demo Only)</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/document-analysis" class="btn btn-outline-primary">Cancel and Return to Basic Analysis</a>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-arrow-up-circle"></i> Why Upgrade?
+                    </div>
+                    <div class="card-body">
+                        <p>Our comprehensive analysis uses advanced AI to provide deeper insights into your legal document.</p>
+                        
+                        <h5 class="mt-4">Basic vs. Comprehensive</h5>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Basic</th>
+                                    <th>Comprehensive</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Document type identification</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Key parties extraction</td>
+                                    <td>✓</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Legal implications</td>
+                                    <td>Basic</td>
+                                    <td>Detailed</td>
+                                </tr>
+                                <tr>
+                                    <td>Response strategy</td>
+                                    <td>-</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Legal references</td>
+                                    <td>-</td>
+                                    <td>✓</td>
+                                </tr>
+                                <tr>
+                                    <td>Risk assessment</td>
+                                    <td>-</td>
+                                    <td>✓</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="alert alert-info mt-3">
+                            <strong>Note:</strong> All analysis is provided for informational purposes only and should not be considered legal advice.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SmartDispute.ai - Empowering Canadians with AI-driven legal assistance</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // PayPal integration
+        paypal.Buttons({
+            createOrder: function(data, actions) {
+                // Set up the transaction
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'SmartDispute.ai Comprehensive Document Analysis',
+                        amount: {
+                            currency_code: 'CAD',
+                            value: '4.99'
+                        }
+                    }]
+                });
+            },
+            onApprove: function(data, actions) {
+                // Capture the funds from the transaction
+                return actions.order.capture().then(function(details) {
+                    // Show a success message to the buyer
+                    alert('Transaction completed by ' + details.payer.name.given_name + '! You will be redirected to your analysis results.');
+                    
+                    // Submit the form to process the payment on our server
+                    document.querySelector('form').submit();
+                });
+            }
+        }).render('#paypal-button-container');
+    </script>
+</body>
+</html>

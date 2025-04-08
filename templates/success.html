@@ -1,80 +1,267 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SmartDispute.ai - Letter Generated</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Generated | SmartDispute.ai</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            color: #333;
             margin: 0;
             padding: 20px;
-            background-color: #f7f7f7;
+            background-color: #f8f9fa;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            padding: 20px;
+            background-color: white;
+            padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        h2 {
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
         }
-        .download-button {
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #48bb78;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .download-btn {
             display: inline-block;
-            background-color: #3498db;
+            background-color: #4a5568;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             text-decoration: none;
             border-radius: 4px;
-            margin-top: 15px;
             font-weight: bold;
+            margin-right: 10px;
+            transition: background-color 0.3s;
         }
-        .info-box {
-            background-color: #e8f4fd;
-            border: 1px solid #c5e1f9;
+        .download-btn:hover {
+            background-color: #2d3748;
+        }
+        .buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .secondary-btn {
+            display: inline-block;
+            background-color: #718096;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
             border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
-        .next-steps {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
+        .secondary-btn:hover {
+            background-color: #4a5568;
+        }
+        .payment-notice {
+            background-color: #ebf8ff;
+            border: 1px solid #bee3f8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .email-form {
+            margin-top: 40px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            height: 100px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .alert-success {
+            background-color: #f0fff4;
+            border: 1px solid #c6f6d5;
+            color: #2f855a;
+        }
+        .alert-error {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #718096;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Your Dispute Letter is Ready!</h2>
+        <div class="logo">
+            <img src="/public/logo.png" alt="SmartDispute.ai Logo">
+        </div>
         
-        {% if payment_completed %}
-        <div class="info-box" style="background-color: #e6f7e9; border-color: #c3e6cb;">
-            <p><strong>Payment Successful!</strong> Thank you for your purchase. Your premium CAS Worker Reassignment Letter has been successfully generated.</p>
+        <div class="success-icon">✓</div>
+        
+        <h1>Your Document Is Ready!</h1>
+        
+        <div class="content">
+            {% if payment_completed %}
+            <div class="payment-notice">
+                <strong>Thank you for your payment!</strong> Your premium document has been successfully generated.
+            </div>
+            {% endif %}
+            
+            <p>
+                Your legal document has been successfully created and is ready for download. You can download the document now and use it for your legal matter.
+            </p>
+            
+            <p>
+                Please review the document carefully to ensure all information is correct before sending it to any recipients or official agencies.
+            </p>
+        </div>
+        
+        <div class="buttons">
+            <a href="{{ url_for('download_file', filename=filename) }}" class="download-btn">Download Document</a>
+            <a href="{{ url_for('index') }}" class="secondary-btn">Create Another Document</a>
+        </div>
+        
+        {% if email_enabled %}
+        <div class="email-form">
+            <h2>Send Document via Email</h2>
+            <p>You can send this document directly to your email for your records, or to another recipient.</p>
+            
+            <div class="alert alert-success" id="emailSuccess">
+                Document sent successfully! Please check your inbox (and spam folder) shortly.
+            </div>
+            
+            <div class="alert alert-error" id="emailError">
+                Error sending the document. Please try again or download it instead.
+            </div>
+            
+            <form id="emailForm">
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Recipient Name:</label>
+                    <input type="text" id="name" name="name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Additional Message (Optional):</label>
+                    <textarea id="message" name="message"></textarea>
+                </div>
+                
+                <input type="hidden" name="filename" value="{{ filename }}">
+                
+                <div class="buttons">
+                    <button type="submit" class="download-btn">Send Document via Email</button>
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    Sending email... Please wait.
+                </div>
+            </form>
         </div>
         {% else %}
-        <div class="info-box">
-            <p>Your dispute letter has been successfully generated. You can download it now to print or email to the recipient.</p>
+        <div class="email-form">
+            <h2>Email Service Not Available</h2>
+            <p>The email service is not currently configured. Please download your document using the button above.</p>
         </div>
         {% endif %}
         
-        <p>Click the button below to download your letter:</p>
-        <a href="/generated/{{ filename }}" class="download-button">Download Letter</a>
-        
-        <div class="next-steps">
-            <h3>Next Steps</h3>
-            <ol>
-                <li><strong>Review the letter</strong> carefully to ensure all information is correct.</li>
-                <li><strong>Print and sign</strong> the letter if you plan to send it by mail.</li>
-                <li><strong>Keep a copy</strong> for your records.</li>
-                <li><strong>Follow up</strong> if you don't receive a response within 14 days.</li>
-            </ol>
-            
-            <p>Need more help? <a href="/">Generate another letter</a></p>
-        </div>
+        <footer>
+            <p>SmartDispute.ai - Empowering Canadians through accessible legal resources</p>
+        </footer>
     </div>
+    
+    {% if email_enabled %}
+    <script>
+        document.getElementById('emailForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Hide any previous alerts
+            document.getElementById('emailSuccess').style.display = 'none';
+            document.getElementById('emailError').style.display = 'none';
+            
+            // Show loading indicator
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/send-email', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                if (data.success) {
+                    document.getElementById('emailSuccess').style.display = 'block';
+                    document.getElementById('emailForm').reset();
+                } else {
+                    document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
+                    document.getElementById('emailError').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                // Hide loading indicator
+                document.getElementById('loadingIndicator').style.display = 'none';
+                
+                // Show error message
+                document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
+                document.getElementById('emailError').style.display = 'block';
+            });
+        });
+    </script>
+    {% endif %}
 </body>
 </html>

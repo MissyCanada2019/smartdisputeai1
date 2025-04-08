@@ -1,404 +1,480 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>SmartDispute.ai - Dispute Form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Document | SmartDispute.ai</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            color: #333;
             margin: 0;
             padding: 20px;
-            background-color: #f7f7f7;
+            background-color: #f8f9fa;
         }
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            padding: 20px;
+            background-color: white;
+            padding: 30px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .logo img {
+            max-width: 200px;
+            height: auto;
+        }
+        h1 {
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
         }
         h2 {
-            color: #2c3e50;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-        h3 {
-            color: #3498db;
-            margin-top: 25px;
+            color: #4a5568;
+            margin-top: 30px;
             margin-bottom: 15px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #eee;
+            font-size: 1.5rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .document-info {
+            background-color: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #4299e1;
+        }
+        .document-info p {
+            margin: 10px 0;
+        }
+        .document-info .label {
+            font-weight: bold;
+            color: #4a5568;
         }
         .form-group {
             margin-bottom: 20px;
         }
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: bold;
-            color: #333;
+            color: #4a5568;
         }
-        input[type="text"],
-        input[type="email"],
-        textarea {
+        .form-group input[type="text"], 
+        .form-group input[type="email"],
+        .form-group input[type="date"],
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #cbd5e0;
             border-radius: 4px;
+            font-family: inherit;
             font-size: 16px;
-            box-sizing: border-box;
         }
-        textarea {
-            min-height: 100px;
+        .form-group textarea {
+            height: 120px;
         }
-        button {
-            background-color: #3498db;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #edf2f7;
         }
-        button:hover {
-            background-color: #2980b9;
+        .form-section:last-child {
+            border-bottom: none;
         }
-        .tip {
+        .help-text {
             font-size: 14px;
-            color: #666;
+            color: #718096;
             margin-top: 5px;
         }
+        .btn {
+            background-color: #4a5568;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2d3748;
+        }
+        .btn-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .required-label {
+            color: #e53e3e;
+        }
+        .conditional-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f7fafc;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
         .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: #3498db;
+            display: block;
+            margin-bottom: 20px;
+            color: #4a5568;
             text-decoration: none;
         }
         .back-link:hover {
             text-decoration: underline;
         }
-        .info-box {
-            background-color: #e8f4fd;
-            border: 1px solid #c5e1f9;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #718096;
             font-size: 14px;
+        }
+        .premium-notice {
+            background-color: #fffaf0;
+            border: 1px solid #feebc8;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+        }
+        .premium-notice h3 {
+            color: #dd6b20;
+            margin-top: 0;
+        }
+        .checkbox-group {
+            margin-top: 10px;
+        }
+        .checkbox-group label {
+            display: inline-block;
+            font-weight: normal;
+            margin-left: 5px;
+        }
+        .radio-group {
+            margin-top: 10px;
+        }
+        .radio-group label {
+            display: inline-block;
+            font-weight: normal;
+            margin-left: 5px;
+            margin-right: 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Dispute Form for {{ province }} - {{ dispute_type.replace("_", " ").title() }}</h2>
+        <div class="logo">
+            <img src="/public/logo.png" alt="SmartDispute.ai Logo">
+        </div>
         
-        <form action="/generate" method="post">
+        <a href="{{ url_for('index') }}" class="back-link">← Back to document selection</a>
+        
+        <h1>Generate Your Document</h1>
+        
+        <div class="document-info">
+            <p><span class="label">Province:</span> {{ province_name }}</p>
+            <p><span class="label">Document Type:</span> {{ dispute_type_name }}</p>
+            {% if is_premium %}
+            <p><span class="label">Document Category:</span> Premium Document (${{ price }})</p>
+            {% endif %}
+        </div>
+        
+        {% if is_premium %}
+        <div class="premium-notice">
+            <h3>Premium Document</h3>
+            <p>This is a premium document that requires payment to generate. You will be redirected to our secure payment page after submitting the form.</p>
+            <p>Cost: ${{ price }}</p>
+        </div>
+        {% endif %}
+        
+        <form method="post" action="{{ url_for('generate') }}">
             <input type="hidden" name="province" value="{{ province }}">
             <input type="hidden" name="dispute_type" value="{{ dispute_type }}">
-
-            <h3>Your Information</h3>
-            <div class="form-group">
-                <label for="name">Full Name:</label>
-                <input type="text" name="name" required>
-                <p class="tip">Enter your legal name as it should appear on official documents.</p>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email Address:</label>
-                <input type="email" name="email" required>
-            </div>
-
-            <div class="form-group">
-                <label for="address">Your Address:</label>
-                <textarea name="address" placeholder="Your current mailing address"></textarea>
-                <p class="tip">Enter your full mailing address as it should appear on the document.</p>
-            </div>
-
-            <h3>Recipient Information</h3>
-            <div class="form-group">
-                <label for="recipient_name">Recipient Name/Organization:</label>
-                <input type="text" name="recipient_name" placeholder="To Whom It May Concern">
-                <p class="tip">Enter the name of the person or organization you're addressing.</p>
-            </div>
-
-            <div class="form-group">
-                <label for="recipient_address">Recipient Address:</label>
-                <textarea name="recipient_address" placeholder="Optional: Full address of recipient"></textarea>
-            </div>
-
-            {% if province == 'QC' and (dispute_type.startswith('cas_') or dispute_type == 'sublease_agreement') %}
-            <h3>Language Preference</h3>
-            <div class="form-group">
-                <label for="language">Preferred Language:</label>
-                <select name="language">
-                    <option value="EN">English</option>
-                    <option value="FR">French (Français)</option>
-                </select>
-                <p class="tip">For Quebec residents, you can choose to generate your letter in English or French.</p>
-            </div>
-            {% endif %}
-
-            <h3>Dispute Details</h3>
-            <div class="form-group">
-                <label for="description">Describe the issue in detail:</label>
-                <textarea name="description" required placeholder="Please provide as much detail as possible about your dispute. Include relevant dates, locations, and any supporting information."></textarea>
-                <p class="tip">Be specific and include all relevant facts, dates, amounts, and previous communication details.</p>
+            
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h2>Your Information</h2>
+                
+                <div class="form-group">
+                    <label for="full_name">Your Full Name <span class="required-label">*</span></label>
+                    <input type="text" id="full_name" name="full_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="address">Your Address <span class="required-label">*</span></label>
+                    <textarea id="address" name="address" required></textarea>
+                    <p class="help-text">Include your complete address including street, city, province, and postal code</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Your Email Address</label>
+                    <input type="email" id="email" name="email">
+                    <p class="help-text">Optional but recommended if you want to receive the document by email</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Your Phone Number</label>
+                    <input type="text" id="phone" name="phone">
+                </div>
             </div>
             
-            {% if dispute_type.endswith('cease_desist') %}
-            <div class="form-group">
-                <label for="prior_incidents">Describe any prior incidents or communications:</label>
-                <textarea name="prior_incidents" placeholder="Detail any previous incidents, communications, or harassment that led to this cease and desist request."></textarea>
-                <p class="tip">Include dates and specific examples of previous incidents or communications.</p>
+            <!-- Recipient Information Section -->
+            <div class="form-section">
+                <h2>Recipient Information</h2>
+                
+                <div class="form-group">
+                    <label for="recipient_name">Recipient Name (Individual or Organization) <span class="required-label">*</span></label>
+                    <input type="text" id="recipient_name" name="recipient_name" required>
+                    {% if dispute_type.startswith('cas_') %}
+                    <p class="help-text">Enter the name of the Children's Aid Society agency</p>
+                    {% elif dispute_type.startswith('landlord_') %}
+                    <p class="help-text">Enter your landlord's full name or property management company</p>
+                    {% elif dispute_type.startswith('credit_') %}
+                    <p class="help-text">Enter the name of the credit bureau or financial institution</p>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="recipient_address">Recipient Address <span class="required-label">*</span></label>
+                    <textarea id="recipient_address" name="recipient_address" required></textarea>
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="requested_actions">Specific actions you want stopped:</label>
-                <textarea name="requested_actions" placeholder="Clearly list the specific actions or behaviors you want the recipient to stop."></textarea>
-                <p class="tip">Be clear and specific about what actions you want the recipient to cease immediately.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="consequences">Potential consequences if the behavior continues:</label>
-                <textarea name="consequences" placeholder="Outline potential legal actions you may take if the behavior doesn't stop."></textarea>
-                <p class="tip">This may include reporting to authorities, seeking legal counsel, or pursuing civil remedies.</p>
-            </div>
-            {% endif %}
-            
-            {% if dispute_type == 'cas_worker_reassignment' %}
-            <div class="form-group">
-                <label for="current_worker_name">Current CAS Worker's Name:</label>
-                <input type="text" name="current_worker_name" required>
-                <p class="tip">Enter the full name of the CAS worker you're requesting to have reassigned.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="description_of_concerns">Describe your concerns with the current worker:</label>
-                <textarea name="description_of_concerns" required placeholder="Provide specific examples of conduct, communication issues, or other concerns that justify the reassignment request."></textarea>
-                <p class="tip">Be specific, factual, and professional. Include dates and details of incidents that demonstrate why a new worker is needed.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="previous_attempts">Previous attempts to resolve the issue:</label>
-                <textarea name="previous_attempts" placeholder="Describe any prior attempts to address these concerns with the agency or worker."></textarea>
-                <p class="tip">Include dates of any emails, phone calls, or meetings where you tried to resolve issues.</p>
-            </div>
-            
-            <h3>Payment Information</h3>
-            <div class="info-box">
-                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="payment_method">Payment Method:</label>
-                <select name="payment_method">
-                    <option value="paypal">PayPal</option>
-                    <option value="credit_card">Credit Card</option>
-                </select>
+            <!-- Document-Specific Fields -->
+            {% if dispute_type.startswith('cas_worker_') %}
+            <div class="form-section">
+                <h2>CAS Worker Reassignment Details</h2>
+                
+                <div class="form-group">
+                    <label for="current_worker_name">Current Worker's Name <span class="required-label">*</span></label>
+                    <input type="text" id="current_worker_name" name="current_worker_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="case_number">Case Number/File Number (if known)</label>
+                    <input type="text" id="case_number" name="case_number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reassignment_reason">Reason for Requesting Reassignment <span class="required-label">*</span></label>
+                    <select id="reassignment_reason" name="reassignment_reason" required>
+                        <option value="">-- Select a Reason --</option>
+                        <option value="communication">Communication Issues</option>
+                        <option value="bias">Demonstrated Bias or Prejudice</option>
+                        <option value="conflict">Conflict of Interest</option>
+                        <option value="unprofessional">Unprofessional Conduct</option>
+                        <option value="trust">Breakdown of Trust</option>
+                        <option value="other">Other Reason (specify below)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="details">Describe the Specific Issues <span class="required-label">*</span></label>
+                    <textarea id="details" name="details" required></textarea>
+                    <p class="help-text">Provide concrete examples of issues you've experienced with the caseworker</p>
+                </div>
             </div>
             {% endif %}
             
-            {% if dispute_type == 'cas_answer_plan' %}
-            <div class="form-group">
-                <label for="case_number">CAS/Child Protection Case Number (if known):</label>
-                <input type="text" name="case_number" placeholder="Optional: Your case/file number">
-            </div>
-            
-            <div class="form-group">
-                <label for="plan_date">Date of Plan of Care/Service Plan:</label>
-                <input type="text" name="plan_date" placeholder="e.g., May 15, 2025">
-                <p class="tip">Enter the date shown on the Plan of Care or Service Plan document you received.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="alternative_plan">Your Alternative Plan Proposal:</label>
-                <textarea name="alternative_plan" placeholder="Describe your alternative proposal for addressing the concerns raised in the official plan."></textarea>
-                <p class="tip">Be specific, realistic, and demonstrate how your proposal addresses the agency's concerns about child safety.</p>
-            </div>
-            
-            <h3>Payment Information</h3>
-            <div class="info-box">
-                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="payment_method">Payment Method:</label>
-                <select name="payment_method">
-                    <option value="paypal">PayPal</option>
-                    <option value="credit_card">Credit Card</option>
-                </select>
-            </div>
-            {% endif %}
-            
-            {% if dispute_type == 'cas_records_request' %}
-            <div class="form-group">
-                <label for="specific_records">Specific Records Requested:</label>
-                <textarea name="specific_records" placeholder="List the specific records you are requesting (e.g., all case notes from January-March 2025, assessment reports, etc.)"></textarea>
-                <p class="tip">Be as specific as possible about what records you need. Include date ranges if applicable.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="purpose">Purpose of Request:</label>
-                <select name="purpose">
-                    <option value="review">To review my/my child's file</option>
-                    <option value="legal">For legal proceedings</option>
-                    <option value="correction">To correct inaccurate information</option>
-                    <option value="other">Other (specify in description)</option>
-                </select>
-            </div>
-            
-            <h3>Payment Information</h3>
-            <div class="info-box">
-                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="payment_method">Payment Method:</label>
-                <select name="payment_method">
-                    <option value="paypal">PayPal</option>
-                    <option value="credit_card">Credit Card</option>
-                </select>
+            {% if dispute_type.startswith('cas_records_') %}
+            <div class="form-section">
+                <h2>Records Request Details</h2>
+                
+                <div class="form-group">
+                    <label for="request_type">Type of Records Requested <span class="required-label">*</span></label>
+                    <select id="request_type" name="request_type" required>
+                        <option value="">-- Select Records Type --</option>
+                        <option value="all">Complete Case File</option>
+                        <option value="notes">Case Notes Only</option>
+                        <option value="assessments">Assessments and Reports</option>
+                        <option value="medical">Medical Records</option>
+                        <option value="communications">Communications</option>
+                        <option value="custom">Custom Request (specify below)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="case_number">Case Number/File Number (if known)</label>
+                    <input type="text" id="case_number" name="case_number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="date_range">Date Range (if applicable)</label>
+                    <input type="text" id="date_range" name="date_range" placeholder="e.g., January 2022 to Present">
+                </div>
+                
+                <div class="form-group">
+                    <label for="specific_details">Additional Details About Your Request</label>
+                    <textarea id="specific_details" name="specific_details"></textarea>
+                    <p class="help-text">Include any specific information about what you're looking for</p>
+                </div>
             </div>
             {% endif %}
             
-            {% if dispute_type == 'cas_appeal' %}
-            <div class="form-group">
-                <label for="decision_date">Date of Decision Being Appealed:</label>
-                <input type="text" name="decision_date" placeholder="e.g., April 2, 2025">
-                <p class="tip">Enter the date of the agency decision you are appealing.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="decision_details">Decision Details:</label>
-                <textarea name="decision_details" placeholder="Describe the specific decision you are appealing and who made it."></textarea>
-                <p class="tip">Clearly specify what decision was made and by whom.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="appeal_grounds">Grounds for Appeal:</label>
-                <textarea name="appeal_grounds" placeholder="Explain the legal or factual reasons why the decision should be overturned or modified."></textarea>
-                <p class="tip">Be specific about why you believe the decision was wrong, unreasonable, or procedurally unfair.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="requested_remedy">Requested Remedy:</label>
-                <textarea name="requested_remedy" placeholder="What specific outcome are you seeking from this appeal?"></textarea>
-                <p class="tip">Clearly state what you want to happen as a result of your appeal.</p>
-            </div>
-            
-            <h3>Payment Information</h3>
-            <div class="info-box">
-                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="payment_method">Payment Method:</label>
-                <select name="payment_method">
-                    <option value="paypal">PayPal</option>
-                    <option value="credit_card">Credit Card</option>
-                </select>
-            </div>
-            {% endif %}
-            
-            {% if dispute_type == 'repair_notice' %}
-            <div class="form-group">
-                <label for="repair_issues">Repair Issues:</label>
-                <textarea name="repair_issues" placeholder="List all repair issues that need to be addressed"></textarea>
-                <p class="tip">Be specific about each repair issue, its location, and when it was first noticed.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="prior_notifications">Prior Repair Notifications:</label>
-                <textarea name="prior_notifications" placeholder="Describe any previous notifications to the landlord about these issues"></textarea>
-                <p class="tip">Include dates of prior notifications and the landlord's response.</p>
+            {% if dispute_type.startswith('repair_notice') %}
+            <div class="form-section">
+                <h2>Repair Request Details</h2>
+                
+                <div class="form-group">
+                    <label for="property_address">Rental Property Address <span class="required-label">*</span></label>
+                    <textarea id="property_address" name="property_address" required></textarea>
+                    <p class="help-text">Address of the property requiring repairs (if different from your address)</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="issue_description">Description of Issues Requiring Repair <span class="required-label">*</span></label>
+                    <textarea id="issue_description" name="issue_description" required></textarea>
+                    <p class="help-text">Be specific about each issue needing repair (e.g., leaking bathroom faucet, broken window)</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="issue_date">When Did You First Notice the Issue? <span class="required-label">*</span></label>
+                    <input type="date" id="issue_date" name="issue_date" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="previous_notification">Have You Previously Notified the Landlord?</label>
+                    <div class="radio-group">
+                        <input type="radio" id="previous_yes" name="previous_notification" value="yes">
+                        <label for="previous_yes">Yes</label>
+                        <input type="radio" id="previous_no" name="previous_notification" value="no" checked>
+                        <label for="previous_no">No</label>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="previous_details_group" style="display: none;">
+                    <label for="previous_details">Details of Previous Notifications</label>
+                    <textarea id="previous_details" name="previous_details"></textarea>
+                    <p class="help-text">When and how you previously notified the landlord, and their response if any</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="health_safety">Does this issue affect health or safety?</label>
+                    <div class="radio-group">
+                        <input type="radio" id="health_safety_yes" name="health_safety" value="yes">
+                        <label for="health_safety_yes">Yes</label>
+                        <input type="radio" id="health_safety_no" name="health_safety" value="no" checked>
+                        <label for="health_safety_no">No</label>
+                    </div>
+                </div>
             </div>
             {% endif %}
             
-            {% if dispute_type == 'intent_to_vacate' %}
-            <div class="form-group">
-                <label for="move_out_date">Intended Move-Out Date:</label>
-                <input type="text" name="move_out_date" placeholder="e.g., May 31, 2025">
-                <p class="tip">This should comply with your lease's notice period requirements.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="tenancy_details">Tenancy Details:</label>
-                <textarea name="tenancy_details" placeholder="Include details about your current lease (start date, monthly rent, etc.)"></textarea>
-            </div>
-            {% endif %}
-            
-            {% if dispute_type == 'termination_notice' %}
-            <div class="form-group">
-                <label for="termination_date">Termination Date:</label>
-                <input type="text" name="termination_date" placeholder="e.g., May 31, 2025">
-            </div>
-            
-            <div class="form-group">
-                <label for="termination_reason">Reason for Termination:</label>
-                <select name="termination_reason">
-                    <option value="lease_end">End of lease term</option>
-                    <option value="moving">Moving to a new location</option>
-                    <option value="other">Other (please specify in description)</option>
-                </select>
-            </div>
-            {% endif %}
-            
-            {% if dispute_type == 'sublease_agreement' %}
-            <div class="form-group">
-                <label for="subtenant_name">Subtenant's Full Name:</label>
-                <input type="text" name="subtenant_name" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="property_address">Rental Property Address:</label>
-                <textarea name="property_address" required></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="sublease_start">Sublease Start Date:</label>
-                <input type="text" name="sublease_start" placeholder="e.g., June 1, 2025" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="sublease_end">Sublease End Date:</label>
-                <input type="text" name="sublease_end" placeholder="e.g., August 31, 2025" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="monthly_rent">Monthly Rent Amount:</label>
-                <input type="text" name="monthly_rent" placeholder="e.g., $1,500.00" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="security_deposit">Security Deposit Amount:</label>
-                <input type="text" name="security_deposit" placeholder="e.g., $1,500.00">
-            </div>
-            
-            <div class="form-group">
-                <label for="utilities_included">Utilities Included:</label>
-                <textarea name="utilities_included" placeholder="List any utilities included in the rent"></textarea>
-            </div>
-            
-            <h3>Payment Information</h3>
-            <div class="info-box">
-                <p>This document requires a $9.99 payment. You will be directed to our secure payment page after submitting this form.</p>
-            </div>
-            
-            <div class="form-group">
-                <label for="payment_method">Payment Method:</label>
-                <select name="payment_method">
-                    <option value="paypal">PayPal</option>
-                    <option value="credit_card">Credit Card</option>
-                </select>
+            {% if dispute_type.startswith('sublease_agreement') %}
+            <div class="form-section">
+                <h2>Sublease Agreement Details</h2>
+                
+                <div class="form-group">
+                    <label for="property_address">Rental Property Address <span class="required-label">*</span></label>
+                    <textarea id="property_address" name="property_address" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subtenant_name">Subtenant's Full Name <span class="required-label">*</span></label>
+                    <input type="text" id="subtenant_name" name="subtenant_name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subtenant_email">Subtenant's Email Address</label>
+                    <input type="email" id="subtenant_email" name="subtenant_email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="subtenant_phone">Subtenant's Phone Number</label>
+                    <input type="text" id="subtenant_phone" name="subtenant_phone">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sublease_start">Sublease Start Date <span class="required-label">*</span></label>
+                    <input type="date" id="sublease_start" name="sublease_start" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sublease_end">Sublease End Date <span class="required-label">*</span></label>
+                    <input type="date" id="sublease_end" name="sublease_end" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthly_rent">Monthly Rent Amount ($) <span class="required-label">*</span></label>
+                    <input type="text" id="monthly_rent" name="monthly_rent" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="security_deposit">Security Deposit Amount ($)</label>
+                    <input type="text" id="security_deposit" name="security_deposit">
+                </div>
+                
+                <div class="form-group">
+                    <label for="utilities_included">Utilities Included in Rent</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="electricity" name="utilities[]" value="electricity">
+                        <label for="electricity">Electricity</label><br>
+                        <input type="checkbox" id="water" name="utilities[]" value="water">
+                        <label for="water">Water</label><br>
+                        <input type="checkbox" id="heat" name="utilities[]" value="heat">
+                        <label for="heat">Heat</label><br>
+                        <input type="checkbox" id="internet" name="utilities[]" value="internet">
+                        <label for="internet">Internet</label><br>
+                        <input type="checkbox" id="cable" name="utilities[]" value="cable">
+                        <label for="cable">Cable TV</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="special_terms">Special Terms or Conditions</label>
+                    <textarea id="special_terms" name="special_terms"></textarea>
+                    <p class="help-text">Include any specific conditions of the sublease arrangement</p>
+                </div>
             </div>
             {% endif %}
-
-            <button type="submit">Generate Letter</button>
+            
+            <!-- Additional Information Section (for all document types) -->
+            <div class="form-section">
+                <h2>Additional Information</h2>
+                
+                <div class="form-group">
+                    <label for="additional_details">Any Additional Details or Context</label>
+                    <textarea id="additional_details" name="additional_details"></textarea>
+                    <p class="help-text">Provide any additional information that may be relevant to your document</p>
+                </div>
+            </div>
+            
+            <div class="btn-container">
+                <button type="submit" class="btn">Generate Document</button>
+            </div>
         </form>
         
-        <a href="/" class="back-link">← Back to Province Selection</a>
+        <footer>
+            <p>SmartDispute.ai - Empowering Canadians through accessible legal resources</p>
+        </footer>
     </div>
+    
+    <script>
+        // Show/hide conditional fields based on selection
+        document.addEventListener('DOMContentLoaded', function() {
+            // For repair notice - previous notification details
+            var previousNotificationRadios = document.querySelectorAll('input[name="previous_notification"]');
+            if (previousNotificationRadios.length > 0) {
+                previousNotificationRadios.forEach(function(radio) {
+                    radio.addEventListener('change', function() {
+                        var detailsGroup = document.getElementById('previous_details_group');
+                        if (this.value === 'yes' && detailsGroup) {
+                            detailsGroup.style.display = 'block';
+                        } else if (detailsGroup) {
+                            detailsGroup.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Add more conditional logic as needed for other document types
+        });
+    </script>
 </body>
 </html>

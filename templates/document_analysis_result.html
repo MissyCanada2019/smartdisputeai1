@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analysis Results - SmartDispute.ai</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #004d99;
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .card-header {
+            background-color: #e9f0f8;
+            font-weight: bold;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .btn-primary {
+            background-color: #004d99;
+            border-color: #004d99;
+        }
+        .btn-primary:hover {
+            background-color: #003d7a;
+            border-color: #003d7a;
+        }
+        .analysis-header {
+            background-color: #f1f8ff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border: 1px solid #d1e7ff;
+        }
+        .confidence-meter {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #e9ecef;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background-color: #004d99;
+        }
+        .key-dates {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .issues-box {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .recommendations-box {
+            background-color: #d1e7dd;
+            border-left: 4px solid #198754;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .legislation-box {
+            background-color: #cff4fc;
+            border-left: 4px solid #0dcaf0;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        footer {
+            margin-top: 3rem;
+            padding: 1.5rem 0;
+            background-color: #f1f1f1;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Document Analysis Results</h1>
+            <p class="lead">AI-powered insights for your legal document</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="analysis-header">
+            <div class="row">
+                <div class="col-md-9">
+                    <h2>Analysis of: {{ document_name }}</h2>
+                    <p class="text-muted">Analysis Date: {{ analysis.meta.analysisDate }}</p>
+                    <p>Analysis Level: 
+                        {% if analysis.meta.analysisLevel == 'comprehensive' %}
+                        <span class="badge bg-success">Comprehensive</span>
+                        {% else %}
+                        <span class="badge bg-primary">Basic</span>
+                        {% endif %}
+                    </p>
+                    
+                    {% if analysis.meta.fallbackAnalysis %}
+                    <div class="alert alert-warning mt-3">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Automated Fallback Analysis</h5>
+                        <p>Our AI analysis service is currently unavailable. We've provided a standard automated analysis based on the document type. For more accurate and detailed analysis, please try again later or contact support.</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h5>Confidence Score</h5>
+                        <h3>{% if analysis.confidenceScore %}{{ (analysis.confidenceScore * 100)|round|int }}{% else %}75{% endif %}%</h3>
+                        <div class="confidence-meter">
+                            <div class="confidence-fill" style="width: {% if analysis.confidenceScore %}{{ (analysis.confidenceScore * 100)|round|int }}{% else %}75{% endif %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-file-text"></i> Document Summary
+                    </div>
+                    <div class="card-body">
+                        <p>{{ analysis.documentSummary }}</p>
+                        
+                        {% if analysis.keyParties and analysis.keyParties|length > 0 %}
+                        <h5 class="mt-4"><i class="bi bi-people"></i> Key Parties</h5>
+                        <ul class="list-group">
+                            {% for party in analysis.keyParties %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <strong>{{ party.name }}</strong>
+                                <span class="badge bg-secondary">{{ party.role }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        
+                        {% if analysis.criticalDates and analysis.criticalDates|length > 0 %}
+                        <div class="key-dates mt-4">
+                            <h5><i class="bi bi-calendar-event"></i> Critical Dates and Deadlines</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for date_item in analysis.criticalDates %}
+                                <li class="list-group-item bg-transparent">
+                                    <strong>{{ date_item.date }}</strong>: {{ date_item.description }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if analysis.keyFindings and analysis.keyFindings|length > 0 %}
+                        <h5 class="mt-4"><i class="bi bi-search"></i> Key Findings</h5>
+                        <ul>
+                            {% for finding in analysis.keyFindings %}
+                            <li>{{ finding }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if analysis.potentialIssues and analysis.potentialIssues|length > 0 %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-exclamation-triangle"></i> Potential Issues Identified
+                    </div>
+                    <div class="card-body">
+                        <div class="issues-box">
+                            <ul class="mb-0">
+                                {% for issue in analysis.potentialIssues %}
+                                <li>{{ issue }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if analysis.recommendations and analysis.recommendations|length > 0 %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-lightbulb"></i> Recommendations
+                    </div>
+                    <div class="card-body">
+                        <div class="recommendations-box">
+                            <ul class="mb-0">
+                                {% for recommendation in analysis.recommendations %}
+                                <li>{{ recommendation }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if analysis.relevantLegislation and analysis.relevantLegislation|length > 0 %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-journal-text"></i> Relevant Legislation and References
+                    </div>
+                    <div class="card-body">
+                        <div class="legislation-box">
+                            <ul class="mb-0">
+                                {% for legislation in analysis.relevantLegislation %}
+                                <li>{{ legislation }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-arrow-right-circle"></i> Next Steps
+                    </div>
+                    <div class="card-body">
+                        <p>Based on this analysis, consider the following actions:</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="/" class="btn btn-primary">Create a Response Document</a>
+                            <a href="/" class="btn btn-outline-primary">Get Legal Resources</a>
+                            <a href="/document-analysis" class="btn btn-outline-secondary">Analyze Another Document</a>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="alert alert-warning">
+                            <h5><i class="bi bi-shield-exclamation"></i> Important Disclaimer</h5>
+                            <p class="mb-0">This analysis is provided for informational purposes only and does not constitute legal advice. Please consult with a qualified legal professional for specific advice related to your situation.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if analysis.meta.analysisLevel == 'basic' %}
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-graph-up-arrow"></i> Upgrade Your Analysis
+                    </div>
+                    <div class="card-body text-center">
+                        <h5><i class="bi bi-stars"></i> Want More Detailed Insights?</h5>
+                        <p>Upgrade to our comprehensive analysis for deeper legal insights and recommendations specific to your situation.</p>
+                        <div class="text-start mb-3">
+                            <small>
+                                <ul class="mb-0">
+                                    <li><i class="bi bi-diagram-3"></i> Detailed legal implications</li>
+                                    <li><i class="bi bi-journal-text"></i> Precedent-based analysis</li>
+                                    <li><i class="bi bi-lightbulb"></i> Strategic response options</li>
+                                    <li><i class="bi bi-geo-alt"></i> Province-specific guidance</li>
+                                </ul>
+                            </small>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="/document-analysis-payment?province={{ analysis.meta.province }}&dispute_type={{ analysis.meta.disputeType }}&document_type={{ analysis.meta.documentType }}" class="btn btn-success">
+                                Upgrade to Comprehensive Analysis
+                            </a>
+                        </div>
+                        <p class="text-muted mt-2"><small>One-time payment of $4.99</small></p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="card">
+                    <div class="card-header">
+                        <i class="bi bi-question-circle"></i> Need Additional Help?
+                    </div>
+                    <div class="card-body">
+                        <p>If you need further assistance, consider:</p>
+                        <ul>
+                            <li><i class="bi bi-building"></i> Consulting a legal aid clinic in your area</li>
+                            <li><i class="bi bi-house-door"></i> Contacting your local tenant rights organization</li>
+                            <li><i class="bi bi-people"></i> Reaching out to community support services</li>
+                        </ul>
+                        <p class="text-center mt-3">
+                            <a href="mailto:support@smartdispute.ai" class="btn btn-sm btn-outline-primary">Contact Support</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SmartDispute.ai - Empowering Canadians with AI-driven legal assistance</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

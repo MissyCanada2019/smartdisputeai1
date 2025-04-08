@@ -5,7 +5,9 @@ import os
 import uuid
 import json
 import datetime
-from flask import jsonify
+import subprocess
+from flask import jsonify, session
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'smartdispute_ai_development_key')
@@ -1004,6 +1006,138 @@ def send_email():
     except Exception as e:
         print(f"Exception in send_email: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Set up uploads folder for document analysis
+ANALYSIS_UPLOAD_FOLDER = 'uploads/documents'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx', 'doc', 'rtf', 'jpg', 'jpeg', 'png'}
+
+# Create uploads directory if it doesn't exist
+if not os.path.exists(ANALYSIS_UPLOAD_FOLDER):
+    os.makedirs(ANALYSIS_UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    """Check if the file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/document-analysis', methods=['GET'])
+def document_analysis_form():
+    """Display the document analysis form"""
+    return render_template('document_analysis.html')
+
+@app.route('/analyze-document', methods=['POST'])
+def analyze_document():
+    """Process document for AI analysis"""
+    try:
+        # Check if a file was uploaded
+        if 'document' not in request.files:
+            return jsonify({"success": False, "message": "No document file provided"})
+            
+        file = request.files['document']
+        
+        # Check if file was selected
+        if file.filename == '':
+            return jsonify({"success": False, "message": "No file selected"})
+            
+        # Check if the file extension is allowed
+        if not allowed_file(file.filename):
+            allowed_ext = ', '.join(ALLOWED_EXTENSIONS)
+            return jsonify({"success": False, "message": f"File type not allowed. Supported formats: {allowed_ext}"})
+        
+        # Get form data
+        analysis_type = request.form.get('analysis_type', 'basic')
+        province = request.form.get('province', 'ON')
+        dispute_type = request.form.get('dispute_type', 'landlord_tenant')
+        document_type = request.form.get('document_type', 'notice')
+        
+        # Save the uploaded file
+        filename = secure_filename(file.filename)
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        file_path = os.path.join(ANALYSIS_UPLOAD_FOLDER, unique_filename)
+        file.save(file_path)
+        
+        # Store file path in session for later use
+        session['analysis_document_path'] = file_path
+        session['analysis_document_name'] = filename
+        
+        # Free tier users get basic analysis only
+        is_premium = request.form.get('premium', 'false').lower() == 'true'
+        basic_analysis_only = not is_premium
+        
+        # If free tier, show payment page before full analysis
+        if not is_premium and analysis_type == 'comprehensive':
+            return redirect(url_for('document_analysis_payment', 
+                                   province=province, 
+                                   dispute_type=dispute_type,
+                                   document_type=document_type))
+        
+        # Run the analysis using Node.js script
+        result = subprocess.run([
+            'node', 'document-analysis-test.cjs',
+            '--document', file_path,
+            '--province', province,
+            '--dispute_type', dispute_type,
+            '--document_type', document_type,
+            '--basic_only', 'true' if basic_analysis_only else 'false'
+        ], capture_output=True, text=True)
+        
+        # If the analysis was successful
+        if result.returncode == 0:
+            try:
+                # Try to parse the output as JSON
+                analysis_result = json.loads(result.stdout)
+                
+                # Store analysis result in session
+                session['analysis_result'] = analysis_result
+                
+                # Redirect to analysis results page
+                return redirect(url_for('document_analysis_result'))
+            except json.JSONDecodeError:
+                print("Failed to parse analysis result as JSON")
+                return jsonify({
+                    "success": False, 
+                    "message": "Failed to parse analysis result",
+                    "output": result.stdout
+                })
+        else:
+            print(f"Error analyzing document: {result.stderr}")
+            # Check for API key errors
+            if "API key" in result.stderr:
+                return jsonify({
+                    "success": False, 
+                    "message": "AI analysis service unavailable. Please try again later."
+                })
+            return jsonify({"success": False, "message": "Failed to analyze document"})
+            
+    except Exception as e:
+        print(f"Exception in analyze_document: {str(e)}")
+        return jsonify({"success": False, "message": f"Error processing document: {str(e)}"})
+
+@app.route('/document-analysis-payment')
+def document_analysis_payment():
+    """Display payment page for document analysis"""
+    province = request.args.get('province', 'ON')
+    dispute_type = request.args.get('dispute_type', 'landlord_tenant')
+    document_type = request.args.get('document_type', 'notice')
+    
+    return render_template('document_analysis_payment.html', 
+                          province=province,
+                          dispute_type=dispute_type,
+                          document_type=document_type)
+
+@app.route('/document-analysis-result')
+def document_analysis_result():
+    """Display document analysis results"""
+    # Get analysis result from session
+    analysis_result = session.get('analysis_result', {})
+    document_name = session.get('analysis_document_name', 'Uploaded document')
+    
+    if not analysis_result:
+        return redirect(url_for('document_analysis_form'))
+    
+    return render_template('document_analysis_result.html', 
+                          analysis=analysis_result,
+                          document_name=document_name)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)
