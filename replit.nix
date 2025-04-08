@@ -1,5 +1,15 @@
 {pkgs}: {
   deps = [
+    pkgs.tesseract
+    pkgs.zlib
+    pkgs.tk
+    pkgs.tcl
+    pkgs.libxcrypt
+    pkgs.libwebp
+    pkgs.libtiff
+    pkgs.libjpeg
+    pkgs.libimagequant
+    pkgs.lcms2
     pkgs.xcbuild
     pkgs.swig
     pkgs.openjpeg
