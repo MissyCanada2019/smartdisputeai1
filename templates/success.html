@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Generated | SmartDispute.ai</title>
     <!-- Google Tag Manager -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MEASUREMENT-ID"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3WXDJLT2T"></script>
+    <!-- Enhanced Analytics Module -->
+    <script src="{{ url_for('static', filename='js/analytics-enhanced.js') }}"></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-MEASUREMENT-ID'); // Replace with your GA4 Measurement ID in production
+        // Initialize Analytics with our measurement ID
+        window.sdAnalytics.initializeAnalytics('G-S3WXDJLT2T');
     </script>
     <!-- End Google Tag Manager -->
     <style>
@@ -228,42 +228,48 @@
         </footer>
     </div>
     
-    <!-- Google Analytics and Email Script -->
+    <!-- Enhanced Analytics and Email Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Track success page view with appropriate event
+            // Track page view with enhanced details
+            window.sdAnalytics.trackPageView('Document Success', 'Conversion');
+            
+            // Track document generation with details
             {% if payment_completed %}
-            // If payment was completed, we should track this as a purchase completion
-            gtag('event', 'purchase_success', {
-                event_category: 'conversion',
-                event_label: 'Payment completed'
+            // For paid documents, track as part of a purchase flow
+            window.sdAnalytics.trackFormSubmission('document_generation_complete', {
+                document_type: '{{ document_type|default("legal_document") }}',
+                payment_status: 'paid',
+                province: '{{ province|default("unknown") }}'
             });
             {% else %}
             // For free documents
-            gtag('event', 'document_generated', {
-                event_category: 'conversion',
-                event_label: 'Document generated'
+            window.sdAnalytics.trackDocumentGeneration('{{ document_type|default("standard_document") }}', {
+                tier: 'standard',
+                province: '{{ province|default("unknown") }}',
+                template_type: '{{ template_type|default("general") }}'
             });
             {% endif %}
             
-            // Track document download clicks
+            // Track document download clicks with enhanced properties
             document.getElementById('download-btn').addEventListener('click', function() {
-                gtag('event', 'document_download', {
-                    event_category: 'engagement',
-                    event_label: '{{ filename }}'
+                window.sdAnalytics.trackFormSubmission('document_download', {
+                    filename: '{{ filename }}',
+                    document_type: '{{ document_type|default("legal_document") }}',
+                    location: 'success_page'
                 });
             });
             
             // Track create another document clicks
             document.getElementById('new-document-btn').addEventListener('click', function() {
-                gtag('event', 'create_another', {
-                    event_category: 'engagement',
-                    event_label: 'From success page'
+                window.sdAnalytics.trackFormSubmission('create_another', {
+                    source: 'success_page',
+                    previous_document: '{{ document_type|default("legal_document") }}'
                 });
             });
             
             {% if email_enabled %}
-            // Handle email form submission
+            // Handle email form submission with enhanced tracking
             document.getElementById('emailForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -274,10 +280,11 @@
                 // Show loading indicator
                 document.getElementById('loadingIndicator').style.display = 'block';
                 
-                // Track email send attempt
-                gtag('event', 'send_email_initiated', {
-                    event_category: 'engagement',
-                    event_label: 'Document email'
+                // Track email send attempt with enhanced details
+                window.sdAnalytics.trackFormSubmission('email_send_attempt', {
+                    document_type: '{{ document_type|default("legal_document") }}',
+                    filename: '{{ filename }}',
+                    has_message: document.getElementById('message').value.trim().length > 0
                 });
                 
                 // Get form data
@@ -294,20 +301,19 @@
                     document.getElementById('loadingIndicator').style.display = 'none';
                     
                     if (data.success) {
-                        // Track successful email send
-                        gtag('event', 'send_email_success', {
-                            event_category: 'engagement',
-                            event_label: 'Document email sent'
+                        // Track successful email send with enhanced analytics
+                        window.sdAnalytics.trackFormSubmission('email_send_success', {
+                            document_type: '{{ document_type|default("legal_document") }}',
+                            filename: '{{ filename }}'
                         });
                         
                         document.getElementById('emailSuccess').style.display = 'block';
                         document.getElementById('emailForm').reset();
                     } else {
-                        // Track email send failure
-                        gtag('event', 'send_email_failed', {
-                            event_category: 'engagement',
-                            event_label: data.error || 'Unknown error'
-                        });
+                        // Track email send failure with detailed error tracking
+                        window.sdAnalytics.trackError('email_send_failed', 
+                            data.error || 'Unknown error'
+                        );
                         
                         document.getElementById('emailError').textContent = data.error || 'Error sending the document. Please try again.';
                         document.getElementById('emailError').style.display = 'block';
@@ -317,11 +323,10 @@
                     // Hide loading indicator
                     document.getElementById('loadingIndicator').style.display = 'none';
                     
-                    // Track connection error
-                    gtag('event', 'send_email_connection_error', {
-                        event_category: 'error',
-                        event_label: 'Server connection failed'
-                    });
+                    // Track connection error with detailed error reporting
+                    window.sdAnalytics.trackError('email_connection_error',
+                        'Server connection failed'
+                    );
                     
                     // Show error message
                     document.getElementById('emailError').textContent = 'Error connecting to the server. Please try again.';
