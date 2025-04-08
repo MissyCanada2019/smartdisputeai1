@@ -1,19 +1,27 @@
 """
-SmartDispute.ai Document Upload Handler
-A Flask application that handles document uploads and AI analysis
+SmartDispute.ai Document Upload Handler with Payment Integration
+A Flask application that handles document uploads, AI analysis, and payment processing
 """
-from flask import Flask, request, render_template, redirect, url_for, send_file
+from flask import Flask, request, render_template, redirect, url_for, send_file, jsonify
 import os
+import json
+import stripe
 from werkzeug.utils import secure_filename
 from ai_handler import extract_text_from_file, analyze_text_with_ai
 from pricing_and_pdf import determine_price_and_type, generate_pdf_preview
 
+# Initialize app
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 PREVIEW_FOLDER = 'previews'
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'jpg', 'jpeg', 'png'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
+
+# Configure Stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY", "pk_test_yourkeyhere")
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID", "Ae4aYzkf6oRX1GtudHIm9UVWx-U55zBh92pgQKVWnvgel5MvWAW3FYh6nEQ5y-_wcpRCjs5omR4AXyZV")
 
 # Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -85,7 +93,7 @@ def upload_file():
                         <a href="/preview/{filename}_preview.pdf" class="button" target="_blank">View PDF Preview</a>
                     </div>
                     
-                    <form action="/pay" method="post" style="text-align: center;">
+                    <form action="/payment" method="post" style="text-align: center;">
                         <input type="hidden" name="filename" value="{filename}">
                         <input type="hidden" name="price" value="{price}">
                         <input type="submit" value="Continue to Payment" class="button">
@@ -132,79 +140,71 @@ def preview_file(filename):
     """Serve the PDF preview file"""
     return send_file(os.path.join(app.config['PREVIEW_FOLDER'], filename), as_attachment=False)
 
-@app.route('/pay', methods=['POST'])
-def handle_payment():
-    """Handle payment page for the document"""
+@app.route('/payment', methods=['POST'])
+def payment_page():
+    """Display payment options page"""
     filename = request.form.get('filename')
-    price = request.form.get('price')
-    preview_file = f"{filename}_preview.pdf"
-    download_link = f"/download?file={preview_file}"
+    price = float(request.form.get('price', 0))
     
-    return render_template_string("""
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <title>Payment - SmartDispute.ai</title>
-            <style>
-                body { font-family: Arial, sans-serif; background-color: #000; color: #fff; text-align: center; padding: 20px; }
-                h1, h2 { color: #ff0000; }
-                .container { background-color: #111; padding: 20px; border-radius: 10px; max-width: 800px; margin: 0 auto; }
-                .payment-box { background-color: #222; padding: 20px; border-radius: 5px; margin: 20px 0; }
-                .price { font-size: 24px; font-weight: bold; margin: 20px 0; }
-                button { background-color: #ff0000; color: #fff; padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-size: 16px; margin: 10px 0; display: block; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto; }
-                .payment-option { margin: 30px 0; }
-                .divider { margin: 20px 0; color: #666; }
-                #paypal-button-container { width: 300px; margin: 0 auto; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>Complete Your Purchase</h1>
-                <p>You're one step away from receiving your customized legal document.</p>
-                
-                <div class="payment-box">
-                    <h2>Order Summary</h2>
-                    <p>Document: <strong>{{ filename }}</strong></p>
-                    <div class="price">Total: ${{ price }}</div>
-                    
-                    <div class="payment-option">
-                        <form action="/create-stripe-session" method="post">
-                            <input type="hidden" name="file" value="{{ filename }}">
-                            <input type="hidden" name="price" value="{{ price }}">
-                            <button type="submit">Pay with Credit Card</button>
-                        </form>
-                        
-                        <div class="divider">OR</div>
-                        
-                        <div id="paypal-button-container"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <script src="https://www.paypal.com/sdk/js?client-id=Ae4aYzkf6oRX1GtudHIm9UVWx-U55zBh92pgQKVWnvgel5MvWAW3FYh6nEQ5y-_wcpRCjs5omR4AXyZV&currency=CAD"></script>
-            <script>
-              paypal.Buttons({
-                createOrder: function(data, actions) {
-                  return actions.order.create({
-                    purchase_units: [{
-                      amount: { value: '{{ price }}' }
-                    }]
-                  });
+    return render_template('payment_choice.html', 
+                           filename=filename, 
+                           price=price,
+                           stripe_public_key=STRIPE_PUBLIC_KEY,
+                           paypal_client_id=PAYPAL_CLIENT_ID)
+
+@app.route('/create-stripe-session', methods=['POST'])
+def create_stripe_session():
+    """Create a Stripe checkout session"""
+    data = request.get_json()
+    price_cents = int(data.get('price', 0))
+    filename = data.get('filename', 'document.pdf')
+    
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'cad',
+                    'product_data': {
+                        'name': 'SmartDispute.ai Legal Document',
+                    },
+                    'unit_amount': price_cents,
                 },
-                onApprove: function(data, actions) {
-                  return actions.order.capture().then(function(details) {
-                    window.location.href = "{{ download_link }}";
-                  });
-                }
-              }).render('#paypal-button-container');
-            </script>
-        </body>
-        </html>
-    """, filename=filename, price=price, download_link=download_link)
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.host_url + f'download?file={filename}_preview.pdf',
+            cancel_url=request.host_url + 'payment',
+        )
+        return jsonify(sessionId=session.id)
+    except Exception as e:
+        return jsonify(error=str(e)), 403
+
+@app.route('/record-paypal-payment', methods=['POST'])
+def record_paypal_payment():
+    """Record a successful PayPal payment"""
+    data = request.get_json()
+    order_id = data.get('orderId')
+    filename = data.get('filename')
+    
+    # In a real app, verify the payment with PayPal API
+    # For now, we'll just return success
+    return jsonify(success=True)
+
+@app.route('/download')
+def download_final_pdf():
+    """Download the purchased document"""
+    file = request.args.get('file')
+    if not file:
+        return "No file specified", 400
+        
+    file_path = os.path.join(app.config['PREVIEW_FOLDER'], file)
+    if os.path.exists(file_path):
+        return send_file(file_path, as_attachment=True)
+    return "File not found", 404
 
 @app.route('/success')
-def success():
+def success_page():
     """Display success page after payment"""
     filename = request.args.get('filename', 'document.pdf')
     
@@ -238,17 +238,5 @@ def success():
     </html>
     """
 
-@app.route('/download')
-def download_final_pdf():
-    """Download the purchased document"""
-    file = request.args.get('file')
-    if not file:
-        return "No file specified", 400
-        
-    file_path = os.path.join(app.config['PREVIEW_FOLDER'], file)
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
-    return "File not found", 404
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000)
+    app.run(host='0.0.0.0', port=3000, debug=True)

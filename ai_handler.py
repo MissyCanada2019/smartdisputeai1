@@ -1,231 +1,84 @@
 """
-AI Handler Module for SmartDispute.ai
-Handles text extraction from various file types and AI analysis
+Simplified AI Handler Module for SmartDispute.ai
+(Placeholder for actual AI functionality)
 """
-import os
 import json
-import fitz  # PyMuPDF
-import docx
-import openai
-from PIL import Image
-import base64
-from io import BytesIO
+import os
+import random
 
-# Configure OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
-
-# Pricing configuration
-PRICING = {
-    'basic': 4.99,  # Basic document analysis
-    'standard': 14.99,  # Standard response with legal references
-    'premium': 29.99,  # Premium response with full dispute letter
-    'urgent': 49.99,  # Urgent response with priority processing
-}
-
-def extract_text_from_pdf(file_path):
-    """Extract text content from a PDF file"""
-    text = ""
-    try:
-        with fitz.open(file_path) as pdf:
-            for page in pdf:
-                text += page.get_text()
-        return text
-    except Exception as e:
-        print(f"Error extracting text from PDF: {e}")
-        return f"Error extracting text: {e}"
-
-def extract_text_from_docx(file_path):
-    """Extract text content from a DOCX file"""
-    try:
-        doc = docx.Document(file_path)
-        return "\n".join([paragraph.text for paragraph in doc.paragraphs])
-    except Exception as e:
-        print(f"Error extracting text from DOCX: {e}")
-        return f"Error extracting text: {e}"
-
-def extract_text_from_image(file_path):
-    """Extract text from an image using OpenAI's Vision model"""
-    try:
-        # Convert the image to base64
-        with open(file_path, "rb") as image_file:
-            base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-        
-        # Use OpenAI's Vision model to extract text
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Extract all text from this image. Format it clearly, preserving paragraphs and important formatting."},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=1500
-        )
-        
-        return response.choices[0].message.content
-    except Exception as e:
-        print(f"Error extracting text from image: {e}")
-        return f"Error extracting text from image: {e}"
-
-def extract_text_from_file(file_path):
-    """Extract content from various file types"""
-    file_extension = file_path.split('.')[-1].lower()
+def extract_text_from_file(filepath):
+    """
+    Simple placeholder function to extract text from files
+    In the real version, this would use specialized libraries for different file types
+    """
+    # For the demo, we'll just return a placeholder text
+    file_extension = os.path.splitext(filepath)[1].lower()
     
-    if file_extension in ['pdf']:
-        return extract_text_from_pdf(file_path)
-    elif file_extension in ['docx', 'doc']:
-        return extract_text_from_docx(file_path)
-    elif file_extension in ['jpg', 'jpeg', 'png']:
-        return extract_text_from_image(file_path)
+    if file_extension in ['.pdf', '.docx']:
+        return f"This is extracted text from the document {os.path.basename(filepath)}. " \
+               f"This would normally contain the actual content of the document."
+    elif file_extension in ['.jpg', '.jpeg', '.png']:
+        return f"This is extracted text from the image {os.path.basename(filepath)}. " \
+               f"In the full version, this would use OCR or AI vision models."
     else:
-        return "Unsupported file type"
+        return "Unsupported file type."
 
-def analyze_text_with_ai(text, province="ON"):
+def analyze_text_with_ai(text):
     """
-    Analyze document content with OpenAI to classify issue and suggest responses
-    
-    Args:
-        text (str): The extracted text from the document
-        province (str): Two-letter province code (default: "ON" for Ontario)
-        
-    Returns:
-        str: JSON string with analysis results
+    Simple placeholder function to simulate AI analysis
+    In the real version, this would call OpenAI or other AI APIs
     """
-    try:
-        system_prompt = f"""
-        You are a legal assistant for SmartDispute.ai, specialized in Canadian legal matters.
-        Analyze this document from {province} and identify:
-        
-        1. Type of issue (housing, employment, consumer, CAS/child services, etc.)
-        2. Specific classification (e.g., "T2 - Interference with reasonable enjoyment" for housing)
-        3. Recommended legal forms or responses
-        4. Relevant legal references from {province}
-        5. Suggested response strategy
-        6. Document complexity (basic, standard, premium, or urgent)
-        
-        Respond in valid JSON format with these fields:
-        {{
-            "issue_type": string,
-            "classification": string,
-            "recommended_forms": string,
-            "legal_references": string,
-            "response_strategy": string,
-            "complexity": string,
-            "confidence": number (0-1)
-        }}
-        Include detailed explanations for each field based on the document content.
-        """
-        
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            response_format={"type": "json_object"},
-            max_tokens=1500
-        )
-        
-        # Get the JSON response
-        result = response.choices[0].message.content
-        
-        # Parse it to add pricing
-        analysis = json.loads(result)
-        
-        # Add pricing based on complexity
-        if 'complexity' in analysis:
-            complexity = analysis['complexity'].lower()
-            if complexity in PRICING:
-                analysis['price'] = PRICING[complexity]
-            else:
-                analysis['price'] = PRICING['standard']  # Default pricing
-        else:
-            analysis['price'] = PRICING['standard']  # Default pricing
-            
-        # Convert back to formatted JSON string for display
-        return json.dumps(analysis, indent=2)
+    # Simulate different document types for testing
+    document_types = [
+        "housing",
+        "credit dispute",
+        "cas response",
+        "cease and desist"
+    ]
     
-    except Exception as e:
-        print(f"Error analyzing with OpenAI: {e}")
-        error_result = {
-            "error": str(e),
-            "issue_type": "Unknown",
-            "classification": "Error during analysis",
-            "recommended_forms": "Unable to determine",
-            "legal_references": "Unable to determine",
-            "response_strategy": "Please contact support",
-            "complexity": "standard",
-            "price": PRICING['standard'],
-            "confidence": 0
-        }
-        return json.dumps(error_result, indent=2)
-
-def generate_response_preview(analysis_json, text, user_info=None):
-    """
-    Generate a response preview based on the AI analysis and document content
+    # Randomly choose one for the demo
+    chosen_type = random.choice(document_types)
     
-    Args:
-        analysis_json (str): JSON string with analysis results
-        text (str): The original document text
-        user_info (dict): Optional user information for personalization
+    if "housing" in chosen_type:
+        issue_type = "Housing Dispute"
+        classification = "T2 - Tenant Rights"
+        complexity = "standard"
+        recommended_forms = "Form T2 - Application about Tenant Rights"
+        legal_references = "Residential Tenancies Act, 2006, S.O. 2006, c. 17, Sections 22-23"
+        response_strategy = "Document the interference with reasonable enjoyment. Include dates, times, and specific incidents. Reference your rights under Section 22 of the RTA."
     
-    Returns:
-        str: HTML preview of the generated response
-    """
-    try:
-        # Parse the analysis JSON
-        analysis = json.loads(analysis_json)
-        
-        user_context = ""
-        if user_info:
-            if 'name' in user_info:
-                user_context += f"My name is {user_info['name']}. "
-            if 'address' in user_info:
-                user_context += f"I reside at {user_info['address']}. "
-            if 'details' in user_info:
-                user_context += f"{user_info['details']}"
-        
-        # Create a prompt for response generation
-        prompt = f"""
-        You are drafting a legal response for a client based on this analysis:
-        
-        Issue Type: {analysis.get('issue_type', 'Unknown')}
-        Classification: {analysis.get('classification', 'Unknown')}
-        Recommended Forms: {analysis.get('recommended_forms', 'None')}
-        Legal References: {analysis.get('legal_references', 'None')}
-        
-        The client provided this additional context: {user_context}
-        
-        Original document text:
-        {text[:1000]}... [truncated]
-        
-        Create a legally sound response draft that:
-        1. Is professionally formatted as a legal letter
-        2. Addresses the key issues in the document
-        3. Uses appropriate legal language and references
-        4. Presents the client's position clearly and persuasively
-        
-        Format the response as clean HTML that can be rendered in a preview.
-        """
-        
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1500
-        )
-        
-        return response.choices[0].message.content
+    elif "credit" in chosen_type:
+        issue_type = "Financial Dispute"
+        classification = "Credit Report Error"
+        complexity = "standard"
+        recommended_forms = "Credit Bureau Dispute Letter"
+        legal_references = "Consumer Reporting Act, R.S.O. 1990, c. C.33"
+        response_strategy = "Clearly identify the inaccurate information. Provide any supporting documentation that proves the error. Request a prompt investigation and correction."
     
-    except Exception as e:
-        print(f"Error generating response preview: {e}")
-        return f"<p>Error generating preview: {e}</p>"
+    elif "cas" in chosen_type:
+        issue_type = "CAS Dispute"
+        classification = "Child Protection"
+        complexity = "premium"
+        recommended_forms = "CAS Response Letter"
+        legal_references = "Child, Youth and Family Services Act, 2017, S.O. 2017, c. 14, Sched. 1"
+        response_strategy = "Address each concern specifically. Demonstrate your commitment to addressing any legitimate issues. Request specific action items and timeline for resolution."
+    
+    else:  # cease and desist
+        issue_type = "Cease and Desist"
+        classification = "Harassment"
+        complexity = "urgent"
+        recommended_forms = "Formal Cease and Desist Letter"
+        legal_references = "Criminal Code (R.S.C., 1985, c. C-46) Section 264 (criminal harassment)"
+        response_strategy = "Document all incidents of harassment including dates, times, and witnesses. Clearly state that the behavior must stop immediately. Specify potential legal actions if harassment continues."
+    
+    # Construct a JSON response similar to what would come from the AI
+    analysis = {
+        "issue_type": issue_type,
+        "classification": classification,
+        "complexity": complexity,
+        "recommended_forms": recommended_forms,
+        "legal_references": legal_references,
+        "response_strategy": response_strategy
+    }
+    
+    return json.dumps(analysis)
