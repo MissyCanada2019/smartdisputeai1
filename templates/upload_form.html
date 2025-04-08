@@ -2,33 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Upload Your Document - SmartDispute.ai</title>
+  <title>Document Upload - SmartDispute.ai</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #000; color: #fff; text-align: center; padding: 50px; }
-    h1 { color: #ff0000; }
-    form { background-color: #111; padding: 20px; border-radius: 10px; display: inline-block; }
-    input[type="file"], input[type="submit"] {
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: #fff;
+      text-align: center;
+      padding: 50px;
     }
-    input[type="submit"] {
+    h1, h2 {
+      color: #ff0000;
+    }
+    .container {
+      background-color: #111;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .upload-box {
+      background-color: #222;
+      padding: 30px;
+      border-radius: 5px;
+      margin: 20px 0;
+      border: 2px dashed #555;
+    }
+    .upload-box:hover {
+      border-color: #ff0000;
+    }
+    .upload-instruction {
+      margin-bottom: 20px;
+    }
+    .file-input {
+      display: none;
+    }
+    .file-label {
       background-color: #ff0000;
       color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-block;
+      margin: 10px;
+    }
+    .file-name {
+      margin-top: 10px;
+      font-style: italic;
+      color: #aaa;
+    }
+    .submit-btn {
+      background-color: #ff0000;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
       border: none;
       cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
     }
-    .note { font-size: 0.9em; color: #ccc; margin-top: 10px; }
+    .file-types {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #aaa;
+    }
+    .loading {
+      display: none;
+      margin-top: 20px;
+    }
+    .loading-spinner {
+      border: 4px solid #333;
+      border-top: 4px solid #ff0000;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 2s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <h1>Upload Your Document</h1>
-  <p>Start your case now. Upload your notice, email, letter, or proof before payment. We'll help you build the perfect response.</p>
-  <form action="/upload" method="post" enctype="multipart/form-data">
-    <input type="file" name="document" accept=".pdf,.docx,.jpg,.jpeg,.png" required><br>
-    <input type="submit" value="Submit for AI Review">
-  </form>
-  <p class="note">Supported file types: PDF, DOCX, JPG, PNG</p>
+  <div class="container">
+    <h1>SmartDispute.ai Document Analysis</h1>
+    <p>Upload your legal document for AI-powered analysis and response recommendations.</p>
+    
+    <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form">
+      <div class="upload-box">
+        <div class="upload-instruction">Drag and drop your document here or click to browse</div>
+        <label for="document" class="file-label">Choose File</label>
+        <input type="file" name="document" id="document" class="file-input" accept=".pdf,.docx,.jpg,.jpeg,.png">
+        <div class="file-name" id="file-name">No file chosen</div>
+        <div class="file-types">Supported formats: PDF, DOCX, JPG, PNG</div>
+      </div>
+      
+      <button type="submit" class="submit-btn">Analyze Document</button>
+      
+      <div class="loading" id="loading">
+        <p>Analyzing your document with AI...</p>
+        <div class="loading-spinner"></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Display file name when selected
+    document.getElementById('document').addEventListener('change', function() {
+      const fileName = this.files[0] ? this.files[0].name : 'No file chosen';
+      document.getElementById('file-name').textContent = fileName;
+    });
+    
+    // Show loading animation when form is submitted
+    document.getElementById('upload-form').addEventListener('submit', function() {
+      document.getElementById('loading').style.display = 'block';
+    });
+    
+    // Handle drag and drop
+    const uploadBox = document.querySelector('.upload-box');
+    
+    uploadBox.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#ff0000';
+    });
+    
+    uploadBox.addEventListener('dragleave', function() {
+      this.style.borderColor = '#555';
+    });
+    
+    uploadBox.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.style.borderColor = '#555';
+      
+      const fileInput = document.getElementById('document');
+      fileInput.files = e.dataTransfer.files;
+      
+      const fileName = fileInput.files[0] ? fileInput.files[0].name : 'No file chosen';
+      document.getElementById('file-name').textContent = fileName;
+    });
+    
+    // Open file dialog when clicking anywhere in the upload box
+    uploadBox.addEventListener('click', function() {
+      document.getElementById('document').click();
+    });
+  </script>
 </body>
 </html>
