@@ -1,12 +1,20 @@
 """
 SmartDispute.ai Document Upload Handler
-A Flask application that handles document uploads and AI analysis
+A Flask application that handles document uploads, AI analysis, and payment processing
 """
-from flask import Flask, request, render_template, redirect, url_for, send_file
+from flask import Flask, request, render_template, redirect, url_for, send_file, render_template_string, jsonify
 import os
+import stripe
 from werkzeug.utils import secure_filename
 from ai_handler import extract_text_from_file, analyze_text_with_ai
 from pricing_and_pdf import determine_price_and_type, generate_pdf_preview
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Initialize Stripe with your secret key
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -202,6 +210,36 @@ def handle_payment():
         </body>
         </html>
     """, filename=filename, price=price, download_link=download_link)
+
+@app.route('/create-stripe-session', methods=['POST'])
+def create_stripe_session():
+    """Create a Stripe checkout session"""
+    filename = request.form.get('file')
+    price = float(request.form.get('price', 0))
+    price_cents = int(price * 100)  # Convert to cents for Stripe
+    
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'cad',
+                    'product_data': {
+                        'name': 'SmartDispute.ai Legal Document',
+                    },
+                    'unit_amount': price_cents,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=f"{request.host_url}download?file={filename}_preview.pdf",
+            cancel_url=request.host_url + 'pay',
+        )
+        
+        # Redirect to Stripe checkout
+        return redirect(session.url)
+    except Exception as e:
+        return f"Error creating payment session: {str(e)}", 400
 
 @app.route('/success')
 def success():

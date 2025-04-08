@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - SmartDispute.ai</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #222;
+            --success-color: #00cc66;
+            --text-color: #fff;
+            --bg-color: #000;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+        }
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+        .success-section {
+            background-color: var(--secondary-color);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin: 30px 0;
+        }
+        .success-message {
+            background-color: #113311;
+            color: var(--success-color);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .document-preview {
+            background-color: #333;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .document-preview h2 {
+            text-align: center;
+            margin-top: 0;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: inline-block;
+            margin: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        .btn:hover {
+            background-color: #cc0000;
+        }
+        .btn-success {
+            background-color: var(--success-color);
+            color: #000;
+        }
+        .btn-success:hover {
+            background-color: #00aa55;
+        }
+        .upsell-section {
+            background-color: #223;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin: 30px 0;
+        }
+        .upsell-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .upsell-option {
+            flex: 1;
+            min-width: 200px;
+            background-color: #333;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        .price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        .actions {
+            text-align: center;
+            margin: 30px 0;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #333;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">SmartDispute.ai</div>
+            <p>AI-Powered Legal Assistance for Canadians</p>
+        </header>
+
+        <div class="success-section">
+            <div class="success-message">
+                <h1>Payment Successful!</h1>
+                <p>Thank you for your purchase. Your legal document has been generated and is ready for download.</p>
+            </div>
+            
+            <div class="document-preview">
+                <h2>Your Legal Document</h2>
+                <div class="response-content">
+                    {{ response_html|safe }}
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="/download?file={{ filename }}_preview.pdf" class="btn btn-success" download>Download PDF Document</a>
+                <a href="/" class="btn">Create Another Document</a>
+            </div>
+        </div>
+        
+        <div class="upsell-section">
+            <h2>Enhance Your Legal Response</h2>
+            <p>Take your document to the next level with these additional services:</p>
+            
+            <div class="upsell-options">
+                <div class="upsell-option">
+                    <h3>Legal Review</h3>
+                    <p>Get your document reviewed by a legal expert to ensure maximum effectiveness.</p>
+                    <div class="price">$49.99</div>
+                    <a href="#" class="btn">Add Legal Review</a>
+                </div>
+                
+                <div class="upsell-option">
+                    <h3>Additional Documents</h3>
+                    <p>Get a complete package of supporting documents tailored to your situation.</p>
+                    <div class="price">$29.99</div>
+                    <a href="#" class="btn">Add Supporting Documents</a>
+                </div>
+                
+                <div class="upsell-option">
+                    <h3>Follow-up Letter</h3>
+                    <p>Pre-purchase a follow-up letter to send if you don't get a response.</p>
+                    <div class="price">$19.99</div>
+                    <a href="#" class="btn">Add Follow-up Letter</a>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background-color: var(--secondary-color); padding: 20px; border-radius: var(--border-radius); text-align: center;">
+            <h2>Need More Help?</h2>
+            <p>Join our community of Canadians who are successfully navigating the legal system.</p>
+            <a href="#" class="btn">Join Our Community</a>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 SmartDispute.ai - Legal Assistance for Canadians</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -6,7 +6,7 @@ import os
 import json
 import fitz  # PyMuPDF
 import docx
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from werkzeug.utils import secure_filename
@@ -17,8 +17,8 @@ from io import BytesIO
 # Load environment variables
 load_dotenv()
 
-# Configure OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 # Pricing configuration
 PRICING = {
@@ -57,8 +57,8 @@ def extract_text_from_image(file_path):
             base64_image = base64.b64encode(image_file.read()).decode('utf-8')
         
         # Use OpenAI's Vision model to extract text
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
+        response = client.chat.completions.create(
+            model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages=[
                 {
                     "role": "user",
@@ -130,8 +130,8 @@ def analyze_with_openai(text, province="ON"):
         Include detailed explanations for each field based on the document content.
         """
         
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
+        response = client.chat.completions.create(
+            model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": text}
@@ -214,8 +214,8 @@ def generate_response_preview(analysis, text, user_info=None):
         Format the response as clean HTML that can be rendered in a preview.
         """
         
-        response = openai.chat.completions.create(
-            model="gpt-4o",  # Using the newest model
+        response = client.chat.completions.create(
+            model="gpt-4o",  # the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
             messages=[
                 {"role": "user", "content": prompt}
             ],

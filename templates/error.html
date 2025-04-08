@@ -1,74 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Error - SmartDispute.ai</title>
-  <!-- Google Analytics Tag -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-484252740');
-    
-    // Track error page view
-    gtag('event', 'view_error_page', {
-      'event_category': 'error',
-      'event_label': '{{ message }}'
-    });
-  </script>
-  <style>
-    body {
-      background-color: #000;
-      color: #fff;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      text-align: center;
-      padding: 50px 20px;
-    }
-    
-    h1 {
-      color: #ff0000;
-    }
-    
-    .error-container {
-      background-color: #111;
-      border: 2px solid #ff0000;
-      border-radius: 10px;
-      padding: 30px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-    
-    .message {
-      background-color: #1a1a1a;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-      text-align: left;
-    }
-    
-    .back-button {
-      background-color: #ff0000;
-      color: #fff;
-      padding: 12px 20px;
-      text-decoration: none;
-      border-radius: 5px;
-      display: inline-block;
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - SmartDispute.ai</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #222;
+            --text-color: #fff;
+            --bg-color: #000;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+        }
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        h1, h2, h3 {
+            color: var(--primary-color);
+        }
+        .error-section {
+            background-color: var(--secondary-color);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            margin: 30px 0;
+        }
+        .error-message {
+            background-color: #331111;
+            color: #ffaaaa;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: inline-block;
+            margin: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #cc0000;
+        }
+        .troubleshooting {
+            background-color: #333;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: left;
+            margin: 20px 0;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid #333;
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-  <div class="error-container">
-    <h1>Something Went Wrong</h1>
-    
-    <div class="message">
-      <p>{{ message }}</p>
+    <div class="container">
+        <header>
+            <div class="logo">SmartDispute.ai</div>
+            <p>AI-Powered Legal Assistance for Canadians</p>
+        </header>
+
+        <div class="error-section">
+            <h1>An Error Occurred</h1>
+            
+            <div class="error-message">
+                <p><strong>{{ error }}</strong></p>
+            </div>
+            
+            <p>We apologize for the inconvenience. Please try again or contact our support team for assistance.</p>
+            
+            <div class="troubleshooting">
+                <h3>Troubleshooting Tips:</h3>
+                <ul>
+                    <li>Check that your document is in a supported format (PDF, DOCX, JPG, PNG)</li>
+                    <li>Ensure your document is less than 16MB in size</li>
+                    <li>If you uploaded an image, ensure it has clear, readable text</li>
+                    <li>Try a different document or format</li>
+                </ul>
+            </div>
+            
+            <a href="/" class="btn">Try Again</a>
+            <a href="mailto:support@smartdispute.ai" class="btn">Contact Support</a>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 SmartDispute.ai - Legal Assistance for Canadians</p>
+        </footer>
     </div>
-    
-    <p>Please try again or contact support if the problem persists.</p>
-    
-    <a href="/" class="back-button">Back to Home</a>
-  </div>
 </body>
 </html>

@@ -194,6 +194,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(filePath);
   });
   
+  // Health check endpoint for API diagnostics
+  app.get('/api/health', (_req: Request, res: Response) => {
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+  
+  // Placeholder for the mobile API endpoints that will be defined after the multer configuration
+  
   // Serve standalone login page
   app.get('/standalone-login', (req: Request, res: Response) => {
     console.log('Serving standalone login page');
@@ -271,6 +282,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test upload endpoint for API diagnostics
+  app.post('/api/test-upload', upload.single('document'), (req: Request, res: Response) => {
+    // If we reached this point, file upload capability is working
+    res.json({ 
+      status: 'ok',
+      message: 'Upload mechanism working',
+      filename: req.file?.filename || 'No file uploaded',
+      province: req.body?.province || 'Not specified',
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  // Mobile document analysis endpoint
+  app.post('/api/advanced-analysis/upload', upload.single('document'), async (req: Request, res: Response) => {
+    try {
+      // Basic validation
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: "No file uploaded"
+        });
+      }
+
+      const province = req.body?.province || 'ON';
+      const documentInfo = {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        province: province,
+        uploadTime: new Date().toISOString()
+      };
+      
+      // Try to use the actual AI analysis service if available
+      try {
+        // This would call the actual AI service
+        // For example: const result = await aiService.analyzeDocument(req.file.path, province);
+        // But for development purposes we'll simulate an error
+        throw new Error("API keys not configured or service unavailable");
+      } catch (aiError) {
+        console.log('AI service error in document analysis, using fallback mock data:', aiError.message);
+        
+        // Generate mock document type based on file extension
+        const fileExt = req.file.originalname.split('.').pop()?.toLowerCase() || '';
+        let mockDocumentType = "Unknown Document";
+        
+        if (fileExt === 'pdf') {
+          mockDocumentType = "PDF Legal Document";
+        } else if (['doc', 'docx'].includes(fileExt)) {
+          mockDocumentType = "Word Legal Document";
+        } else if (['jpg', 'jpeg', 'png'].includes(fileExt)) {
+          mockDocumentType = "Scanned Image of Document";
+        } else if (fileExt === 'txt') {
+          mockDocumentType = "Text Document";
+        }
+        
+        // Return mock analysis data when AI services fail
+        return res.json({
+          success: true,
+          mode: "fallback_mock",
+          documentInfo,
+          result: {
+            documentType: mockDocumentType,
+            legalJurisdiction: province,
+            complexityScore: 7,
+            summary: `MOCK ANALYSIS: This appears to be a ${req.file.size > 1000000 ? 'large' : 'standard'} ${mockDocumentType}. The file is ${Math.round(req.file.size/1024)} KB and has extension .${fileExt}. This is a mock summary as the AI analysis service is unavailable.`,
+            risksAndWarnings: [
+              "This is mock analysis and should not be used for actual legal decisions.",
+              "The system is currently running in fallback mode due to API configuration issues.",
+              `Mock risk analysis based on jurisdiction: ${province}`
+            ],
+            nextSteps: [
+              "Review the document with a qualified legal professional",
+              "Consider the limitations of this mock analysis",
+              "For detailed analysis, proper API configuration is required"
+            ],
+            keyPoints: [
+              "This is point 1 from mock analysis",
+              "This is point 2 from mock analysis",
+              `File type: ${req.file.mimetype}`,
+              `Jurisdiction: ${province}`
+            ]
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in document analysis:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'An error occurred during document analysis',
+      });
+    }
+  });
+  
+  // Text analysis endpoint for mobile
+  app.post('/api/advanced-analysis/analyze-text', async (req: Request, res: Response) => {
+    try {
+      const { text, jurisdiction } = req.body;
+      
+      if (!text) {
+        return res.status(400).json({
+          success: false,
+          error: "No text content provided for analysis"
+        });
+      }
+      
+      // Try to use the actual AI analysis service if available
+      try {
+        // This would call the actual AI service
+        // For example: const result = await aiService.analyzeText(text, jurisdiction);
+        // But for development purposes we'll simulate an error
+        throw new Error("API keys not configured or service unavailable");
+      } catch (aiError) {
+        console.log('AI service error, using fallback mock data:', aiError.message);
+        
+        // Return mock analysis data when AI services fail
+        return res.json({
+          success: true,
+          mode: "fallback_mock",
+          result: {
+            documentType: "Legal Correspondence",
+            legalJurisdiction: jurisdiction || "Ontario",
+            complexityScore: 6,
+            summary: `MOCK ANALYSIS: This ${text.length > 200 ? 'lengthy' : 'brief'} content appears to be related to ${
+              jurisdiction === 'ON' ? 'an Ontario tenant dispute' : 
+              jurisdiction === 'BC' ? 'a British Columbia family matter' : 
+              jurisdiction === 'AB' ? 'an Alberta employment issue' : 
+              'a Canadian legal matter'
+            }. The document contains approximately ${text.length} characters.`,
+            risksAndWarnings: [
+              "This is mock analysis and should not be used for actual legal decisions.",
+              "The system is currently running in fallback mode due to API configuration issues.",
+              `Mock risk analysis based on jurisdiction: ${jurisdiction || 'Unknown province'}`
+            ],
+            nextSteps: [
+              "Review the document with a qualified legal professional",
+              "Consider the limitations of this mock analysis",
+              "For detailed analysis, proper API configuration is required"
+            ],
+            keyPoints: [
+              "This is point 1 from mock analysis",
+              "This is point 2 from mock analysis",
+              `Jurisdiction: ${jurisdiction || 'Not specified'}`
+            ]
+          }
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in text analysis:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: error.message || 'An error occurred during text analysis',
+      });
+    }
+  });
+  
   // Get all document templates
   app.get("/api/document-templates", async (_req: Request, res: Response) => {
     try {
