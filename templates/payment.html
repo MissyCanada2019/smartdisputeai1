@@ -286,17 +286,17 @@
                         document.querySelector('.payment-amount').innerHTML = 'Processing payment...';
                         
                         return actions.order.capture().then(function(details) {
-                            // Track successful payment
+                            // Track successful payment with actual transaction details from PayPal
                             gtag('event', 'purchase', {
-                                transaction_id: data.orderID,
-                                value: parseFloat('{{ document_info.price }}'),
-                                currency: 'CAD',
+                                transaction_id: details.id,
+                                value: details.purchase_units[0].amount.value,
+                                currency: details.purchase_units[0].amount.currency_code,
                                 tax: 0,
                                 shipping: 0,
                                 items: [{
                                     item_id: '{{ document_info.dispute_type }}_{{ document_info.province }}',
                                     item_name: '{{ document_info.dispute_type }}',
-                                    price: parseFloat('{{ document_info.price }}'),
+                                    price: parseFloat(details.purchase_units[0].amount.value),
                                     quantity: 1
                                 }]
                             });

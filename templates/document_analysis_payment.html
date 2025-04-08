@@ -283,17 +283,17 @@
             onApprove: function(data, actions) {
                 // Capture the funds from the transaction
                 return actions.order.capture().then(function(details) {
-                    // Track successful purchase
+                    // Track successful purchase with actual transaction details from PayPal
                     gtag('event', 'purchase', {
-                        transaction_id: data.orderID,
-                        value: 4.99,
-                        currency: 'CAD',
+                        transaction_id: details.id,
+                        value: details.purchase_units[0].amount.value,
+                        currency: details.purchase_units[0].amount.currency_code,
                         tax: 0,
                         shipping: 0,
                         items: [{
                             item_id: 'document_analysis_premium',
                             item_name: 'Comprehensive Document Analysis',
-                            price: 4.99,
+                            price: parseFloat(details.purchase_units[0].amount.value),
                             quantity: 1
                         }]
                     });
