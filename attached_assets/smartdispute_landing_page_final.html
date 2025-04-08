@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SmartDispute.ai - Resolve Your Dispute</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-484252740');
+  </script>
+  <style>
+    :root {
+      --primary: #ff0000;
+      --background: #000000;
+      --foreground: #ffffff;
+      --accent-dark: #111111;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    h1, h2 {
+      color: var(--primary);
+    }
+    .cta {
+      background-color: var(--accent-dark);
+      border-left: 6px solid var(--primary);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    ul {
+      padding-left: 20px;
+    }
+    ul li {
+      margin-bottom: 8px;
+    }
+    .paypal-secure {
+      font-size: 0.9em;
+      color: #bbb;
+      margin-top: 10px;
+    }
+    .testimonials {
+      background-color: var(--accent-dark);
+      padding: 20px;
+      border-radius: 8px;
+    }
+    .testimonial {
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+    .button-container {
+      margin: 20px 0;
+    }
+    a {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SmartDispute.ai</h1>
+    <h2>Resolve Your Dispute Without a Lawyer</h2>
+    <div class="cta">
+      <p>For just <strong>$49.99</strong>, get a professionally written, legally backed letter to help resolve housing, credit, or CAS disputes — fast and affordably.</p>
+      <ul>
+        <li>AI-powered and customized to your situation</li>
+        <li>Delivered instantly as a downloadable PDF</li>
+        <li>No subscriptions. No hidden fees.</li>
+      </ul>
+      <p><strong>Limited-Time Offer: $49.99 until April 15!</strong></p>
+      <div id="paypal-button-container" class="button-container"></div>
+      <p><img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" alt="PayPal Secure" width="120"></p>
+      <p class="paypal-secure">Secure checkout powered by PayPal.</p>
+    </div>
+
+    <div class="testimonials">
+      <h3>What Our Users Say:</h3>
+      <p class="testimonial">"SmartDispute helped me stand up to my landlord with confidence. The letter was perfect." – J. Miller</p>
+      <p class="testimonial">"I didn’t know where to start. This platform made it easy, and I won my case." – A. Thomas</p>
+    </div>
+  </div>
+
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=Ae4aYzkf6oRX1GtudHIm9UVWx-U55zBh92pgQKVWnvgel5MvWAW3FYh6nEQ5y-_wcpRCjs5omR4AXyZV&currency=CAD"></script>
+  <script>
+    paypal.Buttons({
+      createOrder: function(data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: '49.99'
+            }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          gtag('event', 'purchase', {
+            transaction_id: details.id,
+            value: details.purchase_units[0].amount.value,
+            currency: details.purchase_units[0].amount.currency_code,
+            items: [
+              {
+                item_name: 'Legal Form Submission',
+                quantity: 1
+              }
+            ]
+          });
+          window.location.href = "/success.html";
+        });
+      }
+    }).render('#paypal-button-container');
+  </script>
+</body>
+</html>
