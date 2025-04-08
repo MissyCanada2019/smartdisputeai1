@@ -1,0 +1,108 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-484252740');
+
+    gtag('event', 'purchase_confirmation_viewed', {
+      event_category: 'ecommerce',
+      event_label: 'Success Page Viewed'
+    });
+  </script>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+    }
+    h1 {
+      color: #ff0000;
+    }
+    .message-box {
+      background-color: #111;
+      border: 2px solid #ff0000;
+      border-radius: 10px;
+      padding: 30px;
+      display: inline-block;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .upsell {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #444;
+    }
+    .upsell h2 {
+      color: #ff0000;
+    }
+    .upsell a {
+      background-color: #ff0000;
+      color: #fff;
+      padding: 12px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .countdown {
+      margin-top: 10px;
+      font-size: 1.2em;
+      color: #ff0000;
+    }
+    a.email-link {
+      color: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <div class="message-box">
+    <h1>Thank You!</h1>
+    <p>Your payment was successful.</p>
+    <p>Your legal form has been submitted and will be processed shortly.</p>
+    <p>If you have any questions, please email us at <a class="email-link" href="mailto:smartdisputecanada@gmail.com">smartdisputecanada@gmail.com</a>.</p>
+
+    <div class="upsell">
+      <h2>Need Another Letter or a Follow-Up?</h2>
+      <p>Get your second dispute letter for only <strong>$29.99</strong> — available for the next:</p>
+      <div class="countdown" id="countdown">05:00</div>
+      <a href="/index.html" id="upsell-button">Claim Discounted Letter</a>
+    </div>
+  </div>
+
+  <script>
+    // Countdown Timer (5 minutes)
+    let timeLeft = 300;
+    const countdownEl = document.getElementById('countdown');
+    const interval = setInterval(() => {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      countdownEl.textContent = 
+        String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
+      timeLeft--;
+      if (timeLeft < 0) {
+        clearInterval(interval);
+        countdownEl.textContent = "Offer expired";
+        document.getElementById("upsell-button").style.display = "none";
+      }
+    }, 1000);
+
+    // Track upsell button click
+    document.getElementById("upsell-button").addEventListener("click", function() {
+      gtag('event', 'upsell_clicked', {
+        event_category: 'engagement',
+        event_label: 'User Clicked Upsell Offer'
+      });
+    });
+  </script>
+</body>
+</html>

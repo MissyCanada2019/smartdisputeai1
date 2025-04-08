@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful | SmartDispute.ai</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-484252740');
+  </script>
+  <style>
+    :root {
+      --primary: #ff0000;
+      --background: #000000;
+      --foreground: #ffffff;
+      --accent-dark: #111111;
+      --success: #4BB543;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    h1, h2 {
+      color: var(--primary);
+    }
+    .success-box {
+      background-color: var(--accent-dark);
+      border-left: 6px solid var(--success);
+      padding: 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    .success-icon {
+      font-size: 72px;
+      color: var(--success);
+      margin-bottom: 20px;
+    }
+    .details {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 8px;
+      text-align: left;
+      margin: 20px 0;
+    }
+    .document-button {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      margin: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    .document-button:hover {
+      background-color: #cc0000;
+    }
+    .order-id {
+      font-family: monospace;
+      font-weight: bold;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 3px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-box">
+      <div class="success-icon">✓</div>
+      <h1>Thank You for Your Payment!</h1>
+      <p>Your transaction has been completed successfully.</p>
+      
+      <div class="details">
+        <p><strong>Transaction Details:</strong></p>
+        <p>Order ID: <span class="order-id" id="order-id">Processing...</span></p>
+        <p>Amount: $49.99 CAD</p>
+        <p>Service: Legal Form Submission</p>
+      </div>
+      
+      <p>Your document is being generated and will be ready for download shortly.</p>
+      
+      <div>
+        <a href="#" class="document-button" id="download-document">Download Your Document</a>
+        <a href="/" class="document-button" id="new-document">Create Another Document</a>
+      </div>
+    </div>
+    
+    <div>
+      <h3>What happens next?</h3>
+      <p>Your letter is ready to print, email, or share with the relevant party. For best results, we recommend:</p>
+      <ul style="text-align: left; display: inline-block;">
+        <li>Reviewing the document thoroughly before sending</li>
+        <li>Keeping a copy for your records</li>
+        <li>Following up within 7-10 business days if you don't receive a response</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Track success page view
+      gtag('event', 'purchase_success', {
+        event_category: 'conversion',
+        event_label: 'Payment completed'
+      });
+      
+      // Get order ID from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order_id');
+      
+      if (orderId) {
+        document.getElementById('order-id').textContent = orderId;
+      }
+      
+      // Track document download clicks
+      document.getElementById('download-document').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent navigation in this demo
+        
+        gtag('event', 'document_download', {
+          event_category: 'engagement',
+          event_label: 'Legal form document'
+        });
+        
+        // Simulate document download
+        const docUrl = '/static/samples/sample_letter.pdf';
+        const link = document.createElement('a');
+        link.href = docUrl;
+        link.setAttribute('download', 'SmartDispute_Letter.pdf');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+      
+      // Track create another document clicks
+      document.getElementById('new-document').addEventListener('click', function() {
+        gtag('event', 'create_another', {
+          event_category: 'engagement',
+          event_label: 'From success page'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

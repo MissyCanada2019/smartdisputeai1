@@ -10,5 +10,6 @@ dependencies = [
     "pypandoc>=1.15",
     "python-docx>=1.1.2",
     "python-dotenv>=1.1.0",
+    "reportlab>=4.3.1",
     "werkzeug>=3.1.3",
 ]

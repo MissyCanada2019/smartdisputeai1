@@ -95,7 +95,7 @@
   </div>
 
   <!-- PayPal SDK -->
-  <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=CAD"></script>
+  <script src="https://www.paypal.com/sdk/js?client-id=Ae4aYzkf6oRX1GtudHIm9UVWx-U55zBh92pgQKVWnvgel5MvWAW3FYh6nEQ5y-_wcpRCjs5omR4AXyZV&currency=CAD"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       paypal.Buttons({
@@ -192,7 +192,7 @@
 
             // Redirect after success (with a slight delay to show the animation)
             setTimeout(function() {
-              window.location.href = "/paypal_success.html?order_id=" + details.id;
+              window.location.href = "/success_with_upsell.html?order_id=" + details.id;
             }, 3000);
           });
         },
