@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Error - SmartDispute.ai</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-484252740');
+    
+    // Track error page view
+    gtag('event', 'view_error_page', {
+      'event_category': 'error',
+      'event_label': '{{ message }}'
+    });
+  </script>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      text-align: center;
+      padding: 50px 20px;
+    }
+    
+    h1 {
+      color: #ff0000;
+    }
+    
+    .error-container {
+      background-color: #111;
+      border: 2px solid #ff0000;
+      border-radius: 10px;
+      padding: 30px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .message {
+      background-color: #1a1a1a;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+      text-align: left;
+    }
+    
+    .back-button {
+      background-color: #ff0000;
+      color: #fff;
+      padding: 12px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h1>Something Went Wrong</h1>
+    
+    <div class="message">
+      <p>{{ message }}</p>
+    </div>
+    
+    <p>Please try again or contact support if the problem persists.</p>
+    
+    <a href="/" class="back-button">Back to Home</a>
+  </div>
+</body>
+</html>

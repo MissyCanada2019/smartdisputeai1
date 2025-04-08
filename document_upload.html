@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Your Document - SmartDispute.ai</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-484252740');
+  </script>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #000; 
+      color: #fff; 
+      text-align: center; 
+      padding: 50px 20px;
+      margin: 0;
+    }
+    h1 { 
+      color: #ff0000; 
+      margin-bottom: 10px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .upload-container { 
+      background-color: #111; 
+      padding: 30px; 
+      border-radius: 10px; 
+      margin: 20px auto;
+      border: 1px solid #333;
+      max-width: 500px;
+    }
+    .file-input-container {
+      position: relative;
+      margin: 20px 0;
+    }
+    .file-input-label {
+      background-color: #333;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-block;
+      width: 80%;
+      transition: background-color 0.3s;
+    }
+    .file-input-label:hover {
+      background-color: #444;
+    }
+    input[type="file"] {
+      position: absolute;
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      z-index: -1;
+    }
+    #file-name {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+    .submit-btn {
+      background-color: #ff0000;
+      color: #fff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+      width: 80%;
+    }
+    .submit-btn:hover {
+      background-color: #cc0000;
+    }
+    .note { 
+      font-size: 0.9em; 
+      color: #ccc; 
+      margin-top: 15px; 
+    }
+    .benefits {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 30px 0;
+    }
+    .benefit {
+      background-color: #111;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 10px;
+      flex: 1 1 200px;
+      max-width: 250px;
+      border: 1px solid #333;
+    }
+    .benefit h3 {
+      color: #ff0000;
+      margin-top: 0;
+    }
+    #loading {
+      display: none;
+      margin: 20px auto;
+    }
+    .spinner {
+      border: 4px solid rgba(255, 0, 0, 0.3);
+      border-radius: 50%;
+      border-top: 4px solid #ff0000;
+      width: 40px;
+      height: 40px;
+      margin: 10px auto;
+      animation: spin 1s linear infinite;
+    }
+    .loading-message {
+      margin-top: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Your Document</h1>
+    <p>Start your case now. Upload your notice, email, letter, or proof before payment. We'll help you build the perfect response.</p>
+    
+    <div class="benefits">
+      <div class="benefit">
+        <h3>Expert Analysis</h3>
+        <p>Our AI will scan your document for legal issues and identify key points relevant to your case.</p>
+      </div>
+      <div class="benefit">
+        <h3>Time Saving</h3>
+        <p>Quick review of your documents saves hours of manual research and reduces stress.</p>
+      </div>
+      <div class="benefit">
+        <h3>Customized Response</h3>
+        <p>Get recommendations tailored to your specific situation based on Canadian law.</p>
+      </div>
+    </div>
+    
+    <div class="upload-container">
+      <form id="upload-form" action="/analyze_document" method="post" enctype="multipart/form-data">
+        <div class="file-input-container">
+          <label for="document" class="file-input-label">Choose File</label>
+          <input type="file" id="document" name="document" accept=".pdf,.docx,.jpg,.jpeg,.png" required>
+          <div id="file-name">No file chosen</div>
+        </div>
+        <button type="submit" class="submit-btn">Submit for AI Review</button>
+      </form>
+      <p class="note">Supported file types: PDF, DOCX, JPG, PNG</p>
+      
+      <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-message">Analyzing your document...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Display selected filename
+    document.getElementById('document').addEventListener('change', function(e) {
+      const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+      document.getElementById('file-name').textContent = fileName;
+      
+      // Track file selection
+      gtag('event', 'file_selected', {
+        'event_category': 'document_upload',
+        'event_label': fileName.split('.').pop().toLowerCase() // Track file extension
+      });
+    });
+    
+    // Show loading indicator on form submission
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+      document.getElementById('loading').style.display = 'block';
+      
+      // Track form submission
+      gtag('event', 'document_uploaded', {
+        'event_category': 'engagement',
+        'event_label': document.getElementById('file-name').textContent
+      });
+    });
+  </script>
+</body>
+</html>
