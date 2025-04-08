@@ -3,10 +3,9 @@ import { extractJsonFromText, validateTextInput } from '../utils/ai-content-help
 import { DocumentAnalysisResult } from './advancedNlpService';
 
 // Initialize OpenAI client
-// Note: We don't need to explicitly pass the API key as the SDK will automatically use the environment variable
 const openai = new OpenAI();
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
+// The newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const DEFAULT_MODEL = 'gpt-4o';
 
 /**

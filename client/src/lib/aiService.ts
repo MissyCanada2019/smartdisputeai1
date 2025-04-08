@@ -3,7 +3,7 @@ import { apiRequest } from "@/lib/queryClient";
 
 /**
  * AI Service for document and text analysis
- * Uses server-side OpenAI and Claude APIs through our backend endpoints
+ * Uses server-side OpenAI API through our backend endpoints
  */
 
 // Types for AI analysis responses
