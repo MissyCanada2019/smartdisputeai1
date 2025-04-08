@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Basic Meta Setup -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SmartDispute.ai - Payment</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" 
+          rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-S3WXDJLT2T"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-S3WXDJLT2T');
+    </script>
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .payment-container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        .header {
+            background: linear-gradient(135deg, #6c5ce7, #3498db);
+            color: white;
+            padding: 20px 30px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .service-details {
+            padding: 15px;
+            background-color: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        .price-tag {
+            font-size: 36px;
+            font-weight: bold;
+            color: #3498db;
+            display: block;
+            margin-bottom: 20px;
+        }
+        .currency {
+            font-size: 20px;
+            vertical-align: top;
+            position: relative;
+            top: 5px;
+        }
+        .disclaimer {
+            font-size: 14px;
+            color: #777;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .payment-form {
+            margin-top: 25px;
+        }
+        .feature-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+        }
+        .feature-list li i {
+            color: #6c5ce7;
+            margin-right: 10px;
+        }
+        .brand-name {
+            font-weight: 600;
+            color: #fff;
+        }
+        .tagline {
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 5px;
+        }
+        .legal-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 20px;
+        }
+        #paypal-button-container {
+            margin-top: 30px;
+        }
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            color: #666;
+        }
+        .security-badge i {
+            font-size: 18px;
+            color: #6c5ce7;
+            margin-right: 8px;
+        }
+        .top-features {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .feature-box {
+            flex: 0 0 30%;
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            margin-bottom: 15px;
+        }
+        .feature-box i {
+            font-size: 24px;
+            color: #6c5ce7;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 767px) {
+            .feature-box {
+                flex: 0 0 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="payment-container">
+            <div class="header">
+                <h1 class="brand-name">SmartDispute.ai</h1>
+                <p class="tagline">Comprehensive Legal Document Analysis</p>
+            </div>
+            
+            <div class="content">
+                <div class="top-features">
+                    <div class="feature-box">
+                        <i class="fas fa-bolt"></i>
+                        <h5>Instant Analysis</h5>
+                        <p>Get results in minutes</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="fas fa-shield-alt"></i>
+                        <h5>Secure & Private</h5>
+                        <p>Your data is protected</p>
+                    </div>
+                    <div class="feature-box">
+                        <i class="fas fa-check-circle"></i>
+                        <h5>Expert-Powered</h5>
+                        <p>AI with legal expertise</p>
+                    </div>
+                </div>
+                
+                <div class="service-details">
+                    <h3>Comprehensive Document Analysis</h3>
+                    <p>Our premium service provides a thorough analysis of your legal document, including:</p>
+                    
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Complete document evaluation</li>
+                        <li><i class="fas fa-check"></i> Key information extraction</li>
+                        <li><i class="fas fa-check"></i> Legal implications breakdown</li>
+                        <li><i class="fas fa-check"></i> Suggested response strategies</li>
+                        <li><i class="fas fa-check"></i> Risk assessment</li>
+                    </ul>
+                    
+                    <span class="price-tag"><span class="currency">$</span>49.99</span>
+                    
+                    <div id="paypal-button-container"></div>
+                    
+                    <div class="security-badge">
+                        <i class="fas fa-lock"></i>
+                        <span>Secure Payment Processing</span>
+                    </div>
+                </div>
+                
+                <div class="disclaimer">
+                    <p><strong>Important:</strong> This service provides analysis for informational purposes only and does not constitute legal advice. For specific legal concerns, please consult with a qualified legal professional.</p>
+                    <p class="legal-text">By proceeding with payment, you agree to our Terms of Service and Privacy Policy. You'll receive instant access to comprehensive document analysis after payment is processed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PayPal JavaScript SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id={{ paypal_client_id }}&currency=CAD"></script>
+    
+    <script>
+        // Track payment form view
+        gtag('event', 'view_item', {
+            currency: 'CAD',
+            value: 49.99,
+            items: [{
+                item_id: 'doc-analysis-premium',
+                item_name: 'Comprehensive Document Analysis',
+                price: 49.99,
+                quantity: 1,
+                item_category: 'Legal Services'
+            }]
+        });
+        
+        // Begin checkout event
+        gtag('event', 'begin_checkout', {
+            currency: 'CAD',
+            value: 49.99,
+            items: [{
+                item_id: 'doc-analysis-premium',
+                item_name: 'Comprehensive Document Analysis',
+                price: 49.99,
+                quantity: 1,
+                item_category: 'Legal Services'
+            }]
+        });
+        
+        // PayPal checkout setup
+        paypal.Buttons({
+            style: {
+                color: 'blue',
+                shape: 'pill',
+                label: 'pay',
+                height: 40
+            },
+            
+            // Create order
+            createOrder: function(data, actions) {
+                // Track add payment info event
+                gtag('event', 'add_payment_info', {
+                    currency: 'CAD',
+                    value: 49.99,
+                    payment_type: 'paypal',
+                    items: [{
+                        item_id: 'doc-analysis-premium',
+                        item_name: 'Comprehensive Document Analysis',
+                        price: 49.99,
+                        quantity: 1,
+                        item_category: 'Legal Services'
+                    }]
+                });
+                
+                return actions.order.create({
+                    purchase_units: [{
+                        description: 'SmartDispute.ai Comprehensive Document Analysis',
+                        amount: {
+                            value: '49.99',
+                            currency_code: 'CAD'
+                        }
+                    }]
+                });
+            },
+            
+            // On approval
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderData) {
+                    // Get order details
+                    const transaction = orderData.purchase_units[0].payments.captures[0];
+                    const orderId = transaction.id;
+                    const amount = transaction.amount.value;
+                    const currency = transaction.amount.currency_code;
+                    
+                    // Track purchase event with actual transaction data
+                    gtag('event', 'purchase', {
+                        transaction_id: orderId,
+                        value: parseFloat(amount),
+                        currency: currency,
+                        tax: 0,
+                        shipping: 0,
+                        items: [{
+                            item_id: 'doc-analysis-premium',
+                            item_name: 'Comprehensive Document Analysis',
+                            price: parseFloat(amount),
+                            quantity: 1,
+                            item_category: 'Legal Services'
+                        }]
+                    });
+                    
+                    // Redirect to success page with order details
+                    window.location.href = `/payment-success?order_id=${orderId}&amount=${amount}&currency=${currency}`;
+                });
+            }
+        }).render('#paypal-button-container');
+    </script>
+    
+    <!-- Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

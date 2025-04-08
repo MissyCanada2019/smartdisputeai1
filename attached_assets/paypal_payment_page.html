@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SmartDispute.ai Payment Page</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXX'); // Replace with your actual GA4 Measurement ID
+  </script>
+</head>
+<body>
+  <h1>Complete Your Legal Form Submission</h1>
+  <div id="paypal-button-container"></div>
+
+  <!-- PayPal SDK -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=CAD"></script>
+  <script>
+    paypal.Buttons({
+      createOrder: function(data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: '49.99' // Set your actual price here
+            }
+          }]
+        });
+      },
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          // Fire GA4 'purchase' event
+          gtag('event', 'purchase', {
+            transaction_id: details.id,
+            value: details.purchase_units[0].amount.value,
+            currency: details.purchase_units[0].amount.currency_code,
+            items: [
+              {
+                item_name: 'Legal Form Submission',
+                quantity: 1
+              }
+            ]
+          });
+
+          // Redirect after success
+          window.location.href = "/success.html";
+        });
+      }
+    }).render('#paypal-button-container');
+  </script>
+</body>
+</html>

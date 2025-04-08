@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payment Successful | SmartDispute.ai</title>
+  <!-- Google Analytics Tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXX'); // Replace with your actual GA4 Measurement ID
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h1 {
+      color: #2d3748;
+      margin-bottom: 20px;
+    }
+    .success-icon {
+      font-size: 72px;
+      color: #48bb78;
+      margin-bottom: 20px;
+    }
+    .details {
+      margin: 30px 0;
+      background-color: #f0fff4;
+      border: 1px solid #c6f6d5;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: left;
+    }
+    .document-button {
+      display: inline-block;
+      background-color: #4a5568;
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 20px 10px;
+      transition: background-color 0.3s;
+    }
+    .document-button:hover {
+      background-color: #2d3748;
+    }
+    .order-id {
+      font-family: monospace;
+      font-weight: bold;
+      background-color: #edf2f7;
+      padding: 3px 6px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">✓</div>
+    <h1>Payment Successful!</h1>
+    <p>Thank you for your payment. Your transaction has been completed successfully.</p>
+    
+    <div class="details">
+      <p><strong>Transaction Details:</strong></p>
+      <p>Order ID: <span class="order-id" id="order-id">Processing...</span></p>
+      <p>Amount: $49.99 CAD</p>
+      <p>Service: Legal Form Submission</p>
+    </div>
+    
+    <p>Your document has been generated and is ready for use.</p>
+    
+    <div>
+      <a href="#" class="document-button" id="download-document">Download Document</a>
+      <a href="/" class="document-button" id="new-document">Create Another Document</a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Track success page view
+      gtag('event', 'purchase_success', {
+        event_category: 'conversion',
+        event_label: 'Payment completed'
+      });
+      
+      // Get order ID from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('order_id');
+      
+      if (orderId) {
+        document.getElementById('order-id').textContent = orderId;
+      }
+      
+      // Track document download clicks
+      document.getElementById('download-document').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent navigation in this demo
+        
+        gtag('event', 'document_download', {
+          event_category: 'engagement',
+          event_label: 'Legal form document'
+        });
+        
+        alert('Document download would start here in the real application.');
+      });
+      
+      // Track create another document clicks
+      document.getElementById('new-document').addEventListener('click', function() {
+        gtag('event', 'create_another', {
+          event_category: 'engagement',
+          event_label: 'From success page'
+        });
+      });
+    });
+  </script>
+</body>
+</html>

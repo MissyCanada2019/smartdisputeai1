@@ -731,6 +731,26 @@ def payment():
                            amount=amount, 
                            payment_method=payment_method)
 
+@app.route('/paypal-payment')
+def paypal_payment():
+    """Handle PayPal payment page"""
+    return render_template('paypal_payment_page.html', paypal_client_id=os.environ.get('PAYPAL_CLIENT_ID', ''))
+
+@app.route('/payment-success')
+def payment_success():
+    """Handle payment success page"""
+    # Get order details from query parameters or use defaults
+    order_id = request.args.get('order_id', 'ORDER-' + str(uuid.uuid4())[:8])
+    amount = request.args.get('amount', '49.99')
+    currency = request.args.get('currency', 'CAD')
+    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    
+    return render_template('payment_success.html', 
+                           order_id=order_id,
+                           amount=amount,
+                           currency=currency,
+                           date=date)
+
 @app.route('/process-payment', methods=['POST'])
 def process_payment():
     """Process the payment and generate the document"""
