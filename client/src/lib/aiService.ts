@@ -1,10 +1,5 @@
-
 import { apiRequest } from "@/lib/queryClient";
-
-/**
- * AI Service for document and text analysis
- * Uses server-side OpenAI API through our backend endpoints
- */
+import { analyzeText as claudeAnalyze } from './claude';
 
 // Types for AI analysis responses
 /**
@@ -46,32 +41,32 @@ export interface AIAnalysisResponse {
  */
 function isApiKeyError(error: unknown): boolean {
   if (!error) return false;
-  
+
   // Handle array of errors
   if (typeof error === 'object' && error !== null && 'errors' in error) {
     const errorsArray = Array.isArray((error as any).errors) ? (error as any).errors : [];
-    
+
     if (errorsArray.length > 0) {
       // Check if any error in the array is an API key error
       return errorsArray.some((e: any) => {
-        const errMsg = typeof e === 'string' 
-          ? e 
+        const errMsg = typeof e === 'string'
+          ? e
           : (typeof e === 'object' && e !== null)
-            ? (e.message || e.error || '') 
+            ? (e.message || e.error || '')
             : '';
-        
+
         return isApiKeyErrorMessage(errMsg);
       });
     }
   }
-  
+
   // Extract error message from different possible formats
-  const errorMsg = typeof error === 'string' 
-    ? error 
+  const errorMsg = typeof error === 'string'
+    ? error
     : (typeof error === 'object' && error !== null)
-      ? ((error as any).message || (error as any).error || '') 
+      ? ((error as any).message || (error as any).error || '')
       : '';
-  
+
   return isApiKeyErrorMessage(errorMsg);
 }
 
@@ -94,8 +89,8 @@ function isApiKeyErrorMessage(errorMsg: string): boolean {
     'forbidden',
     'not authorized'
   ];
-  
-  return apiKeyPhrases.some(phrase => 
+
+  return apiKeyPhrases.some(phrase =>
     errorMsg.toLowerCase().includes(phrase.toLowerCase())
   );
 }
@@ -107,46 +102,46 @@ function isApiKeyErrorMessage(errorMsg: string): boolean {
  */
 function formatApiKeyError(error: unknown): string {
   const baseMessage = 'AI service unavailable.';
-  
+
   // Handle array of errors from multiple AI services
   if (error && typeof error === 'object' && 'errors' in error) {
     const errorsArray = Array.isArray((error as any).errors) ? (error as any).errors : [];
-    
+
     if (errorsArray.length > 0) {
       // Multiple errors from different AI services
       const models = errorsArray
-        .filter((e: {model?: string, message?: string}) => e.model && e.message)
-        .map((e: {model: string}) => e.model)
+        .filter((e: { model?: string, message?: string }) => e.model && e.message)
+        .map((e: { model: string }) => e.model)
         .join(' and ');
-        
+
       if (models) {
         return `${baseMessage} Unable to connect to ${models}. API credentials may be missing or invalid. Please try another model or contact support.`;
       }
     }
   }
-  
+
   // Extract error message from different possible formats
-  const errorMsg = typeof error === 'string' 
-    ? error 
+  const errorMsg = typeof error === 'string'
+    ? error
     : (typeof error === 'object' && error !== null)
-      ? ((error as any).message || (error as any).error || '') 
+      ? ((error as any).message || (error as any).error || '')
       : '';
-  
+
   // Check for specific API key errors
   if (errorMsg.toLowerCase().includes('api key')) {
     return `${baseMessage} API key validation failed. Please contact support to verify the API configuration.`;
   }
-  
+
   if (errorMsg.toLowerCase().includes('rate limit')) {
     return `${baseMessage} API rate limit exceeded. Please try again later or contact support.`;
   }
-  
-  if (errorMsg.toLowerCase().includes('token') || 
-      errorMsg.toLowerCase().includes('unauthorized') || 
-      errorMsg.toLowerCase().includes('authentication')) {
+
+  if (errorMsg.toLowerCase().includes('token') ||
+    errorMsg.toLowerCase().includes('unauthorized') ||
+    errorMsg.toLowerCase().includes('authentication')) {
     return `${baseMessage} API authorization failed. Please contact support to check the API credentials.`;
   }
-  
+
   // Default message
   return `${baseMessage} The AI service credentials may be missing or invalid. Please try another model or contact support.`;
 }
@@ -166,7 +161,7 @@ export async function analyzeDocument(
     formData.append('document', file);
 
     let endpoint = '/api/document-analyzer/analyze';
-    
+
     if (model === 'dual') {
       endpoint = '/api/document-analyzer/analyze-dual';
     } else {
@@ -210,7 +205,7 @@ export async function analyzeExistingDocument(
 ): Promise<AIAnalysisResponse> {
   try {
     let endpoint = '/api/document-analyzer/analyze-existing';
-    
+
     if (model === 'dual') {
       endpoint = '/api/document-analyzer/analyze-existing-dual';
     } else {
@@ -226,7 +221,7 @@ export async function analyzeExistingDocument(
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       if (isApiKeyError(data)) {
         throw new Error(formatApiKeyError(data));
@@ -265,7 +260,7 @@ export async function analyzeText(
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       if (isApiKeyError(data)) {
         throw new Error(formatApiKeyError(data));
@@ -311,21 +306,21 @@ export async function analyzeEvidenceFile(
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         query,
         preferredModel
       }),
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       // Check for errors array with API key related issues
       if (data.errors && Array.isArray(data.errors)) {
-        if (data.errors.some((e: {message?: string}) => e.message && isApiKeyError(e.message))) {
+        if (data.errors.some((e: { message?: string }) => e.message && isApiKeyError(e.message))) {
           throw new Error(formatApiKeyError(data));
         }
-        
+
         // If we have errors but they're not API key related, format them for display
         if (data.errors.length > 0) {
           const errorMessages = data.errors
@@ -335,13 +330,13 @@ export async function analyzeEvidenceFile(
               return e.message || e.error || 'Unknown error';
             })
             .join('; ');
-            
+
           if (errorMessages) {
             throw new Error(`Analysis failed: ${errorMessages}`);
           }
         }
       }
-      
+
       // Handle other error formats
       throw new Error(data.error || data.message || 'Failed to analyze evidence file');
     }
@@ -359,7 +354,7 @@ export async function analyzeEvidenceFile(
   } catch (error: unknown) {
     console.error('Error analyzing evidence file:', error);
     const errorMessage = error instanceof Error ? error.message : 'An error occurred while analyzing the evidence';
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -378,18 +373,18 @@ export function compareAnalyses(analyses: {
 }): { similarities: string[]; differences: string[] } {
   // This is a simple implementation - in a real application, we might use 
   // more sophisticated NLP techniques to compare the analyses
-  
+
   const similarities: string[] = [];
   const differences: string[] = [];
-  
+
   if (!analyses.openai || !analyses.claude) {
     return { similarities, differences };
   }
-  
+
   // Convert to lowercase for comparison
   const openaiLower = analyses.openai.toLowerCase();
   const claudeLower = analyses.claude.toLowerCase();
-  
+
   // Check for major section presence
   const sections = [
     "document assessment",
@@ -397,11 +392,11 @@ export function compareAnalyses(analyses: {
     "court strategy",
     "summary and action items"
   ];
-  
+
   sections.forEach(section => {
     const inOpenAI = openaiLower.includes(section);
     const inClaude = claudeLower.includes(section);
-    
+
     if (inOpenAI && inClaude) {
       similarities.push(`Both models provide ${section} analysis`);
     } else if (inOpenAI && !inClaude) {
@@ -410,18 +405,55 @@ export function compareAnalyses(analyses: {
       differences.push(`Only Claude provides ${section} analysis`);
     }
   });
-  
+
   // Look for specific keywords related to case merit
   const meritTerms = ["merit", "strength", "weakness", "evidence", "credibility"];
-  
+
   meritTerms.forEach(term => {
     const inOpenAI = openaiLower.includes(term);
     const inClaude = claudeLower.includes(term);
-    
+
     if (inOpenAI && inClaude) {
       similarities.push(`Both models mention "${term}" in their analysis`);
     }
   });
-  
+
   return { similarities, differences };
 }
+
+const analyzeDocument = async (text: string, options = {}) => {
+  try {
+    // Try OpenAI first
+    const response = await apiRequest('/api/openai/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ text, options }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      // If OpenAI fails, try Claude as backup
+      console.log('OpenAI analysis failed, falling back to Claude');
+      return await claudeAnalyze(text, options);
+    }
+
+    const data = await response.json();
+    return data.analysis;
+  } catch (error) {
+    console.error('AI analysis error:', error);
+    // Final fallback to Claude
+    try {
+      return await claudeAnalyze(text, options);
+    } catch (backupError) {
+      throw new Error(`All AI services failed: ${error}. Backup error: ${backupError}`);
+    }
+  }
+};
+
+export default {
+  analyzeDocument,
+  analyzeDocument,
+  analyzeExistingDocument,
+  analyzeText,
+  analyzeEvidenceFile,
+  compareAnalyses
+};

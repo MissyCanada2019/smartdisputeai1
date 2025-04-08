@@ -45,14 +45,14 @@ export async function analyzeText(
 
   try {
     const messages = [];
-    
+
     if (systemInstruction) {
       messages.push({
         role: 'system',
         content: systemInstruction
       });
     }
-    
+
     messages.push({
       role: 'user',
       content: text
@@ -75,7 +75,8 @@ export async function analyzeText(
     return response.choices[0].message.content || '';
   } catch (error: any) {
     console.error('OpenAI API error:', error);
-    throw new Error(`OpenAI analysis failed: ${error.message}`);
+    // Rethrow with specific error to help identify OpenAI failures
+    throw new Error(`OpenAI_SERVICE_ERROR: ${error.message}`);
   }
 }
 
@@ -115,11 +116,11 @@ Focus on:
 
 Your analysis should be thorough but focused on what would be most important for someone without legal training to understand. Prioritize clarity and actionable insights.
 `;
-  
+
   if (documentType) {
     systemInstruction += `\nThis document appears to be a ${documentType}. Please analyze it with this context in mind.`;
   }
-  
+
   if (jurisdiction) {
     systemInstruction += `\nThis document is from ${jurisdiction}, Canada. Please consider relevant provincial laws in your analysis.`;
   }
@@ -127,7 +128,7 @@ Your analysis should be thorough but focused on what would be most important for
   try {
     // Truncate text if too long
     const processedText = validateTextInput(text, 10, 25000);
-    
+
     const userMessage = `Please analyze this legal document and provide a detailed analysis in JSON format with the following structure:
 {
   "documentType": "type of legal document",
@@ -170,17 +171,17 @@ ${processedText}`;
 
     const contentText = response.choices[0].message.content || '';
     let jsonResponse;
-    
+
     try {
       jsonResponse = JSON.parse(contentText);
     } catch (parseError) {
       jsonResponse = extractJsonFromText(contentText);
-      
+
       if (!jsonResponse) {
         throw new Error('Failed to extract structured data from OpenAI response');
       }
     }
-    
+
     // Construct a structured document analysis result
     const result: DocumentAnalysisResult = {
       content: text.substring(0, 1000) + (text.length > 1000 ? '...' : ''), // Store a preview of the original content
@@ -197,7 +198,7 @@ ${processedText}`;
       rawAnalysis: contentText,
       sourceModel: DEFAULT_MODEL
     };
-    
+
     return result;
   } catch (error: any) {
     console.error('OpenAI document analysis error:', error);
