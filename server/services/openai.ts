@@ -3,9 +3,8 @@ import { extractJsonFromText, validateTextInput } from '../utils/ai-content-help
 import { DocumentAnalysisResult } from './advancedNlpService';
 
 // Initialize OpenAI client
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+// Note: We don't need to explicitly pass the API key as the SDK will automatically use the environment variable
+const openai = new OpenAI();
 
 // The newest OpenAI model is "gpt-4o" which was released May 13, 2024. Do not change this unless explicitly requested by the user
 const DEFAULT_MODEL = 'gpt-4o';
@@ -31,9 +30,7 @@ export async function analyzeText(
   text: string,
   options: AnalysisOptions = {}
 ): Promise<string> {
-  if (!openai) {
-    throw new Error('OpenAI API key not configured');
-  }
+  // API key authentication is handled by the OpenAI client
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     throw new Error('Text content required for analysis');
@@ -95,9 +92,7 @@ export async function analyzeDocument(
   documentType: string | null = null,
   jurisdiction: string = 'Ontario'
 ): Promise<DocumentAnalysisResult> {
-  if (!openai) {
-    throw new Error('OpenAI API key not configured');
-  }
+  // API key authentication is handled by the OpenAI client
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     throw new Error('Document text required for analysis');
@@ -221,9 +216,7 @@ export async function analyzeImage(
   base64Image: string,
   prompt: string = 'Analyze this image and describe what you see in detail.'
 ): Promise<string> {
-  if (!openai) {
-    throw new Error('OpenAI API key not configured');
-  }
+  // API key authentication is handled by the OpenAI client
 
   if (!base64Image) {
     throw new Error('Base64 image data is required');
@@ -270,9 +263,7 @@ export async function analyzeLegalSituation(
   documentType?: string,
   jurisdiction: string = 'Ontario'
 ): Promise<string> {
-  if (!openai) {
-    throw new Error('OpenAI API key not configured');
-  }
+  // API key authentication is handled by the OpenAI client
 
   if (!userDescription || userDescription.trim().length === 0) {
     throw new Error('User description is required');
@@ -300,14 +291,14 @@ Be empathetic, clear, and practical in your guidance.
 
   try {
     const messages = [
-      { role: 'system', content: systemInstruction },
-      { role: 'user', content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}` }
+      { role: 'system' as const, content: systemInstruction },
+      { role: 'user' as const, content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}` }
     ];
 
     // Add document context if provided
     if (documentText && documentText.trim().length > 0) {
       messages.push({
-        role: 'user',
+        role: 'user' as const,
         content: `Here's a ${documentType || 'legal document'} related to my situation:\n\n${documentText}`
       });
     }

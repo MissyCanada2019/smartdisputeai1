@@ -3,12 +3,44 @@ import { extractJsonFromText, extractTextFromContentBlock, validateTextInput } f
 import { DocumentAnalysisResult } from './advancedNlpService';
 
 // Initialize Anthropic client
-const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-}) : null;
+// Note: SDK will look for the ANTHROPIC_API_KEY environment variable automatically
+const anthropic = new Anthropic();
 
 // The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025. Do not change this unless explicitly requested by the user
 const DEFAULT_MODEL = 'claude-3-7-sonnet-20250219';
+
+// Define TypeScript types to match Anthropic SDK requirements
+type UserRole = 'user';
+type AssistantRole = 'assistant';
+type MessageRole = UserRole | AssistantRole;
+
+interface TextContent {
+  type: 'text';
+  text: string;
+}
+
+interface ImageContent {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: string;
+    data: string;
+  };
+}
+
+type MessageContent = string | TextContent | ImageContent | (TextContent | ImageContent)[];
+
+interface UserMessage {
+  role: UserRole;
+  content: MessageContent;
+}
+
+interface AssistantMessage {
+  role: AssistantRole;
+  content: string;
+}
+
+type Message = UserMessage | AssistantMessage;
 
 /**
  * Interface for analysis options
@@ -31,9 +63,7 @@ export async function analyzeText(
   text: string,
   options: AnalysisOptions = {}
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
-  }
+  // API key authentication is handled by the Anthropic client
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     throw new Error('Text content required for analysis');
@@ -50,7 +80,7 @@ export async function analyzeText(
   try {
     const messages = [
       {
-        role: 'user',
+        role: 'user' as const,
         content: text
       }
     ];
@@ -84,9 +114,7 @@ export async function analyzeDocument(
   documentType: string | null = null,
   jurisdiction: string = 'Ontario'
 ): Promise<DocumentAnalysisResult> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
-  }
+  // API key authentication is handled by the Anthropic client
 
   if (!text || typeof text !== 'string' || text.trim().length === 0) {
     throw new Error('Document text required for analysis');
@@ -158,7 +186,7 @@ ${processedText}`;
       temperature: 0.3,
       system: systemPrompt,
       messages: [
-        { role: 'user', content: userMessage }
+        { role: 'user' as const, content: userMessage }
       ]
     });
 
@@ -203,9 +231,7 @@ export async function analyzeImage(
   base64Image: string,
   prompt: string = 'Analyze this image and describe what you see in detail.'
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
-  }
+  // API key authentication is handled by the Anthropic client
 
   if (!base64Image) {
     throw new Error('Base64 image data is required');
@@ -217,16 +243,16 @@ export async function analyzeImage(
       max_tokens: 1024,
       messages: [
         {
-          role: 'user',
+          role: 'user' as const,
           content: [
             {
-              type: 'text',
+              type: 'text' as const,
               text: prompt
             },
             {
-              type: 'image',
+              type: 'image' as const,
               source: {
-                type: 'base64',
+                type: 'base64' as const,
                 media_type: 'image/jpeg',
                 data: base64Image
               }
@@ -257,9 +283,7 @@ export async function analyzeLegalSituation(
   documentType?: string,
   jurisdiction: string = 'Ontario'
 ): Promise<string> {
-  if (!anthropic) {
-    throw new Error('Anthropic API key not configured');
-  }
+  // API key authentication is handled by the Anthropic client
 
   if (!userDescription || userDescription.trim().length === 0) {
     throw new Error('User description is required');
@@ -286,17 +310,17 @@ Be empathetic, clear, and practical in your guidance.
 `;
 
   try {
-    const messages = [];
-    
-    messages.push({
-      role: 'user',
-      content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}`
-    });
+    const messages = [
+      {
+        role: 'user' as const,
+        content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}`
+      }
+    ];
 
     // Add document context if provided
     if (documentText && documentText.trim().length > 0) {
       messages.push({
-        role: 'user',
+        role: 'user' as const,
         content: `Here's a ${documentType || 'legal document'} related to my situation:\n\n${documentText}`
       });
     }

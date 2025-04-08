@@ -1,107 +1,134 @@
-// Simple test script for Claude API functionality
+/**
+ * Test script for the latest Anthropic Claude API using Node.js SDK
+ */
+
 import Anthropic from '@anthropic-ai/sdk';
+import 'dotenv/config';
 
-// Initialize the Anthropic client with API key
-// Note: This is only needed for direct API calls, our API endpoints handle this server-side
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Initialize the client
+const client = new Anthropic();
 
-// Function to test text analysis with Claude
 async function testTextAnalysis(text) {
   try {
-    // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-    const message = await anthropic.messages.create({
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: text }],
-      model: 'claude-3-7-sonnet-20250219',
-    });
-
-    console.log('Text Analysis Result:');
-    console.log(message.content[0].text);
-    return message.content[0].text;
-  } catch (error) {
-    console.error('Error in text analysis:', error.message);
-    throw error;
-  }
-}
-
-// Function to test image analysis with Claude (multimodal)
-async function testImageAnalysis(base64Image, prompt) {
-  try {
-    // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-    const response = await anthropic.messages.create({
-      model: "claude-3-7-sonnet-20250219",
-      max_tokens: 1024,
-      messages: [{
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: prompt || "Analyze this image in detail and describe what you see."
-          },
-          {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: base64Image
-            }
-          }
-        ]
-      }]
-    });
-
-    console.log('Image Analysis Result:');
-    console.log(response.content[0].text);
-    return response.content[0].text;
-  } catch (error) {
-    console.error('Error in image analysis:', error.message);
-    throw error;
-  }
-}
-
-// Function to test legal situation analysis
-async function testLegalAnalysis(situation, returnJson = false) {
-  try {
-    let systemPrompt = "You're a legal assistant specializing in Canadian law. Analyze the described situation and provide insights.";
-    
-    if (returnJson) {
-      systemPrompt += " Respond with a JSON object that includes the following keys: 'legalIssues', 'applicableLaws', 'possibleActions', 'risks', and 'recommendations'.";
-    }
-
-    // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-    const response = await anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      system: systemPrompt,
-      max_tokens: 1024,
+    console.log('Testing basic text analysis...');
+    const response = await client.messages.create({
+      model: "claude-3-7-sonnet-20250219", // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+      max_tokens: 500,
       messages: [
-        { role: 'user', content: situation }
+        { role: "user", content: text || "Write a one-sentence bedtime story about a unicorn." }
       ],
     });
-
-    console.log('Legal Analysis Result:');
-    console.log(response.content[0].text);
     
-    if (returnJson) {
-      try {
-        return JSON.parse(response.content[0].text);
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', parseError);
-        return response.content[0].text;
-      }
-    }
+    console.log('Text analysis result:');
+    console.log(response.content[0].text);
+    console.log('\n' + '-'.repeat(50) + '\n');
     
     return response.content[0].text;
   } catch (error) {
-    console.error('Error in legal analysis:', error.message);
+    console.error('Error in Claude text analysis:');
+    console.error(error);
     throw error;
   }
 }
 
-// Export the test functions
-export {
-  testTextAnalysis,
-  testImageAnalysis,
-  testLegalAnalysis
-};
+async function testImageAnalysis(base64Image, prompt) {
+  if (!base64Image) {
+    console.error('Base64 image data required');
+    return;
+  }
+  
+  try {
+    console.log('Testing image analysis...');
+    const response = await client.messages.create({
+      model: "claude-3-7-sonnet-20250219",
+      max_tokens: 1000,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt || "Analyze this image in detail."
+            },
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: base64Image
+              }
+            }
+          ]
+        }
+      ]
+    });
+    
+    console.log('Image analysis result:');
+    console.log(response.content[0].text);
+    console.log('\n' + '-'.repeat(50) + '\n');
+    
+    return response.content[0].text;
+  } catch (error) {
+    console.error('Error in Claude image analysis:');
+    console.error(error);
+    throw error;
+  }
+}
+
+async function testLegalAnalysis(situation, returnJson = false) {
+  try {
+    console.log('Testing legal analysis...');
+    
+    const systemPrompt = `
+    You are a legal assistance AI specialized in Canadian law.
+    Your goal is to provide helpful information and guidance to individuals who may not be able to afford legal representation.
+    
+    IMPORTANT DISCLAIMERS:
+    1. You are not a lawyer and cannot provide legal advice.
+    2. Your analysis is for informational purposes only and should not be considered legal advice.
+    3. You should encourage users to seek professional legal counsel for their specific situation.
+    `;
+    
+    let message = situation || "I received a notice from my landlord saying I have to move out in 14 days. Is this legal in Ontario?";
+    
+    if (returnJson) {
+      message += "\n\nPlease respond in JSON format with the following structure: { 'legalIssue': 'identification of the legal issue', 'relevantLaws': ['list of relevant laws'], 'possibleSteps': ['possible steps to take'], 'timeframe': 'any relevant timeframes' }";
+    }
+    
+    const response = await client.messages.create({
+      model: "claude-3-7-sonnet-20250219",
+      max_tokens: 1500,
+      system: systemPrompt,
+      messages: [
+        { role: "user", content: message }
+      ]
+    });
+    
+    console.log('Legal analysis result:');
+    console.log(response.content[0].text);
+    console.log('\n' + '-'.repeat(50) + '\n');
+    
+    return response.content[0].text;
+  } catch (error) {
+    console.error('Error in Claude legal analysis:');
+    console.error(error);
+    throw error;
+  }
+}
+
+// If this script is run directly, test the functions
+if (process.argv[1].includes('claude-test')) {
+  console.log("Running Claude API tests...");
+  
+  const testText = "What are some key considerations when facing eviction in Canada?";
+  testTextAnalysis(testText)
+    .then(() => console.log("Text analysis test completed"))
+    .catch(err => console.error("Text analysis test failed:", err));
+  
+  // Note: Image testing requires a base64 image to be passed in
+  
+  const legalSituation = "I received a notice that says I violated my lease by having a pet, but my lease doesn't say anything about pets. What should I do?";
+  testLegalAnalysis(legalSituation)
+    .then(() => console.log("Legal analysis test completed"))
+    .catch(err => console.error("Legal analysis test failed:", err));
+}

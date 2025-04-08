@@ -111,33 +111,25 @@ export async function analyzeDocument(
   let errorMessage = '';
 
   // Try with OpenAI first
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      console.log('Attempting document analysis using OpenAI...');
-      result = await openaiService.analyzeDocument(text, documentType, jurisdiction);
-      console.log('OpenAI document analysis succeeded');
-      return result;
-    } catch (error: any) {
-      errorMessage += `OpenAI analysis error: ${error.message}. `;
-      console.warn('OpenAI analysis failed, will try Anthropic:', error.message);
-    }
-  } else {
-    console.log('OpenAI API key not configured, skipping OpenAI analysis');
+  try {
+    console.log('Attempting document analysis using OpenAI...');
+    result = await openaiService.analyzeDocument(text, documentType, jurisdiction);
+    console.log('OpenAI document analysis succeeded');
+    return result;
+  } catch (error: any) {
+    errorMessage += `OpenAI analysis error: ${error.message}. `;
+    console.warn('OpenAI analysis failed, will try Anthropic:', error.message);
   }
 
   // Fall back to Anthropic
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      console.log('Attempting document analysis using Anthropic...');
-      result = await anthropicService.analyzeDocument(text, documentType, jurisdiction);
-      console.log('Anthropic document analysis succeeded');
-      return result;
-    } catch (error: any) {
-      errorMessage += `Anthropic analysis error: ${error.message}. `;
-      console.warn('Anthropic analysis failed:', error.message);
-    }
-  } else {
-    console.log('Anthropic API key not configured, skipping Anthropic analysis');
+  try {
+    console.log('Attempting document analysis using Anthropic...');
+    result = await anthropicService.analyzeDocument(text, documentType, jurisdiction);
+    console.log('Anthropic document analysis succeeded');
+    return result;
+  } catch (error: any) {
+    errorMessage += `Anthropic analysis error: ${error.message}. `;
+    console.warn('Anthropic analysis failed:', error.message);
   }
 
   // If all attempts fail, throw an error
@@ -188,11 +180,10 @@ export async function extractEntities(text: string): Promise<Entity[]> {
   let errorMessage = '';
 
   // Try OpenAI first
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      console.log('Extracting entities using OpenAI...');
-      
-      const userPrompt = `
+  try {
+    console.log('Extracting entities using OpenAI...');
+    
+    const userPrompt = `
 Please extract all named entities from the following text. 
 Return only a JSON array of entities with the following structure:
 [
@@ -207,33 +198,31 @@ Return only a JSON array of entities with the following structure:
 Text to analyze:
 ${text}`;
 
-      const response = await openaiService.analyzeText(text, {
-        systemInstruction: 'You are a specialized legal entity extractor focusing on entities relevant in legal documents.',
-        responseFormat: 'json'
-      });
-      
-      try {
-        const parsed = JSON.parse(response);
-        if (Array.isArray(parsed)) {
-          entities = parsed;
-          console.log(`Successfully extracted ${entities.length} entities with OpenAI`);
-          return entities;
-        }
-      } catch (parseError: any) {
-        console.warn('Failed to parse OpenAI entity extraction response:', parseError.message);
+    const response = await openaiService.analyzeText(userPrompt, {
+      systemInstruction: 'You are a specialized legal entity extractor focusing on entities relevant in legal documents.',
+      responseFormat: 'json'
+    });
+    
+    try {
+      const parsed = JSON.parse(response);
+      if (Array.isArray(parsed)) {
+        entities = parsed;
+        console.log(`Successfully extracted ${entities.length} entities with OpenAI`);
+        return entities;
       }
-    } catch (error: any) {
-      errorMessage += `OpenAI entity extraction error: ${error.message}. `;
-      console.warn('OpenAI entity extraction failed, will try Anthropic:', error.message);
+    } catch (parseError: any) {
+      console.warn('Failed to parse OpenAI entity extraction response:', parseError.message);
     }
+  } catch (error: any) {
+    errorMessage += `OpenAI entity extraction error: ${error.message}. `;
+    console.warn('OpenAI entity extraction failed, will try Anthropic:', error.message);
   }
 
   // Fall back to Anthropic
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      console.log('Extracting entities using Anthropic...');
-      
-      const userPrompt = `
+  try {
+    console.log('Extracting entities using Anthropic...');
+    
+    const userPrompt = `
 Please extract all named entities from the following text. 
 Return only a JSON array of entities with the following structure:
 [
@@ -248,25 +237,24 @@ Return only a JSON array of entities with the following structure:
 Text to analyze:
 ${text}`;
 
-      const response = await anthropicService.analyzeText(userPrompt, {
-        systemPrompt: 'You are a specialized legal entity extractor focusing on entities relevant in legal documents.',
-        responseFormat: 'json'
-      });
-      
-      try {
-        const parsed = JSON.parse(response);
-        if (Array.isArray(parsed)) {
-          entities = parsed;
-          console.log(`Successfully extracted ${entities.length} entities with Anthropic`);
-          return entities;
-        }
-      } catch (parseError: any) {
-        console.warn('Failed to parse Anthropic entity extraction response:', parseError.message);
+    const response = await anthropicService.analyzeText(userPrompt, {
+      systemPrompt: 'You are a specialized legal entity extractor focusing on entities relevant in legal documents.',
+      responseFormat: 'json'
+    });
+    
+    try {
+      const parsed = JSON.parse(response);
+      if (Array.isArray(parsed)) {
+        entities = parsed;
+        console.log(`Successfully extracted ${entities.length} entities with Anthropic`);
+        return entities;
       }
-    } catch (error: any) {
-      errorMessage += `Anthropic entity extraction error: ${error.message}. `;
-      console.warn('Anthropic entity extraction failed:', error.message);
+    } catch (parseError: any) {
+      console.warn('Failed to parse Anthropic entity extraction response:', parseError.message);
     }
+  } catch (error: any) {
+    errorMessage += `Anthropic entity extraction error: ${error.message}. `;
+    console.warn('Anthropic entity extraction failed:', error.message);
   }
 
   // If all attempts fail, throw an error
@@ -295,11 +283,10 @@ export async function extractDeadlines(text: string): Promise<Deadline[]> {
   let errorMessage = '';
 
   // Try OpenAI first
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      console.log('Extracting deadlines using OpenAI...');
-      
-      const userPrompt = `
+  try {
+    console.log('Extracting deadlines using OpenAI...');
+    
+    const userPrompt = `
 Extract all deadlines and time-sensitive information from the following text.
 Return only a JSON array with the following structure:
 [
@@ -314,33 +301,31 @@ Return only a JSON array with the following structure:
 Text to analyze:
 ${text}`;
 
-      const response = await openaiService.analyzeText(userPrompt, {
-        systemInstruction: 'You are a specialized legal deadline extractor. Focus only on time-sensitive information in legal documents.',
-        responseFormat: 'json'
-      });
-      
-      try {
-        const parsed = JSON.parse(response);
-        if (Array.isArray(parsed)) {
-          deadlines = parsed;
-          console.log(`Successfully extracted ${deadlines.length} deadlines with OpenAI`);
-          return deadlines;
-        }
-      } catch (parseError: any) {
-        console.warn('Failed to parse OpenAI deadline extraction response:', parseError.message);
+    const response = await openaiService.analyzeText(userPrompt, {
+      systemInstruction: 'You are a specialized legal deadline extractor. Focus only on time-sensitive information in legal documents.',
+      responseFormat: 'json'
+    });
+    
+    try {
+      const parsed = JSON.parse(response);
+      if (Array.isArray(parsed)) {
+        deadlines = parsed;
+        console.log(`Successfully extracted ${deadlines.length} deadlines with OpenAI`);
+        return deadlines;
       }
-    } catch (error: any) {
-      errorMessage += `OpenAI deadline extraction error: ${error.message}. `;
-      console.warn('OpenAI deadline extraction failed, will try Anthropic:', error.message);
+    } catch (parseError: any) {
+      console.warn('Failed to parse OpenAI deadline extraction response:', parseError.message);
     }
+  } catch (error: any) {
+    errorMessage += `OpenAI deadline extraction error: ${error.message}. `;
+    console.warn('OpenAI deadline extraction failed, will try Anthropic:', error.message);
   }
 
   // Fall back to Anthropic
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      console.log('Extracting deadlines using Anthropic...');
-      
-      const userPrompt = `
+  try {
+    console.log('Extracting deadlines using Anthropic...');
+    
+    const userPrompt = `
 Extract all deadlines and time-sensitive information from the following text.
 Return only a JSON array with the following structure:
 [
@@ -355,25 +340,24 @@ Return only a JSON array with the following structure:
 Text to analyze:
 ${text}`;
 
-      const response = await anthropicService.analyzeText(userPrompt, {
-        systemPrompt: 'You are a specialized legal deadline extractor. Focus only on time-sensitive information in legal documents.',
-        responseFormat: 'json'
-      });
-      
-      try {
-        const parsed = JSON.parse(response);
-        if (Array.isArray(parsed)) {
-          deadlines = parsed;
-          console.log(`Successfully extracted ${deadlines.length} deadlines with Anthropic`);
-          return deadlines;
-        }
-      } catch (parseError: any) {
-        console.warn('Failed to parse Anthropic deadline extraction response:', parseError.message);
+    const response = await anthropicService.analyzeText(userPrompt, {
+      systemPrompt: 'You are a specialized legal deadline extractor. Focus only on time-sensitive information in legal documents.',
+      responseFormat: 'json'
+    });
+    
+    try {
+      const parsed = JSON.parse(response);
+      if (Array.isArray(parsed)) {
+        deadlines = parsed;
+        console.log(`Successfully extracted ${deadlines.length} deadlines with Anthropic`);
+        return deadlines;
       }
-    } catch (error: any) {
-      errorMessage += `Anthropic deadline extraction error: ${error.message}. `;
-      console.warn('Anthropic deadline extraction failed:', error.message);
+    } catch (parseError: any) {
+      console.warn('Failed to parse Anthropic deadline extraction response:', parseError.message);
     }
+  } catch (error: any) {
+    errorMessage += `Anthropic deadline extraction error: ${error.message}. `;
+    console.warn('Anthropic deadline extraction failed:', error.message);
   }
 
   // If all attempts fail, throw an error
