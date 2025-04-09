@@ -25,6 +25,7 @@ import { dirname } from "path";
 import multer from "multer";
 import { WebSocketServer, WebSocket } from 'ws';
 import * as anthropicService from "./services/anthropic";
+import crypto from "crypto";
 
 // Extend the Express Request type to include authentication and user info
 interface Request extends ExpressRequest {
@@ -992,7 +993,7 @@ const subscription = await stripe.subscriptions.create({
         
         // If password is empty, generate a random secure password
         if (!userInput.password || userInput.password.trim() === '') {
-          const crypto = require('crypto');
+          // Using the imported crypto module from the top of the file
           userInput.password = crypto.randomBytes(12).toString('hex');
           console.log("Generated random password for user with empty password field");
         }
