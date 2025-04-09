@@ -57,16 +57,33 @@ export function DirectEvidenceUploader({
       if (files.length > 0) {
         const formData = new FormData();
         
+        // Add user ID (required by backend)
+        formData.append('userId', '1'); // Use a default user ID for uploads
+        
+        // Log upload size
+        let totalSize = 0;
         files.forEach(file => {
           formData.append('evidence', file);
-          console.log('Added file to FormData:', file.name);
+          console.log('Added file to FormData:', file.name, 'Size:', file.size, 'bytes');
+          totalSize += file.size;
         });
+        console.log('Total upload size:', totalSize, 'bytes');
         
         // Add description
         formData.append('description', caseDescription);
         
-        const response = await fetch('/api/direct-evidence/upload', {
+        // Add client diagnostics to help debug
+        formData.append('clientInfo', JSON.stringify({
+          browser: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          fileCount: files.length,
+          totalSize: totalSize
+        }));
+        
+        console.log('Uploading files to /api/evidence-files/upload');
+        const response = await fetch('/api/evidence-files/upload', {
           method: 'POST',
+          // Do not manually set Content-Type for FormData, browser will set it with boundary
           body: formData
         });
         
@@ -75,6 +92,15 @@ export function DirectEvidenceUploader({
           try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorMessage;
+            
+            // Enhanced error handling for specific response status codes
+            if (response.status === 413) {
+              errorMessage = "File too large. Please upload files smaller than 50MB each.";
+            } else if (response.status === 400) {
+              errorMessage = errorData.details || "Bad request: Please check your files and try again.";
+            } else if (response.status === 500) {
+              errorMessage = "Server error processing your files. Please try again with smaller files.";
+            }
           } catch (e) {
             // If we can't parse JSON, use the status text
             errorMessage = `Error ${response.status}: ${response.statusText}`;
@@ -119,6 +145,17 @@ export function DirectEvidenceUploader({
         try {
           const errorData = await analysisResponse.json();
           errorMessage = errorData.message || errorMessage;
+          
+          // Enhanced error handling for specific response status codes
+          if (analysisResponse.status === 403) {
+            errorMessage = "You don't have permission to analyze these documents. Please sign in or check your account access.";
+          } else if (analysisResponse.status === 402) {
+            errorMessage = "Analysis limit reached. Please upgrade your plan to analyze more documents.";
+          } else if (analysisResponse.status === 429) {
+            errorMessage = "Too many requests. Please wait a minute and try again.";
+          } else if (analysisResponse.status >= 500) {
+            errorMessage = "Our AI services are currently experiencing issues. We've been notified and are working to resolve this.";
+          }
         } catch (e) {
           errorMessage = `Error ${analysisResponse.status}: ${analysisResponse.statusText}`;
         }
@@ -169,6 +206,15 @@ export function DirectEvidenceUploader({
             <div>
               <p className="font-medium">Upload Error</p>
               <p className="text-sm">{error}</p>
+              {error.includes("AI services") && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800 font-medium">Need access to AI services?</p>
+                  <p className="text-xs text-yellow-700">
+                    If you're an administrator, please make sure the ANTHROPIC_API_KEY or OPENAI_API_KEY 
+                    environment variables are set correctly. Contact support if you need assistance.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -190,9 +236,9 @@ export function DirectEvidenceUploader({
             onUpload={handleFilesSelected}
             multiple={true}
             acceptedFileTypes=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
-            maxFileSizeMB={10}
+            maxFileSizeMB={50}
             label="Evidence Files"
-            helpText="Upload any documents, photos, or files that support your case (PDF, DOC, JPG, PNG, etc.)"
+            helpText="Upload any documents, photos, or files that support your case (PDF, DOC, JPG, PNG, etc.). Maximum file size: 50MB per file."
           />
         </div>
         

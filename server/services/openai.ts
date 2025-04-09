@@ -1,237 +1,113 @@
-import OpenAI from 'openai';
-import { extractJsonFromText, validateTextInput } from '../utils/ai-content-helpers';
-import { DocumentAnalysisResult } from './advancedNlpService';
+import OpenAI from "openai";
 
-// Initialize OpenAI client
-const openai = new OpenAI();
+// the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+const GPT_MODEL = "gpt-4o";
+const MAX_ATTEMPTS = 3;
+const RETRY_DELAY = 1000; // 1 second
 
-// The newest OpenAI model is "gpt-4o" which was released May 13, 2024
-const DEFAULT_MODEL = 'gpt-4o';
-
-/**
- * Interface for analysis options
- */
-export interface AnalysisOptions {
-  systemInstruction?: string;
-  temperature?: number;
-  maxTokens?: number;
-  responseFormat?: 'text' | 'json';
-  model?: string;
-}
+// Initialize the OpenAI client with API key
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || ''
+});
 
 /**
- * Generic text analysis function using OpenAI
- * @param text Text content to analyze
- * @param options Analysis options
- * @returns Analyzed text
+ * Error handling wrapper for all OpenAI API calls
+ * Provides consistent error response format and retry logic
  */
-export async function analyzeText(
-  text: string,
-  options: AnalysisOptions = {}
-): Promise<string> {
-  // API key authentication is handled by the OpenAI client
+async function safeOpenAIRequest<T>(requestFn: () => Promise<T>, errorMessage: string): Promise<T> {
+  let lastError: Error | null = null;
+  let attempt = 0;
 
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    throw new Error('Text content required for analysis');
-  }
-
-  const {
-    systemInstruction,
-    temperature = 0.3,
-    maxTokens = 1000,
-    responseFormat = 'text',
-    model = DEFAULT_MODEL
-  } = options;
-
-  try {
-    const messages = [];
-
-    if (systemInstruction) {
-      messages.push({
-        role: 'system',
-        content: systemInstruction
-      });
-    }
-
-    messages.push({
-      role: 'user',
-      content: text
-    });
-
-    const requestOptions: any = {
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-    };
-
-    // Add JSON response format if specified
-    if (responseFormat === 'json') {
-      requestOptions.response_format = { type: 'json_object' };
-    }
-
-    const response = await openai.chat.completions.create(requestOptions);
-
-    return response.choices[0].message.content || '';
-  } catch (error: any) {
-    console.error('OpenAI API error:', error);
-    // Rethrow with specific error to help identify OpenAI failures
-    throw new Error(`OpenAI_SERVICE_ERROR: ${error.message}`);
-  }
-}
-
-/**
- * Analyzes a document with OpenAI
- * @param text The document text to analyze
- * @param documentType Optional document type for more targeted analysis
- * @param jurisdiction Optional jurisdiction for more targeted analysis
- * @returns Structured document analysis result
- */
-export async function analyzeDocument(
-  text: string,
-  documentType: string | null = null,
-  jurisdiction: string = 'Ontario'
-): Promise<DocumentAnalysisResult> {
-  // API key authentication is handled by the OpenAI client
-
-  if (!text || typeof text !== 'string' || text.trim().length === 0) {
-    throw new Error('Document text required for analysis');
-  }
-
-  // Build system instruction with context
-  let systemInstruction = `
-You are a specialized legal document analyzer focusing on Canadian legal documents. Your task is to analyze the provided document text and extract key information in a structured format.
-
-Your analysis should be detailed and specific to Canadian legal systems, with particular attention to provincial jurisdictions. Consider the nature of the document and its implications for the party who likely needs assistance.
-
-Focus on:
-1. Document identification: Determine the type of legal document (e.g., notice of eviction, CAS disclosure, etc.)
-2. Key entities: Extract important names, organizations, locations, dates, monetary values, and legal references
-3. Legal deadlines: Identify and explain any time-sensitive requirements or deadlines
-4. Legal obligations: Extract obligations imposed on different parties
-5. Jurisdiction: Identify the relevant legal jurisdiction (province, territory, or federal)
-6. Risks and warnings: Highlight potential risks or concerning elements
-7. Complexity assessment: Evaluate the document's complexity for a layperson (1-10 scale)
-8. Next steps: Suggest practical next steps for someone receiving this document
-
-Your analysis should be thorough but focused on what would be most important for someone without legal training to understand. Prioritize clarity and actionable insights.
-`;
-
-  if (documentType) {
-    systemInstruction += `\nThis document appears to be a ${documentType}. Please analyze it with this context in mind.`;
-  }
-
-  if (jurisdiction) {
-    systemInstruction += `\nThis document is from ${jurisdiction}, Canada. Please consider relevant provincial laws in your analysis.`;
-  }
-
-  try {
-    // Truncate text if too long
-    const processedText = validateTextInput(text, 10, 25000);
-
-    const userMessage = `Please analyze this legal document and provide a detailed analysis in JSON format with the following structure:
-{
-  "documentType": "type of legal document",
-  "legalJurisdiction": "applicable jurisdiction (province/territory)",
-  "summary": "concise summary of the document",
-  "complexityScore": number from 1-10,
-  "keyEntities": [
-    { "text": "entity text", "type": "ENTITY_TYPE", "relevance": 0.0-1.0, "context": "optional context" }
-  ],
-  "keyConcepts": [
-    { "name": "concept name", "relevance": 0.0-1.0, "description": "brief description" }
-  ],
-  "deadlines": [
-    { "description": "what the deadline is for", "date": "deadline date/period", "isAbsolute": boolean, "consequence": "what happens if missed" }
-  ],
-  "obligations": [
-    { "description": "obligation description", "obligated": "who is obligated", "to": "what they must do", "consequence": "what happens if not fulfilled", "timeframe": "when it must be done" }
-  ],
-  "risksAndWarnings": [
-    "description of risk or warning"
-  ],
-  "nextSteps": [
-    "recommended next step"
-  ]
-}
-
-Here is the document text:
-${processedText}`;
-
-    const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
-      messages: [
-        { role: 'system', content: systemInstruction },
-        { role: 'user', content: userMessage }
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.3,
-      max_tokens: 2048
-    });
-
-    const contentText = response.choices[0].message.content || '';
-    let jsonResponse;
-
+  while (attempt < MAX_ATTEMPTS) {
     try {
-      jsonResponse = JSON.parse(contentText);
-    } catch (parseError) {
-      jsonResponse = extractJsonFromText(contentText);
+      // Check if API key is present
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.');
+      }
 
-      if (!jsonResponse) {
-        throw new Error('Failed to extract structured data from OpenAI response');
+      return await requestFn();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Handle different error types
+      if (error.message?.includes('API key') || error.message?.includes('auth')) {
+        // Don't retry authentication errors
+        throw new Error(`Authentication error: ${error.message}`);
+      } else if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+        // Retry with exponential backoff for rate limit errors
+        const delay = RETRY_DELAY * Math.pow(2, attempt);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        attempt++;
+      } else if (error.message?.includes('500') || error.message?.includes('503')) {
+        // Retry for server errors
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        attempt++;
+      } else {
+        // Don't retry other errors
+        throw new Error(`${errorMessage}: ${error.message}`);
       }
     }
-
-    // Construct a structured document analysis result
-    const result: DocumentAnalysisResult = {
-      content: text.substring(0, 1000) + (text.length > 1000 ? '...' : ''), // Store a preview of the original content
-      documentType: jsonResponse.documentType || 'Unknown',
-      legalJurisdiction: jsonResponse.legalJurisdiction || jurisdiction,
-      complexityScore: typeof jsonResponse.complexityScore === 'number' ? jsonResponse.complexityScore : 5,
-      summary: jsonResponse.summary || '',
-      keyEntities: Array.isArray(jsonResponse.keyEntities) ? jsonResponse.keyEntities : [],
-      keyConcepts: Array.isArray(jsonResponse.keyConcepts) ? jsonResponse.keyConcepts : [],
-      deadlines: Array.isArray(jsonResponse.deadlines) ? jsonResponse.deadlines : [],
-      obligations: Array.isArray(jsonResponse.obligations) ? jsonResponse.obligations : [],
-      risksAndWarnings: Array.isArray(jsonResponse.risksAndWarnings) ? jsonResponse.risksAndWarnings : [],
-      nextSteps: Array.isArray(jsonResponse.nextSteps) ? jsonResponse.nextSteps : [],
-      rawAnalysis: contentText,
-      sourceModel: DEFAULT_MODEL
-    };
-
-    return result;
-  } catch (error: any) {
-    console.error('OpenAI document analysis error:', error);
-    throw new Error(`OpenAI document analysis failed: ${error.message}`);
   }
+
+  // If we've exhausted our retries
+  throw new Error(`${errorMessage} after ${MAX_ATTEMPTS} attempts: ${lastError?.message}`);
 }
 
 /**
- * Analyze an image using OpenAI Vision
- * @param base64Image Base64-encoded image data
- * @param prompt Text prompt for the analysis
- * @returns Analysis text
+ * Analyzes text with GPT-4o to extract key information and provide legal insights
  */
-export async function analyzeImage(
-  base64Image: string,
-  prompt: string = 'Analyze this image and describe what you see in detail.'
-): Promise<string> {
-  // API key authentication is handled by the OpenAI client
+export async function analyzeDocument(text: string, context?: string): Promise<any> {
+  const systemPrompt = `You are a legal document analyzer for SmartDispute.ai, assisting Canadians with legal self-representation. 
+  Analyze the provided document text and extract key information that would be relevant in a legal dispute.
+  ${context ? `Consider this additional context: ${context}` : ''}`;
 
-  if (!base64Image) {
-    throw new Error('Base64 image data is required');
-  }
-
-  try {
+  return safeOpenAIRequest(async () => {
     const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
+      model: GPT_MODEL,
+      temperature: 0.2,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: text.substring(0, 30000) } // Limit text to avoid token limits
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    try {
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (e) {
+      return {
+        error: "Failed to parse GPT response as JSON",
+        rawResponse: response.choices[0].message.content
+      };
+    }
+  }, "Failed to analyze document with GPT");
+}
+
+/**
+ * Analyzes an image (base64 encoded) with GPT-4o Vision capabilities
+ */
+export async function analyzeImage(base64Image: string, prompt?: string): Promise<any> {
+  const userPrompt = prompt || 
+    "Analyze this document image and extract all text content, legal details, key facts, and parties mentioned. If this is a legal document, identify its type and purpose.";
+
+  return safeOpenAIRequest(async () => {
+    const response = await openai.chat.completions.create({
+      model: GPT_MODEL,
+      temperature: 0.2,
       messages: [
         {
-          role: 'user',
+          role: "system",
+          content: "You are a legal document analyzer expert. Extract text and analyze legal documents from images with precision and accuracy."
+        },
+        {
+          role: "user",
           content: [
-            { type: 'text', text: prompt },
             {
-              type: 'image_url',
+              type: "text",
+              text: userPrompt
+            },
+            {
+              type: "image_url",
               image_url: {
                 url: `data:image/jpeg;base64,${base64Image}`
               }
@@ -239,80 +115,139 @@ export async function analyzeImage(
           ]
         }
       ],
-      max_tokens: 1024
     });
 
-    return response.choices[0].message.content || '';
-  } catch (error: any) {
-    console.error('OpenAI image analysis error:', error);
-    throw new Error(`OpenAI image analysis failed: ${error.message}`);
-  }
+    return {
+      analysis: response.choices[0].message.content,
+      success: true
+    };
+  }, "Failed to analyze image with GPT Vision");
 }
 
 /**
- * Custom function for analyzing a legal situation
- * @param userDescription User's description of their legal situation
- * @param documentText Optional supporting document text
- * @param documentType Optional document type
- * @param jurisdiction Optional jurisdiction
- * @returns Legal analysis and advice
+ * Generates a legal advice response based on the user's situation and evidence
  */
-export async function analyzeLegalSituation(
-  userDescription: string,
-  documentText?: string,
-  documentType?: string,
-  jurisdiction: string = 'Ontario'
-): Promise<string> {
-  // API key authentication is handled by the OpenAI client
+export async function generateLegalAdvice(situation: string, documents: any[], province: string): Promise<any> {
+  const documentsText = documents.map(d => `Document: ${d.filename}\nContent: ${d.content || 'No text content available'}`).join('\n\n');
+  
+  const systemPrompt = `You are a legal assistant for SmartDispute.ai, helping Canadians with legal self-representation. 
+  You are NOT a lawyer and should clarify this in your response. 
+  Provide guidance on the user's legal situation based on the documents and description provided.
+  Focus on ${province} provincial law where applicable.
+  
+  Format your response in markdown with these sections:
+  1. Situation Summary - Brief neutral summary of the facts
+  2. Legal Issues - Identify potential legal issues based on the situation and documents
+  3. Relevant Laws - Applicable laws or regulations in ${province} 
+  4. Suggested Steps - Practical next steps the user could consider
+  5. Document Analysis - Brief analysis of the provided documents
+  6. Important Disclaimers - Include that this is not legal advice and certain situations require consultation with a lawyer`;
 
-  if (!userDescription || userDescription.trim().length === 0) {
-    throw new Error('User description is required');
-  }
-
-  const systemInstruction = `
-You are a legal assistance AI specialized in Canadian law, particularly for ${jurisdiction}.
-Your goal is to provide helpful information and guidance to individuals who may not be able to afford legal representation.
-
-IMPORTANT DISCLAIMERS:
-1. You are not a lawyer and cannot provide legal advice.
-2. Your analysis is for informational purposes only and should not be considered legal advice.
-3. You should encourage users to seek professional legal counsel for their specific situation.
-
-When analyzing the user's situation:
-1. Identify the key legal issues involved
-2. Provide general information about relevant laws and procedures
-3. Explain potential options the person might have
-4. Mention relevant deadlines or time-sensitive actions
-5. Reference helpful resources or legal aid services
-6. Always maintain a balanced perspective
-
-Be empathetic, clear, and practical in your guidance.
-`;
-
-  try {
-    const messages = [
-      { role: 'system' as const, content: systemInstruction },
-      { role: 'user' as const, content: `I need help understanding my legal situation in ${jurisdiction}. Here's what's happening:\n\n${userDescription}` }
-    ];
-
-    // Add document context if provided
-    if (documentText && documentText.trim().length > 0) {
-      messages.push({
-        role: 'user' as const,
-        content: `Here's a ${documentType || 'legal document'} related to my situation:\n\n${documentText}`
-      });
-    }
-
+  return safeOpenAIRequest(async () => {
     const response = await openai.chat.completions.create({
-      model: DEFAULT_MODEL,
-      messages,
-      temperature: 0.4,
-      max_tokens: 2048
+      model: GPT_MODEL,
+      temperature: 0.5,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `My situation: ${situation}\n\nMy documents:\n${documentsText}` }
+      ]
     });
 
-    return response.choices[0].message.content || '';
-  } catch (error: any) {
-    console.error('OpenAI legal situation analysis error:', error);
-    throw new Error(`OpenAI legal analysis failed: ${error.message}`);
-  }
+    return {
+      advice: response.choices[0].message.content,
+      success: true
+    };
+  }, "Failed to generate legal advice with GPT");
 }
+
+/**
+ * Compares a user's case with similar legal precedents to develop potential strategies
+ */
+export async function analyzeLegalStrategy(situation: string, evidence: any[], jurisdiction: string): Promise<any> {
+  const evidenceText = evidence.map(e => `Evidence: ${e.title || 'Untitled'}\nDescription: ${e.description || 'No description'}\nContent: ${e.content || 'No content available'}`).join('\n\n');
+  
+  const systemPrompt = `You are a legal strategy assistant for SmartDispute.ai, helping Canadians prepare legal strategies. 
+  You are NOT a lawyer and should make this clear in your response.
+  Based on the user's situation and evidence, suggest possible legal strategies they might consider.
+  Focus on ${jurisdiction} jurisdictional considerations where applicable.`;
+
+  return safeOpenAIRequest(async () => {
+    const response = await openai.chat.completions.create({
+      model: GPT_MODEL,
+      temperature: 0.3,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `My situation: ${situation}\n\nMy evidence:\n${evidenceText}` }
+      ],
+      response_format: { type: "json_object" }
+    });
+
+    try {
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (e) {
+      return {
+        error: "Failed to parse GPT response as JSON",
+        rawResponse: response.choices[0].message.content
+      };
+    }
+  }, "Failed to analyze legal strategy with GPT");
+}
+
+/**
+ * Generate a letter or document based on user inputs and templates
+ */
+export async function generateLegalDocument(templateType: string, userInputs: any, jurisdiction: string): Promise<any> {
+  const inputsText = Object.entries(userInputs)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('\n');
+  
+  const systemPrompt = `You are a legal document generator for SmartDispute.ai, helping Canadians create ${templateType} documents.
+  Create a professional, legally-appropriate ${templateType} based on the user inputs provided.
+  Follow standard legal document format and conventions for ${jurisdiction}.
+  Include all necessary sections typically found in a ${templateType}.
+  
+  Format your response as a complete, ready-to-use document in markdown format.
+  Do not include explanations or instructions - return ONLY the document text.`;
+
+  return safeOpenAIRequest(async () => {
+    const response = await openai.chat.completions.create({
+      model: GPT_MODEL,
+      temperature: 0.2,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Please generate a ${templateType} document using the following information:\n\n${inputsText}` }
+      ]
+    });
+
+    return {
+      document: response.choices[0].message.content,
+      success: true
+    };
+  }, `Failed to generate ${templateType} document with GPT`);
+}
+
+/**
+ * Generate an image based on a description
+ */
+export async function generateImage(prompt: string, size: string = "1024x1024"): Promise<string> {
+  return safeOpenAIRequest(async () => {
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: size as any,
+      quality: "standard",
+    });
+
+    return response.data[0].url || "";
+  }, "Failed to generate image");
+}
+
+export default {
+  analyzeDocument,
+  analyzeImage,
+  generateLegalAdvice,
+  analyzeLegalStrategy,
+  generateLegalDocument,
+  generateImage
+};
