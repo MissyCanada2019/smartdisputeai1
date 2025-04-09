@@ -18,7 +18,8 @@ import {
   getEntityTypeIcon,
   getEntityTypeColor,
   getEntityTypeLabel,
-  formatComplexityScore
+  formatComplexityScore,
+  formatMeritWeight
 } from '@/lib/documentAnalysisService';
 
 /**
@@ -303,7 +304,7 @@ export default function DocumentAnalyzer() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="text-sm text-gray-500 mb-1">Complexity</div>
                   <div className="flex items-center justify-between">
@@ -315,6 +316,19 @@ export default function DocumentAnalyzer() {
                     </div>
                   </div>
                   <Progress value={analysisResult.complexityScore * 10} className="h-2 mt-2" />
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500 mb-1">Merit Weight</div>
+                  <div className="flex items-center justify-between">
+                    <div className={`text-xl font-semibold ${formatMeritWeight(analysisResult.meritWeight || 5).color}`}>
+                      {formatMeritWeight(analysisResult.meritWeight || 5).text}
+                    </div>
+                    <div className="text-sm bg-gray-200 px-2 py-1 rounded-full">
+                      {analysisResult.meritWeight || 5}/10
+                    </div>
+                  </div>
+                  <Progress value={(analysisResult.meritWeight || 5) * 10} className="h-2 mt-2" />
                 </div>
                 
                 <div className="bg-gray-50 p-4 rounded-lg">

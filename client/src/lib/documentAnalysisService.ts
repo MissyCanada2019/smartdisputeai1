@@ -15,6 +15,7 @@ export interface DocumentAnalysisResult {
   documentType: string;       // The detected document type
   legalJurisdiction: string;  // Detected legal jurisdiction
   complexityScore: number;    // Document complexity score (1-10)
+  meritWeight?: number;       // Case merit weight score (1-10)
   summary: string;            // Concise summary of the document
   deadlines: Deadline[];      // Important deadlines extracted from document
   obligations: Obligation[];  // Legal obligations identified
@@ -115,6 +116,7 @@ export async function uploadAndAnalyzeDocument(
   jurisdiction: string = 'Ontario'
 ): Promise<{ result: DocumentAnalysisResult, originalFile: any }> {
   try {
+    // Use standard fetch API with FormData
     const formData = new FormData();
     formData.append('document', file);
     
@@ -124,9 +126,11 @@ export async function uploadAndAnalyzeDocument(
     
     formData.append('jurisdiction', jurisdiction);
 
-    const response = await queryClient.apiRequest('/api/advanced-analysis/upload', {
+    // Use native fetch instead of apiRequest to ensure proper FormData handling
+    const response = await fetch('/api/advanced-analysis/upload', {
       method: 'POST',
       body: formData,
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -135,6 +139,15 @@ export async function uploadAndAnalyzeDocument(
     }
 
     const data = await response.json();
+    
+    // Ensure merit weight is explicitly handled in the response
+    if (data.result && typeof data.result.meritWeight === 'undefined') {
+      console.warn('Merit weight missing in response, defaulting to calculated value');
+      // Add a default merit weight if not present in the response
+      // This calculation can be adjusted based on your scoring algorithm
+      data.result.meritWeight = calculateMeritWeightFromComplexity(data.result.complexityScore || 5);
+    }
+    
     return {
       result: data.result,
       originalFile: data.originalFile
@@ -143,6 +156,20 @@ export async function uploadAndAnalyzeDocument(
     console.error('Error in document upload analysis:', error);
     throw error;
   }
+}
+
+/**
+ * Helper function to calculate a merit weight from complexity if not provided by API
+ * @param complexityScore The document complexity score (1-10)
+ * @returns A calculated merit weight (1-10)
+ */
+function calculateMeritWeightFromComplexity(complexityScore: number): number {
+  // This is a simple fallback calculation - adjust based on your needs
+  // The formula inverts complexity (higher complexity = lower initial merit)
+  // Then applies modifiers to keep it in a realistic range
+  const baseScore = 10 - (complexityScore * 0.6);
+  // Ensure the score is between 1-10
+  return Math.max(1, Math.min(10, Math.round(baseScore)));
 }
 
 /**
@@ -353,6 +380,40 @@ export function formatComplexityScore(score: number): { text: string, color: str
   } else {
     return { 
       text: 'Very Complex', 
+      color: 'text-red-600' 
+    };
+  }
+}
+
+/**
+ * Format merit weight score as a readable string with color
+ * @param score Merit weight score (1-10)
+ * @returns Object with text and color class
+ */
+export function formatMeritWeight(score: number): { text: string, color: string } {
+  if (score >= 8) {
+    return { 
+      text: 'Very Strong', 
+      color: 'text-green-600' 
+    };
+  } else if (score >= 6) {
+    return { 
+      text: 'Strong', 
+      color: 'text-emerald-600' 
+    };
+  } else if (score >= 4) {
+    return { 
+      text: 'Moderate', 
+      color: 'text-amber-600' 
+    };
+  } else if (score >= 2) {
+    return { 
+      text: 'Weak', 
+      color: 'text-orange-600' 
+    };
+  } else {
+    return { 
+      text: 'Very Weak', 
       color: 'text-red-600' 
     };
   }

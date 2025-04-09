@@ -65,6 +65,7 @@ import registerDocumentAnalyzerRoutes from "./documentAnalyzer";
 import paypalRoutes from "./paypalRoutes";
 // Import advanced document analysis routes
 import advancedDocumentAnalysisRoutes from "./routes/advancedDocumentAnalysis";
+import claudeRoutes from "./routes/claude";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4895,8 +4896,10 @@ const subscription = await stripe.subscriptions.create({
   app.use("/api/document-analyzer", registerDocumentAnalyzerRoutes(storage));
   
   // Register advanced document analysis routes
-  // Register advanced document analysis routes
   advancedDocumentAnalysisRoutes(app);
+  
+  // Register Claude AI routes
+  app.use("/api/claude", claudeRoutes);
   
   // Register PayPal routes
   app.use("/api/paypal", paypalRoutes);
@@ -4973,63 +4976,7 @@ const subscription = await stripe.subscriptions.create({
     }
   });
 
-  // Claude API endpoints for text, image, and legal situation analysis
-  app.post("/api/claude/analyze-text", async (req: Request, res: Response) => {
-    try {
-      // Validate request body
-      if (!req.body.text) {
-        return res.status(400).json({ message: "Text content is required" });
-      }
-
-      const { text, prompt, options } = req.body;
-
-      // Call the Anthropic service
-      const analysis = await anthropicService.analyzeText(text, prompt || 'Analyze this text thoroughly.', options);
-      
-      res.json({ analysis });
-    } catch (error: any) {
-      console.error("Claude text analysis error:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/claude/analyze-image", async (req: Request, res: Response) => {
-    try {
-      // Validate request body
-      if (!req.body.image) {
-        return res.status(400).json({ message: "Image data is required" });
-      }
-
-      const { image, prompt, options } = req.body;
-
-      // Call the Anthropic service
-      const analysis = await anthropicService.analyzeImage(image, prompt, options);
-      
-      res.json({ analysis });
-    } catch (error: any) {
-      console.error("Claude image analysis error:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
-
-  app.post("/api/claude/analyze-legal-situation", async (req: Request, res: Response) => {
-    try {
-      // Validate request body
-      if (!req.body.situation) {
-        return res.status(400).json({ message: "Legal situation description is required" });
-      }
-
-      const { situation, options } = req.body;
-
-      // Call the Anthropic service
-      const analysis = await anthropicService.analyzeLegalSituation(situation, options);
-      
-      res.json({ analysis });
-    } catch (error: any) {
-      console.error("Claude legal situation analysis error:", error);
-      res.status(500).json({ message: error.message });
-    }
-  });
+  // Legacy Claude API endpoints are now handled by the modular router in server/routes/claude.ts
 
   return httpServer;
 }
