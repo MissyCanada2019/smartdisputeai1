@@ -3,7 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>Payment Successful</title>
-  <!-- Google Analytics Tag -->
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5L7PTHJK');</script>
+  <!-- End Google Tag Manager -->
+  
+  <!-- SmartDispute GTM Integration -->
+  <script src="/gtm.js"></script>
+  
+  <!-- Fallback Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-484252740"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -77,6 +89,13 @@
   </style>
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5L7PTHJK"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
   <div class="message-box">
     <h1>Thank You!</h1>
     <p>Your payment was successful.</p>
@@ -101,6 +120,14 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Track success page view with GTM
+      if (window.GTM) {
+        window.GTM.trackConversion('purchase_complete', 'success_page', {
+          page_type: 'success_with_upsell',
+          purchase_status: 'complete'
+        });
+      }
+      
       // Get order ID from URL parameters
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get('order_id');
@@ -113,10 +140,18 @@
       document.getElementById('download-document').addEventListener('click', function(e) {
         e.preventDefault(); // Prevent default link behavior
         
-        gtag('event', 'document_download', {
-          event_category: 'engagement',
-          event_label: 'Legal form document'
-        });
+        // Use GTM tracking if available
+        if (window.GTM) {
+          window.GTM.trackConversion('document_download', 'success_page', {
+            document_type: 'legal_form'
+          });
+        } else {
+          // Fallback to standard gtag if GTM not available
+          gtag('event', 'document_download', {
+            event_category: 'engagement',
+            event_label: 'Legal form document'
+          });
+        }
         
         // Initiate download of sample document
         const docUrl = '/static/samples/sample_letter.pdf';
@@ -132,10 +167,19 @@
       const upsellButton = document.querySelector('.upsell a');
       if (upsellButton) {
         upsellButton.addEventListener('click', function() {
-          gtag('event', 'upsell_click', {
-            event_category: 'conversion',
-            event_label: 'Discounted second letter'
-          });
+          // Use GTM tracking if available
+          if (window.GTM) {
+            window.GTM.trackConversion('upsell_clicked', 'success_page', {
+              offer_type: 'discount_letter',
+              discount_amount: '40%',
+              offer_price: 29.99
+            });
+          } else {
+            gtag('event', 'upsell_click', {
+              event_category: 'conversion',
+              event_label: 'Discounted second letter'
+            });
+          }
         });
       }
     });
