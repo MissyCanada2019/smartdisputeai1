@@ -984,6 +984,18 @@ const subscription = await stripe.subscriptions.create({
           throw storageError;
         }
       } else {
+        console.log("Processing regular user creation");
+        
+        // For regular users, check if password is empty and auto-generate if needed
+        let userInput = req.body;
+        
+        // If password is empty, generate a random secure password
+        if (!userInput.password || userInput.password.trim() === '') {
+          const crypto = require('crypto');
+          userInput.password = crypto.randomBytes(12).toString('hex');
+          console.log("Generated random password for user with empty password field");
+        }
+        
         // For regular users, use the full validation
         const userSchema = insertUserSchema.extend({
           password: z.string().min(6, "Password must be at least 6 characters"),
@@ -991,8 +1003,9 @@ const subscription = await stripe.subscriptions.create({
         });
         
         // Validate request body
-        const validationResult = userSchema.safeParse(req.body);
+        const validationResult = userSchema.safeParse(userInput);
         if (!validationResult.success) {
+          console.error("User validation failed:", validationResult.error.format());
           return res.status(400).json({ message: "Invalid user data", errors: validationResult.error.format() });
         }
         

@@ -1,0 +1,73 @@
+Common Causes of 400 Bad Request Errors When Uploading Files
+1. File Too Large
+Some systems reject files over a certain size limit.
+
+✅ Fix: Add a file size limit check on the frontend and backend (e.g., 10MB max).
+
+2. Missing or Incorrect Headers
+If you're not setting the Content-Type properly (especially for file uploads like multipart/form-data), the server might reject it.
+
+✅ Fix: Ensure the request uses enctype="multipart/form-data".
+
+3. Backend Endpoint Not Accepting the Request Format
+The server may not be parsing the request body correctly.
+
+✅ Fix: Make sure the backend (like Flask, Node, etc.) is set up to accept file uploads.
+
+4. Frontend Form Issues
+The form may be missing required fields or improperly sending data.
+
+✅ Fix: Make sure all required fields are populated before submission and formData.append('file', file) is used correctly.
+
+5. Filename or Data Corruption
+Filenames with special characters or corrupted files can cause rejections.
+
+✅ Fix: Sanitize filenames or rename before upload.
+
+6. CSRF or CORS Policies
+If you’re uploading from a browser and the server isn’t configured to accept the request origin, it may block it.
+
+✅ Fix: Configure CORS headers on the backend to accept your frontend domain.
+
+✅ Quick Checklist (Frontend)
+If you're using JavaScript:
+
+javascript
+Copy
+Edit
+const formData = new FormData();
+formData.append("file", selectedFile);
+
+fetch("/upload-endpoint", {
+  method: "POST",
+  body: formData,
+  headers: {
+    // DO NOT manually set 'Content-Type' when using FormData
+    // 'Content-Type' will be automatically set by the browser
+  }
+});
+✅ Example: Python Flask Backend Snippet
+python
+Copy
+Edit
+from flask import Flask, request
+
+app = Flask(__name__)
+
+@app.route('/upload-endpoint', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return "No file part", 400
+    file = request.files['file']
+    if file.filename == '':
+        return "No selected file", 400
+    # Save or analyze file
+    file.save(f"./uploads/{file.filename}")
+    return "Upload successful", 200
+If you tell me:
+
+What tech stack you're using (Replit + Flask? Node? HTML form?)
+
+The actual request method and file size
+
+…I’ll give you exact code to fix it. Want me to review the upload handler or the frontend code?
