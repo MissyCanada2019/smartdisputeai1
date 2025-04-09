@@ -276,6 +276,11 @@ def success():
     </html>
     """
 
+@app.route('/stripe-direct')
+def stripe_direct_checkout():
+    """Serve the direct Stripe checkout page with the provided link"""
+    return send_file('stripe-checkout.html')
+
 @app.route('/download')
 def download_final_pdf():
     """Download the purchased document"""

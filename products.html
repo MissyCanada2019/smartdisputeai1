@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Products - SmartDispute.ai</title>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5L7PTHJK');</script>
+  <!-- End Google Tag Manager -->
+  
+  <!-- SmartDispute GTM Integration -->
+  <script src="/gtm.js"></script>
+  
+  <style>
+    :root {
+      --primary: #ff0000;
+      --background: #000000;
+      --foreground: #ffffff;
+      --accent-dark: #111111;
+      --accent-light: #222222;
+      --accent-border: #333333;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 40px;
+    }
+    .product-card {
+      background-color: var(--accent-dark);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 0, 0, 0.2);
+    }
+    .product-image {
+      height: 200px;
+      background-color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 48px;
+    }
+    .product-details {
+      padding: 20px;
+    }
+    .product-title {
+      font-size: 1.5rem;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .product-description {
+      color: #cccccc;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .product-price {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+    .product-button {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .product-button:hover {
+      background-color: #cc0000;
+    }
+    .section-title {
+      margin-top: 50px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--accent-border);
+      padding-bottom: 10px;
+    }
+    .badge {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5L7PTHJK"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
+  <div class="container">
+    <header>
+      <h1>SmartDispute.ai Products</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/products.html">Products</a>
+        <a href="/stripe-direct">Checkout</a>
+      </nav>
+    </header>
+    
+    <h2>Our AI-Powered Legal Solutions</h2>
+    <p>SmartDispute.ai offers a range of products to help you navigate complex legal situations without the high cost of traditional legal services. All our products leverage advanced AI technology to provide personalized, professional legal assistance.</p>
+    
+    <h2 class="section-title">Document Analysis Services</h2>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-image">📄</div>
+        <div class="product-details">
+          <h3 class="product-title">Basic Document Analysis <span class="badge">Popular</span></h3>
+          <p class="product-description">AI-powered analysis of your legal documents. Identifies key information and assesses complexity level.</p>
+          <div class="product-price">$4.99</div>
+          <a href="/stripe-direct" class="product-button" data-product-id="basic_analysis" data-product-price="4.99">Buy Now</a>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-image">📊</div>
+        <div class="product-details">
+          <h3 class="product-title">Full Document Analysis</h3>
+          <p class="product-description">Comprehensive analysis of legal documents with detailed breakdown of terms, obligations, and potential issues.</p>
+          <div class="product-price">$14.99</div>
+          <a href="/stripe-direct" class="product-button" data-product-id="full_analysis" data-product-price="14.99">Buy Now</a>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-image">🔍</div>
+        <div class="product-details">
+          <h3 class="product-title">Evidence Review</h3>
+          <p class="product-description">Detailed examination of evidence documents for strengths, weaknesses, and relevance to your case.</p>
+          <div class="product-price">$19.99</div>
+          <a href="/stripe-direct" class="product-button" data-product-id="evidence_review" data-product-price="19.99">Buy Now</a>
+        </div>
+      </div>
+    </div>
+    
+    <h2 class="section-title">Legal Document Templates</h2>
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-image">📝</div>
+        <div class="product-details">
+          <h3 class="product-title">Legal Form Submission <span class="badge">Best Value</span></h3>
+          <p class="product-description">Customized legal document tailored to your specific situation, ready to submit to relevant authorities.</p>
+          <div class="product-price">$49.99</div>
+          <a href="/" class="product-button" data-product-id="legal_form_submission" data-product-price="49.99">Buy Now</a>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-image">📋</div>
+        <div class="product-details">
+          <h3 class="product-title">CAS Response Letter</h3>
+          <p class="product-description">Professionally crafted response letter for Children's Aid Society matters, tailored to your provincial regulations.</p>
+          <div class="product-price">$59.99</div>
+          <a href="/stripe-direct" class="product-button" data-product-id="cas_letter" data-product-price="59.99">Buy Now</a>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-image">🏠</div>
+        <div class="product-details">
+          <h3 class="product-title">Landlord Dispute Package</h3>
+          <p class="product-description">Complete package of documents for landlord-tenant disputes, including notice letters and formal complaints.</p>
+          <div class="product-price">$39.99</div>
+          <a href="/stripe-direct" class="product-button" data-product-id="landlord_package" data-product-price="39.99">Buy Now</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Track page view
+      if (window.GTM) {
+        window.GTM.trackPageView('/products', 'Products Page');
+      }
+      
+      // Track product button clicks
+      const productButtons = document.querySelectorAll('.product-button');
+      productButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          const productId = this.getAttribute('data-product-id');
+          const productPrice = parseFloat(this.getAttribute('data-product-price'));
+          const productName = this.closest('.product-details').querySelector('.product-title').textContent.trim();
+          
+          // Use GTM tracking if available
+          if (window.GTM) {
+            window.GTM.trackConversion('begin_checkout', 'products_page', {
+              product_id: productId,
+              product_name: productName,
+              value: productPrice,
+              currency: 'CAD'
+            });
+          } else {
+            // Fallback tracking
+            console.log(`Product clicked: ${productName}, Price: $${productPrice}`);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

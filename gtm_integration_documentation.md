@@ -48,7 +48,9 @@ The integration tracks the following events:
 - **Event Name:** `form_submission`
 - **Data Points:** form ID, form type
 
-## PayPal Checkout Tracking
+## Payment Checkout Tracking
+
+### PayPal Checkout Tracking
 
 The PayPal checkout implementation includes the following tracking points:
 
@@ -66,6 +68,27 @@ The PayPal checkout implementation includes the following tracking points:
 
 5. **Payment Errors**
    - Captures any errors that occur during payment
+
+### Stripe Checkout Tracking
+
+The Stripe checkout implementation includes the following tracking points:
+
+1. **Begin Checkout**
+   - Event: `begin_checkout`
+   - Tracks when a user initiates the Stripe checkout process
+
+2. **Stripe Redirect**
+   - Event: `payment_method_selected`
+   - Tracks when a user selects Stripe as payment method
+
+3. **Purchase Completion**
+   - Event: `purchase`
+   - Records successful purchase transactions with order details
+   - Data captured: transaction ID, amount, currency
+
+4. **Payment Method Change**
+   - Event: `payment_option_change`
+   - Tracks when a user changes from Stripe to another payment method
 
 ## Success Page Tracking
 

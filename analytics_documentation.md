@@ -59,6 +59,8 @@ GA4 provides comprehensive analytics on user behavior, traffic sources, and conv
 
 ### Payment Flow
 
+#### General Payment Flow
+
 1. **Checkout Initiation**
    - Event: `begin_checkout`
    - Data: Product type, price, currency
@@ -78,6 +80,24 @@ GA4 provides comprehensive analytics on user behavior, traffic sources, and conv
 5. **Purchase Cancellation**
    - Event: `payment_cancelled`
    - Data: Product type, payment method
+
+#### Stripe-Specific Flow
+
+1. **Stripe Checkout Page View**
+   - Event: `page_view`
+   - Data: Page path (`/stripe-checkout`), page title
+
+2. **Stripe Button Click**
+   - Event: `begin_checkout`
+   - Data: Payment method ("Stripe"), product type, value
+
+3. **Stripe Payment Method Selection**
+   - Event: `payment_method_selected`
+   - Data: "Stripe", product details
+
+4. **Alternative Payment Selection**
+   - Event: `payment_option_change`
+   - Data: Selected payment, original payment
 
 ### Post-Purchase Flow
 

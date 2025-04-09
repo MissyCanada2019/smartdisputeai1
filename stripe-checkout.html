@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout - SmartDispute.ai</title>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5L7PTHJK');</script>
+  <!-- End Google Tag Manager -->
+  
+  <!-- SmartDispute GTM Integration -->
+  <script src="/gtm.js"></script>
+  
+  <!-- Stripe JS -->
+  <script src="https://js.stripe.com/v3/"></script>
+  
+  <style>
+    :root {
+      --primary: #ff0000;
+      --background: #000000;
+      --foreground: #ffffff;
+      --accent-dark: #111111;
+      --accent-light: #222222;
+      --accent-border: #333333;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    .checkout-container {
+      background-color: var(--accent-dark);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      padding: 30px;
+      margin-top: 20px;
+    }
+    .product-selector {
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--accent-border);
+      background-color: var(--accent-light);
+      color: var(--foreground);
+      border-radius: 5px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .price-display {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 20px 0;
+      color: var(--primary);
+    }
+    .checkout-button {
+      display: block;
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      padding: 15px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+    .checkout-button:hover {
+      background-color: #cc0000;
+    }
+    .payment-options {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .payment-option {
+      flex-basis: 48%;
+      padding: 20px;
+      background-color: var(--accent-light);
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .payment-option:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 0, 0, 0.1);
+    }
+    .payment-option.selected {
+      border: 2px solid var(--primary);
+    }
+    .payment-option-title {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .payment-logos {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .payment-logos img {
+      height: 30px;
+      margin: 0 5px;
+      opacity: 0.7;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      color: #888;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5L7PTHJK"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
+  <div class="container">
+    <header>
+      <h1>Checkout</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/products.html">Products</a>
+      </nav>
+    </header>
+    
+    <div class="checkout-container">
+      <h2>Complete Your Purchase</h2>
+      
+      <div class="product-selector">
+        <label for="product-select">Select a Product:</label>
+        <select id="product-select">
+          <option value="basic_analysis|4.99">Basic Document Analysis - $4.99</option>
+          <option value="full_analysis|14.99">Full Document Analysis - $14.99</option>
+          <option value="evidence_review|19.99">Evidence Review - $19.99</option>
+          <option value="legal_form_submission|49.99">Legal Form Submission - $49.99</option>
+          <option value="cas_letter|59.99">CAS Response Letter - $59.99</option>
+          <option value="landlord_package|39.99">Landlord Dispute Package - $39.99</option>
+        </select>
+      </div>
+      
+      <div class="price-display">Total: <span id="price-amount">$4.99</span> CAD</div>
+      
+      <div class="payment-options">
+        <div class="payment-option selected" id="stripe-option">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11.9999 2C6.47988 2 2.00049 6.47939 2.00049 12C2.00049 17.5206 6.47988 22 11.9999 22C17.5199 22 21.9993 17.5206 21.9993 12C21.9993 6.47939 17.5199 2 11.9999 2ZM18.3992 15.7917H5.60049C5.60049 10.3529 9.69322 10.1237 11.4285 12.8571C11.4285 10.8571 14.5714 10.4714 14.5714 14.2857H18.3992V15.7917Z" fill="#ff0000"/>
+          </svg>
+          <div class="payment-option-title">Pay with Stripe</div>
+        </div>
+        
+        <div class="payment-option" id="paypal-option">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20.0835 8.41671C20.0835 5.48337 17.8502 3.53337 15.0002 3.53337H8.73353C8.36686 3.53337 8.05853 3.80004 8.01686 4.16671L6.0502 18.0834C6.02353 18.3834 6.25853 18.65 6.56686 18.65H10.0252L10.6002 14.6834V14.8334C10.6419 14.4667 10.9502 14.2 11.3169 14.2H12.8419C15.8169 14.2 18.1669 12.95 18.7835 9.50004C18.8002 9.43337 18.8002 9.38337 18.8169 9.31671C19.6335 8.95004 20.0835 8.41671 20.0835 8.41671Z" fill="#0070E0"/>
+            <path d="M9.01687 8.53337C9.05687 8.28337 9.2002 8.06671 9.40037 7.93337C9.5002 7.86671 9.61687 7.83337 9.7502 7.83337H14.5169C15.1002 7.83337 15.6335 7.88337 16.1002 7.98337C16.2169 8.01671 16.3335 8.05004 16.4502 8.08337C16.5669 8.13337 16.6835 8.18337 16.7835 8.23337C16.8335 8.26671 16.9002 8.30004 16.9502 8.33337C17.1502 8.45004 17.3335 8.58337 17.4835 8.73337C17.8502 7.10004 17.4835 6.08337 16.6169 5.00004C15.6335 3.83337 13.9002 3.53337 12.4835 3.53337H6.2002C5.8502 3.53337 5.5502 3.80004 5.5002 4.16671L3.53354 18.0834C3.50687 18.3834 3.74187 18.65 4.0502 18.65H7.5002L8.78354 10.1667L9.01687 8.53337Z" fill="#003087"/>
+          </svg>
+          <div class="payment-option-title">Pay with PayPal</div>
+        </div>
+      </div>
+      
+      <button id="checkout-button" class="checkout-button">Proceed to Payment</button>
+      
+      <div class="payment-logos">
+        <img src="https://cdn.iconscout.com/icon/free/png-256/visa-3-226460.png" alt="Visa">
+        <img src="https://cdn.iconscout.com/icon/free/png-256/mastercard-3521564-2944982.png" alt="Mastercard">
+        <img src="https://cdn.iconscout.com/icon/free/png-256/american-express-3521560-2944978.png" alt="Amex">
+        <img src="https://cdn.iconscout.com/icon/free/png-256/paypal-3628970-3030213.png" alt="PayPal">
+      </div>
+      
+      <a href="/products.html" class="back-link">← Back to Products</a>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Stripe
+      const stripe = Stripe('pk_test_TYooMQauvdEDq54NiTphI7jx'); // Replace with your Stripe public key
+      
+      // Track page view
+      if (window.GTM) {
+        window.GTM.trackPageView('/stripe-checkout', 'Stripe Checkout Page');
+      }
+      
+      // Get DOM elements
+      const productSelect = document.getElementById('product-select');
+      const priceAmount = document.getElementById('price-amount');
+      const checkoutButton = document.getElementById('checkout-button');
+      const stripeOption = document.getElementById('stripe-option');
+      const paypalOption = document.getElementById('paypal-option');
+      
+      // Set product from URL parameters if available
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get('product');
+      const price = urlParams.get('price');
+      
+      if (productId && price) {
+        const optionValue = `${productId}|${price}`;
+        const options = productSelect.options;
+        
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].value === optionValue) {
+            productSelect.selectedIndex = i;
+            priceAmount.textContent = `$${price}`;
+            break;
+          }
+        }
+      }
+      
+      // Update price when product selection changes
+      productSelect.addEventListener('change', function() {
+        const selectedOption = this.value.split('|');
+        const price = selectedOption[1];
+        priceAmount.textContent = `$${price}`;
+      });
+      
+      // Toggle payment options
+      stripeOption.addEventListener('click', function() {
+        stripeOption.classList.add('selected');
+        paypalOption.classList.remove('selected');
+        
+        // Track payment method selection
+        if (window.GTM) {
+          window.GTM.trackConversion('payment_method_selected', 'checkout_page', {
+            payment_method: 'Stripe'
+          });
+        }
+      });
+      
+      paypalOption.addEventListener('click', function() {
+        paypalOption.classList.add('selected');
+        stripeOption.classList.remove('selected');
+        
+        // Track payment method change
+        if (window.GTM) {
+          window.GTM.trackConversion('payment_option_change', 'checkout_page', {
+            from_payment: 'Stripe',
+            to_payment: 'PayPal'
+          });
+        }
+      });
+      
+      // Handle checkout button click
+      checkoutButton.addEventListener('click', function() {
+        const selectedOption = productSelect.value.split('|');
+        const productId = selectedOption[0];
+        const price = selectedOption[1];
+        
+        // Determine which payment option is selected
+        if (stripeOption.classList.contains('selected')) {
+          // Track Stripe checkout initiation
+          if (window.GTM) {
+            window.GTM.trackConversion('begin_checkout', 'checkout_page', {
+              payment_method: 'Stripe',
+              product_id: productId,
+              value: parseFloat(price),
+              currency: 'CAD'
+            });
+          }
+          
+          // In a real implementation, this would create a Stripe session
+          // For this demo, we'll redirect to the success page
+          setTimeout(() => {
+            window.location.href = `/success.html?order_id=stripe_${Date.now()}&product=${productId}`;
+          }, 1000);
+        } else {
+          // Track PayPal redirection
+          if (window.GTM) {
+            window.GTM.trackConversion('payment_option_change', 'checkout_page', {
+              from_payment: 'Stripe',
+              to_payment: 'PayPal'
+            });
+          }
+          
+          // Redirect to PayPal flow
+          window.location.href = '/?product=' + productId;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
