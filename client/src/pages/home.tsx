@@ -17,6 +17,17 @@ import { useState } from 'react';
 
 export default function Home() {
   const [videoError, setVideoError] = useState(false);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+
+  const handleVideoLoad = () => {
+    setIsVideoLoaded(true);
+  };
+
+  const handleVideoError = () => {
+    setVideoError(true);
+    setIsVideoLoaded(false);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Quick Guide Section */}
@@ -635,7 +646,9 @@ export default function Home() {
               <video 
                 className="w-full rounded-lg shadow-lg"
                 controls
-                onError={() => setVideoError(true)}
+                onLoadedData={handleVideoLoad}
+                onError={handleVideoError}
+                style={{ display: isVideoLoaded ? 'block' : 'none' }}
               >
                 <source src="/videos/SmartDispute_Intro_Teresa_Video.mp4" type="video/mp4" />
                 Your browser does not support the video tag.
