@@ -350,9 +350,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           mode: "fallback_mock",
           documentInfo,
           result: {
+            content: `Mock document content for ${req.file.originalname}`,
             documentType: mockDocumentType,
             legalJurisdiction: province,
             complexityScore: 7,
+            meritWeight: 6,
             summary: `MOCK ANALYSIS: This appears to be a ${req.file.size > 1000000 ? 'large' : 'standard'} ${mockDocumentType}. The file is ${Math.round(req.file.size/1024)} KB and has extension .${fileExt}. This is a mock summary as the AI analysis service is unavailable.`,
             risksAndWarnings: [
               "This is mock analysis and should not be used for actual legal decisions.",
@@ -364,12 +366,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "Consider the limitations of this mock analysis",
               "For detailed analysis, proper API configuration is required"
             ],
-            keyPoints: [
-              "This is point 1 from mock analysis",
-              "This is point 2 from mock analysis",
-              `File type: ${req.file.mimetype}`,
-              `Jurisdiction: ${province}`
-            ]
+            keyEntities: [
+              {
+                text: "Mock Entity 1",
+                type: "PERSON",
+                relevance: 0.95
+              },
+              {
+                text: "Mock Organization",
+                type: "ORGANIZATION",
+                relevance: 0.85
+              }
+            ],
+            keyConcepts: [
+              {
+                name: "Legal Dispute",
+                relevance: 0.9,
+                description: "This is a mock concept description"
+              },
+              {
+                name: "Document Analysis",
+                relevance: 0.8,
+                description: "This is another mock concept"
+              }
+            ],
+            deadlines: [
+              {
+                description: "Mock Deadline",
+                date: "2025-05-15",
+                isAbsolute: true,
+                consequence: "Mock consequence if deadline is missed"
+              }
+            ],
+            obligations: [
+              {
+                description: "Mock Obligation",
+                obligated: "User",
+                to: "Respond appropriately",
+                consequence: "Potential issues if not addressed",
+                timeframe: "30 days"
+              }
+            ],
+            rawAnalysis: "This is mock raw analysis data as the AI service is unavailable",
+            sourceModel: "Mock Fallback"
           }
         });
       }
@@ -408,9 +447,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           success: true,
           mode: "fallback_mock",
           result: {
+            content: text.substring(0, 500) + (text.length > 500 ? '...' : ''),
             documentType: "Legal Correspondence",
             legalJurisdiction: jurisdiction || "Ontario",
             complexityScore: 6,
+            meritWeight: 5,
             summary: `MOCK ANALYSIS: This ${text.length > 200 ? 'lengthy' : 'brief'} content appears to be related to ${
               jurisdiction === 'ON' ? 'an Ontario tenant dispute' : 
               jurisdiction === 'BC' ? 'a British Columbia family matter' : 
@@ -427,11 +468,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
               "Consider the limitations of this mock analysis",
               "For detailed analysis, proper API configuration is required"
             ],
-            keyPoints: [
-              "This is point 1 from mock analysis",
-              "This is point 2 from mock analysis",
-              `Jurisdiction: ${jurisdiction || 'Not specified'}`
-            ]
+            keyEntities: [
+              {
+                text: "Mock Person",
+                type: "PERSON",
+                relevance: 0.91
+              },
+              {
+                text: "Mock Company Ltd.",
+                type: "ORGANIZATION",
+                relevance: 0.82
+              }
+            ],
+            keyConcepts: [
+              {
+                name: "Legal Correspondence",
+                relevance: 0.9,
+                description: "This is a mock concept description"
+              },
+              {
+                name: "Text Analysis",
+                relevance: 0.7,
+                description: "This is another mock concept"
+              }
+            ],
+            deadlines: [
+              {
+                description: "Mock Response Deadline",
+                date: "2025-05-30",
+                isAbsolute: true,
+                consequence: "Mock consequence if deadline is missed"
+              }
+            ],
+            obligations: [
+              {
+                description: "Mock Text Obligation",
+                obligated: "You",
+                to: "Respond to this correspondence",
+                consequence: "Potential legal consequences",
+                timeframe: "14 days"
+              }
+            ],
+            rawAnalysis: "This is mock raw analysis text as the AI service is unavailable",
+            sourceModel: "Mock Fallback"
           }
         });
       }
