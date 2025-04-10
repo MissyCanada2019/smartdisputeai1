@@ -28,11 +28,14 @@ load_dotenv()
 # Check if Anthropic API key is available 
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 
-# For now, we'll force the use of mock data until we get a valid API key
-USE_ANTHROPIC = False
+# Check if we can use the Anthropic API
+USE_ANTHROPIC = bool(ANTHROPIC_API_KEY and ANTHROPIC_API_KEY.strip() and ANTHROPIC_IMPORTS_AVAILABLE)
 
-print("Using mock data for AI document analysis (Anthropic API not properly configured)")
-print("To enable AI analysis, please provide a valid Anthropic API key")
+if USE_ANTHROPIC:
+    print("Anthropic API key found - AI document analysis enabled")
+else:
+    print("Using mock data for AI document analysis (Anthropic API not properly configured)")
+    print("To enable AI analysis, please provide a valid Anthropic API key")
 
 # PDF text extraction support
 try:

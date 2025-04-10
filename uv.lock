@@ -1061,6 +1061,7 @@ dependencies = [
     { name = "python-docx" },
     { name = "python-dotenv" },
     { name = "reportlab" },
+    { name = "requests" },
     { name = "stripe" },
     { name = "werkzeug" },
 ]
@@ -1083,6 +1084,7 @@ requires-dist = [
     { name = "python-docx", specifier = ">=1.1.2" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "reportlab", specifier = ">=4.3.1" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "stripe", specifier = ">=12.0.0" },
     { name = "werkzeug", specifier = ">=3.1.3" },
 ]

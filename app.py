@@ -19,6 +19,10 @@ load_dotenv()
 # Initialize Stripe with your secret key
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
+# Print API key status (just for debugging)
+anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+print(f"ANTHROPIC_API_KEY status: {'Present' if anthropic_key else 'Missing'}")
+
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 PREVIEW_FOLDER = 'previews'
