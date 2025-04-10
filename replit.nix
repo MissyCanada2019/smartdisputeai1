@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.nodePackages.prettier
     pkgs.tesseract
     pkgs.zlib
     pkgs.tk
