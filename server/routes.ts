@@ -67,6 +67,8 @@ import paypalRoutes from "./paypalRoutes";
 // Import advanced document analysis routes
 import advancedDocumentAnalysisRoutes from "./routes/advancedDocumentAnalysis";
 import claudeRoutes from "./routes/claude";
+// Import AI service with fallback mechanism
+import aiRoutes from "./routes/ai";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4901,6 +4903,9 @@ const subscription = await stripe.subscriptions.create({
   
   // Register Claude AI routes
   app.use("/api/claude", claudeRoutes);
+  
+  // Register AI service routes with fallback mechanism
+  app.use("/api/ai", aiRoutes);
   
   // Register PayPal routes
   app.use("/api/paypal", paypalRoutes);
