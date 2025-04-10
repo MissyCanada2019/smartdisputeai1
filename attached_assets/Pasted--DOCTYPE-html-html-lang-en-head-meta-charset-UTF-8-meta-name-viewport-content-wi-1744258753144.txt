@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartDispute.ai - Guided Tutorial</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white shadow-xl rounded-2xl p-6">
+      <h1 class="text-2xl font-bold mb-4">Start Your Support Journey</h1>
+
+      <!-- Step 1: Choose a Topic -->
+      <div id="step1">
+        <h2 class="text-lg font-semibold mb-2">1. What do you need help with?</h2>
+        <select class="w-full p-3 border rounded mb-6" id="topicSelect">
+          <option value="">Select a topic...</option>
+          <option value="housing">Housing Dispute</option>
+          <option value="credit">Credit Report Error</option>
+          <option value="cas">CAS Issue</option>
+          <option value="police">Police Misconduct</option>
+        </select>
+        <button onclick="nextStep('step2')" class="bg-blue-600 text-white px-4 py-2 rounded">Continue</button>
+      </div>
+
+      <!-- Step 2: Explore Resources / Community -->
+      <div id="step2" class="hidden">
+        <h2 class="text-lg font-semibold mb-2">2. Explore Support Options</h2>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <button class="bg-purple-600 text-white p-4 rounded" onclick="showUpload()">Tutorials & Guides</button>
+          <button class="bg-green-600 text-white p-4 rounded" onclick="showUpload()">Community Help</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Upload Evidence -->
+      <div id="uploadSection" class="hidden">
+        <h2 class="text-lg font-semibold mb-2">3. Upload Your Evidence</h2>
+        <input type="file" class="mb-4">
+        <textarea class="w-full p-3 border rounded mb-4" placeholder="Add a note about your file (optional)..."></textarea>
+        <button onclick="nextStep('pricingSection')" class="bg-blue-600 text-white px-4 py-2 rounded">Continue</button>
+      </div>
+
+      <!-- Step 4: Plan Selection -->
+      <div id="pricingSection" class="hidden">
+        <h2 class="text-lg font-semibold mb-2">4. Choose a Plan</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="border p-4 rounded shadow">
+            <h3 class="font-bold">Pay-per-Form</h3>
+            <p>$5.99 per form</p>
+          </div>
+          <div class="border p-4 rounded shadow">
+            <h3 class="font-bold">Monthly</h3>
+            <p>$50/month - Unlimited Access</p>
+          </div>
+          <div class="border p-4 rounded shadow">
+            <h3 class="font-bold">Annual</h3>
+            <p>$1000/year - Unlimited Access</p>
+          </div>
+          <div class="border p-4 rounded shadow">
+            <h3 class="font-bold">Low-Income</h3>
+            <p>$25/year or $0.99 per form</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nextStep(stepId) {
+      document.querySelectorAll('.hidden').forEach(el => el.classList.add('hidden'));
+      document.getElementById(stepId).classList.remove('hidden');
+    }
+
+    function showUpload() {
+      nextStep('uploadSection');
+    }
+  </script>
+</body>
+</html>
