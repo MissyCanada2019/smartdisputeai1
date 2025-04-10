@@ -309,12 +309,15 @@
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Track page view
-      if (window.GTM) {
+      console.log("Resource page loaded, initializing tabs...");
+      
+      // Track page view safely - check if GTM exists and has the method
+      if (typeof window.GTM !== 'undefined' && window.GTM && typeof window.GTM.trackPageView === 'function') {
         window.GTM.trackPageView('/resources', 'Resources Page');
       }
       
       // Copy category content to respective tabs
+      // Make sure each tab has content initialized
       document.querySelector('#housing').innerHTML = `
         <div class="category-title">
           <span class="category-icon">🏠</span>
@@ -448,9 +451,33 @@
           }
         });
       });
+      
+      // Add direct click handlers to tabs for better reliability
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Extract tab ID from the onclick attribute
+          const onclickValue = this.getAttribute('onclick');
+          const tabIdMatch = onclickValue.match(/showTab\('([^']+)'\)/);
+          
+          if (tabIdMatch && tabIdMatch[1]) {
+            const tabId = tabIdMatch[1];
+            console.log('Tab clicked directly:', tabId);
+            showTab(tabId);
+          } else {
+            console.error('Failed to extract tab ID from onclick attribute');
+          }
+        });
+      });
+      
+      // Make sure the default tab is active on page load
+      console.log('Initializing default tab (all)');
+      setTimeout(() => showTab('all'), 100); // Small delay to ensure DOM is ready
     });
     
     function showTab(tabId) {
+      // Console log for debugging
+      console.log('Showing tab:', tabId);
+      
       // Hide all tab content
       const tabContents = document.querySelectorAll('.tab-content');
       tabContents.forEach(content => {
@@ -458,7 +485,13 @@
       });
       
       // Show the selected tab content
-      document.getElementById(tabId).style.display = 'block';
+      const selectedTab = document.getElementById(tabId);
+      if (selectedTab) {
+        selectedTab.style.display = 'block';
+        console.log('Tab content found and displayed');
+      } else {
+        console.error(`Tab content with ID '${tabId}' not found`);
+      }
       
       // Update active tab styling
       const tabs = document.querySelectorAll('.tab');
@@ -468,10 +501,15 @@
       
       // Find the clicked tab and make it active
       const clickedTab = document.querySelector(`.tab[onclick="showTab('${tabId}')"]`);
-      clickedTab.classList.add('active');
+      if (clickedTab) {
+        clickedTab.classList.add('active');
+        console.log('Tab button activated');
+      } else {
+        console.error(`Tab button for '${tabId}' not found`);
+      }
       
-      // Track tab change
-      if (window.GTM) {
+      // Track tab change - safely check GTM exists
+      if (typeof window.GTM !== 'undefined' && window.GTM && typeof window.GTM.trackEvent === 'function') {
         window.GTM.trackEvent('resource_tab_change', {
           tab_name: tabId
         });
