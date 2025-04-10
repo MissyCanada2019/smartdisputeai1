@@ -1,251 +1,301 @@
 /**
- * AI Service with Fallback Mechanism for SmartDispute.ai
+ * Unified AI Service for SmartDispute.ai
  * 
- * This service attempts to use the Anthropic API directly first,
- * falling back to the Puter API if the Anthropic API fails.
- * This approach ensures maximum reliability for document analysis.
+ * This module provides a unified interface for AI services with automatic fallback
+ * between available providers (Anthropic Claude, OpenAI, and alternative services).
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import puterService from './puter.js';
-import dotenv from 'dotenv';
-dotenv.config();
+import * as anthropicService from './anthropic.js';
+import * as openaiService from './openai.js';
+import * as puterService from './puter.js';
+import 'dotenv/config';
 
-// Load environment variables
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-const DEFAULT_MODEL = 'claude-3-5-sonnet-20241022'; // The default model to use with Anthropic
+// Service status tracking
+const serviceStatus = {
+  anthropic: {
+    available: false,
+    checkedAt: null,
+    lastError: null
+  },
+  openai: {
+    available: false,
+    checkedAt: null,
+    lastError: null
+  },
+  puter: {
+    available: false,
+    checkedAt: null,
+    lastError: null
+  }
+};
+
+// Configuration
+const config = {
+  defaultService: 'anthropic',
+  fallbackOrder: ['openai', 'puter'],
+  cacheExpiryMs: 5 * 60 * 1000, // 5 minutes
+  retries: 2
+};
 
 /**
- * AI Service class with fallback mechanism
+ * Helper to retry operations with exponential backoff
  */
-class AIService {
-  constructor() {
-    // Initialize Anthropic client if API key is available
-    this.anthropicClient = ANTHROPIC_API_KEY ? 
-      new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
-    
-    // Track which service is being used
-    this.usingFallback = false;
-    this.lastError = null;
-  }
-
-  /**
-   * Check if the Anthropic API is available and valid
-   * 
-   * @returns {Promise<boolean>} Whether the API is available
-   */
-  async isAnthropicAvailable() {
-    if (!this.anthropicClient) return false;
-    
+async function withRetry(fn, retries = config.retries) {
+  let lastError;
+  
+  for (let i = 0; i < retries; i++) {
     try {
-      // Make a minimal API call to test connectivity
-      await this.anthropicClient.messages.create({
-        model: DEFAULT_MODEL,
-        max_tokens: 10,
-        messages: [
-          { role: 'user', content: 'Hello' }
-        ]
-      });
-      return true;
+      return await fn();
     } catch (error) {
-      console.error('Anthropic API test failed:', error.message);
-      this.lastError = error.message;
-      return false;
-    }
-  }
-
-  /**
-   * Send a message to the AI with fallback
-   * 
-   * @param {string} message - The message to send
-   * @param {Object} options - Additional options
-   * @returns {Promise<string>} - The AI's response
-   */
-  async sendMessage(message, options = {}) {
-    // Try Anthropic first if available
-    if (this.anthropicClient && !this.usingFallback) {
-      try {
-        const response = await this.anthropicClient.messages.create({
-          model: options.model || DEFAULT_MODEL,
-          max_tokens: options.maxTokens || 1000,
-          messages: [
-            { role: 'user', content: message }
-          ]
-        });
-        
-        // Reset fallback status if successful
-        this.usingFallback = false;
-        return response.content[0].text;
-      } catch (error) {
-        console.error('Anthropic API error:', error.message);
-        this.lastError = error.message;
-        this.usingFallback = true;
-        console.log('Switching to fallback API (Puter)...');
+      console.warn(`Attempt ${i + 1}/${retries} failed:`, error.message);
+      lastError = error;
+      
+      // Wait before retrying (exponential backoff)
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
       }
     }
-    
-    // Fallback to Puter API
-    return await puterService.sendMessage(message, options);
   }
+  
+  throw lastError;
+}
 
-  /**
-   * Analyze a document with fallback support
-   * 
-   * @param {string} documentText - The text content of the document
-   * @param {string} province - Canadian province code
-   * @returns {Promise<Object>} - Structured analysis results
-   */
-  async analyzeDocument(documentText, province = 'ON') {
-    // Create a structured prompt for document analysis
-    const prompt = `
-    Please analyze this legal document from ${province}, Canada and provide the following information:
-    1. Document type and category
-    2. Main parties involved
-    3. Key issues or claims
-    4. Relevant legal statutes or references specific to ${province}
-    5. Deadline dates mentioned
-    6. Overall assessment of the strength of the case or claim
+/**
+ * Select a service to use based on availability
+ */
+async function selectService() {
+  const services = [config.defaultService, ...config.fallbackOrder];
+  const now = new Date();
+  
+  for (const serviceName of services) {
+    const status = serviceStatus[serviceName];
     
-    Document:
-    ${documentText}
-    
-    Format your response as JSON with this structure:
-    {
-      "documentType": "",
-      "documentCategory": "",
-      "parties": { 
-        "from": "", 
-        "to": "" 
-      },
-      "keyIssues": [""],
-      "legalReferences": [{
-        "name": "",
-        "relevantSections": [""]
-      }],
-      "importantDates": [{
-        "date": "",
-        "description": ""
-      }],
-      "assessmentScore": 0-100,
-      "confidenceScore": 0-1,
-      "recommendedActions": [""]
+    // Skip services we know are down (checked recently)
+    if (status.checkedAt && !status.available && 
+        (now.getTime() - status.checkedAt.getTime() < config.cacheExpiryMs)) {
+      continue;
     }
     
-    Return only valid JSON.
-    `;
-    
     try {
-      if (this.anthropicClient && !this.usingFallback) {
-        try {
-          // Try Anthropic first with system prompt for more structured output
-          const response = await this.anthropicClient.messages.create({
-            model: DEFAULT_MODEL,
-            system: "You are a legal analysis assistant that specializes in Canadian provincial law. Always respond with properly formatted JSON according to the requested schema.",
-            max_tokens: 2000,
-            messages: [
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: "json_object" }
-          });
-          
-          const result = JSON.parse(response.content[0].text);
-          this.usingFallback = false;
-          return result;
-        } catch (error) {
-          console.error('Anthropic document analysis failed:', error.message);
-          this.lastError = error.message;
-          this.usingFallback = true;
-          console.log('Switching to fallback API (Puter) for document analysis...');
-        }
+      let available = false;
+      switch (serviceName) {
+        case 'anthropic':
+          available = await anthropicService.testConnection();
+          break;
+        case 'openai':
+          available = await openaiService.testConnection();
+          break;
+        case 'puter':
+          available = await puterService.testConnection();
+          break;
       }
       
-      // Fallback to Puter
-      return await puterService.analyzeDocument(documentText, province);
+      serviceStatus[serviceName] = {
+        available,
+        checkedAt: now,
+        lastError: available ? null : 'Connection test failed'
+      };
+      
+      if (available) {
+        return serviceName;
+      }
     } catch (error) {
-      console.error('All document analysis methods failed:', error.message);
-      throw error;
+      serviceStatus[serviceName] = {
+        available: false,
+        checkedAt: now,
+        lastError: error.message
+      };
     }
   }
+  
+  throw new Error('All AI services are unavailable');
+}
 
-  /**
-   * Generate a response letter with fallback support
-   * 
-   * @param {Object} analysis - The analysis results
-   * @param {string} originalText - The original document text
-   * @param {Object} userInfo - User information
-   * @returns {Promise<string>} - Generated HTML response
-   */
-  async generateResponseLetter(analysis, originalText, userInfo = null) {
-    if (this.anthropicClient && !this.usingFallback) {
-      try {
-        // Try using Anthropic directly first
-        const userContext = userInfo ? `
-        The letter should be addressed from:
-        Name: ${userInfo.name || 'N/A'}
-        Address: ${userInfo.address || 'N/A'}
-        Email: ${userInfo.email || 'N/A'}
-        Phone: ${userInfo.phone || 'N/A'}
-        ` : '';
-        
-        const prompt = `
-        Based on the analysis of this document and the original text, create a professional
-        response letter that addresses the key issues and provides a strong legal position.
-        
-        Document Analysis:
-        ${JSON.stringify(analysis, null, 2)}
-        
-        Original Document:
-        ${originalText}
-        
-        ${userContext}
-        
-        The response should:
-        1. Use formal legal language appropriate for ${analysis.documentCategory || 'this type of document'}
-        2. Reference relevant laws and statutes from the analysis
-        3. Clearly state the recipient's position and requested actions
-        4. Include proper formatting with date, address blocks, subject line, and signature
-        
-        Format the response as properly formatted HTML that can be directly used in a formal letter.
-        `;
-        
-        const response = await this.anthropicClient.messages.create({
-          model: DEFAULT_MODEL,
-          system: "You are a legal letter drafting assistant for SmartDispute.ai that specializes in creating formal response letters to legal documents. Your responses should be in clean, properly formatted HTML suitable for rendering in a web browser.",
-          max_tokens: 4000,
-          messages: [
-            { role: 'user', content: prompt }
-          ]
-        });
-        
-        this.usingFallback = false;
-        return response.content[0].text;
-      } catch (error) {
-        console.error('Anthropic response generation failed:', error.message);
-        this.lastError = error.message;
-        this.usingFallback = true;
-        console.log('Switching to fallback API (Puter) for response generation...');
-      }
+/**
+ * Execute a function with the selected service
+ */
+async function executeWithService(methodName, ...args) {
+  return await withRetry(async () => {
+    const serviceName = await selectService();
+    let service;
+    
+    switch (serviceName) {
+      case 'anthropic':
+        service = anthropicService;
+        break;
+      case 'openai':
+        service = openaiService;
+        break;
+      case 'puter':
+        service = puterService;
+        break;
+      default:
+        throw new Error(`Unknown service: ${serviceName}`);
     }
     
-    // Fallback to Puter
-    return await puterService.generateResponseLetter(analysis, originalText, userInfo);
-  }
+    if (!service[methodName]) {
+      throw new Error(`Method ${methodName} not available in ${serviceName} service`);
+    }
+    
+    try {
+      const result = await service[methodName](...args);
+      return {
+        result,
+        serviceName,
+        modelName: serviceName === 'anthropic' ? 'claude-3-7-sonnet-20250219' : 
+                   serviceName === 'openai' ? 'gpt-4o' : 
+                   'alternative-ai',
+        error: null
+      };
+    } catch (error) {
+      serviceStatus[serviceName] = {
+        available: false,
+        checkedAt: new Date(),
+        lastError: error.message
+      };
+      throw error;
+    }
+  });
+}
 
-  /**
-   * Get the current AI service status
-   * 
-   * @returns {Object} Current status information
-   */
-  getStatus() {
+/**
+ * Get current status of all AI services
+ */
+export async function getStatus() {
+  // Force a refresh of status for services that haven't been checked recently
+  const now = new Date();
+  
+  const services = ['anthropic', 'openai', 'puter'];
+  
+  for (const serviceName of services) {
+    const status = serviceStatus[serviceName];
+    
+    if (!status.checkedAt || 
+        (now.getTime() - status.checkedAt.getTime() > config.cacheExpiryMs)) {
+      try {
+        let available = false;
+        switch (serviceName) {
+          case 'anthropic':
+            available = await anthropicService.testConnection();
+            break;
+          case 'openai':
+            available = await openaiService.testConnection();
+            break;
+          case 'puter':
+            available = await puterService.testConnection();
+            break;
+        }
+        
+        serviceStatus[serviceName] = {
+          available,
+          checkedAt: now,
+          lastError: available ? null : 'Connection test failed'
+        };
+      } catch (error) {
+        serviceStatus[serviceName] = {
+          available: false,
+          checkedAt: now,
+          lastError: error.message
+        };
+      }
+    }
+  }
+  
+  return {
+    defaultService: config.defaultService,
+    fallbackOrder: config.fallbackOrder,
+    services: {
+      anthropic: {
+        available: serviceStatus.anthropic.available,
+        lastChecked: serviceStatus.anthropic.checkedAt,
+        error: serviceStatus.anthropic.lastError,
+        model: 'claude-3-7-sonnet-20250219' // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+      },
+      openai: {
+        available: serviceStatus.openai.available,
+        lastChecked: serviceStatus.openai.checkedAt,
+        error: serviceStatus.openai.lastError,
+        model: 'gpt-4o' // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+      },
+      puter: {
+        available: serviceStatus.puter.available,
+        lastChecked: serviceStatus.puter.checkedAt,
+        error: serviceStatus.puter.lastError,
+        model: 'alternative-ai'
+      }
+    },
+    systemStatus: (serviceStatus.anthropic.available || 
+                  serviceStatus.openai.available || 
+                  serviceStatus.puter.available) ? "operational" : "down"
+  };
+}
+
+/**
+ * Analyze text using the best available AI service
+ * 
+ * @param {string} text - Text to analyze
+ * @param {string} province - Province code (e.g., 'ON')
+ * @returns {Promise<Object>} Analysis results with service info
+ */
+export async function analyzeText(text, province = 'ON') {
+  return await executeWithService('analyzeText', text, province);
+}
+
+/**
+ * Generate a response based on analysis data
+ * 
+ * @param {Object} analysisResult - Results from previous analysis
+ * @param {string} originalText - Original document text
+ * @param {Object} userInfo - User information
+ * @param {string} province - Province code
+ * @returns {Promise<Object>} Generated response with service info
+ */
+export async function generateResponse(analysisResult, originalText, userInfo = {}, province = 'ON') {
+  return await executeWithService('generateResponse', analysisResult, originalText, userInfo, province);
+}
+
+/**
+ * Simple chat interface with AI
+ * 
+ * @param {string} message - User's message
+ * @returns {Promise<Object>} AI response with service info
+ */
+export async function chat(message) {
+  return await executeWithService('chat', message);
+}
+
+/**
+ * Analyze an image using the best available service with vision capabilities
+ * 
+ * @param {string} base64Image - Base64-encoded image data
+ * @returns {Promise<Object>} Analysis results with service info
+ */
+export async function analyzeImage(base64Image) {
+  // Only OpenAI supports image analysis in our implementation
+  try {
+    const result = await openaiService.analyzeImage(base64Image);
     return {
-      primaryAvailable: Boolean(this.anthropicClient) && !this.usingFallback,
-      usingFallback: this.usingFallback,
-      lastError: this.lastError,
-      defaultModel: DEFAULT_MODEL
+      result,
+      serviceName: 'openai',
+      modelName: 'gpt-4o',
+      error: null
     };
+  } catch (error) {
+    // Handle image analysis errors
+    serviceStatus.openai = {
+      available: false,
+      checkedAt: new Date(),
+      lastError: error.message
+    };
+    
+    throw new Error(`Image analysis failed: ${error.message}`);
   }
 }
 
-// Create and export a singleton instance
-const aiService = new AIService();
-export default aiService;
+export default {
+  getStatus,
+  analyzeText,
+  generateResponse,
+  chat,
+  analyzeImage
+};

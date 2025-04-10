@@ -1,175 +1,289 @@
 /**
- * Puter API Integration Service for SmartDispute.ai
+ * Puter-based Alternative AI Service (EndlessClaude) for SmartDispute.ai
  * 
- * This service provides an alternative way to access Claude 3.5 Sonnet
- * using the Puter API instead of requiring a direct Anthropic API key.
- * Based on the EndlessClaude project: https://github.com/usualdork/EndlessClaude
+ * This module provides a fallback AI service when direct Anthropic API
+ * integration is unavailable or fails.
  */
 
 import fetch from 'node-fetch';
+import 'dotenv/config';
+
+// Configuration
+const config = {
+  apiUrl: 'https://api.puter.com/v2/ai/completions',
+  fallbackModel: 'EndlessClaude-3.5',
+  maxTokens: 2000,
+  temperature: 0.7,
+  retries: 3,
+  timeoutMs: 30000
+};
+
+// Helper to retry failed API calls
+async function withRetry(fn, retries = config.retries) {
+  let lastError;
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      console.warn(`Attempt ${i + 1}/${retries} failed:`, error.message);
+      lastError = error;
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+  
+  throw lastError;
+}
 
 /**
- * Class for handling communication with the Puter API
+ * Test connection to Puter API
  */
-class PuterService {
-  constructor() {
-    this.apiBaseUrl = 'https://api.puter.com/v2';
-  }
-
-  /**
-   * Send a message to Claude AI via Puter's API
-   *
-   * @param {string} message - The message to send to Claude
-   * @param {Object} options - Additional options
-   * @param {string} options.model - The model to use (defaults to claude-3-5-sonnet)
-   * @returns {Promise<string>} - The AI's response
-   */
-  async sendMessage(message, options = {}) {
-    const model = options.model || 'claude-3-5-sonnet';
-    console.log(`Sending message to Claude via Puter API using model: ${model}`);
+export async function testConnection() {
+  try {
+    const apiKey = process.env.PUTER_API_KEY;
     
-    try {
-      const response = await fetch(`${this.apiBaseUrl}/ai/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          message: message,
-          model: model
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`Puter API error (${response.status}): ${errorData}`);
-      }
-      
-      const data = await response.json();
-      return data.response;
-    } catch (error) {
-      console.error('Error calling Puter API:', error.message);
-      throw error;
+    if (!apiKey) {
+      throw new Error('PUTER_API_KEY environment variable not set');
     }
-  }
-
-  /**
-   * Analyze a document using Claude via Puter
-   *
-   * @param {string} documentText - The text content of the document to analyze
-   * @param {string} province - Canadian province code (e.g., 'ON', 'BC')
-   * @returns {Promise<Object>} - Structured analysis results
-   */
-  async analyzeDocument(documentText, province = 'ON') {
-    const prompt = `
-    Please analyze this legal document from ${province}, Canada and provide the following information:
-    1. Document type and category
-    2. Main parties involved
-    3. Key issues or claims
-    4. Relevant legal statutes or references specific to ${province}
-    5. Deadline dates mentioned
-    6. Overall assessment of the strength of the case or claim
     
-    Document:
-    ${documentText}
-    
-    Format your response as JSON with this structure:
-    {
-      "documentType": "",
-      "documentCategory": "",
-      "parties": { 
-        "from": "", 
-        "to": "" 
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
       },
-      "keyIssues": [""],
-      "legalReferences": [{
-        "name": "",
-        "relevantSections": [""]
-      }],
-      "importantDates": [{
-        "date": "",
-        "description": ""
-      }],
-      "assessmentScore": 0-100,
-      "confidenceScore": 0-1,
-      "recommendedActions": [""]
+      body: JSON.stringify({
+        model: config.fallbackModel,
+        prompt: 'Hello, are you operational?',
+        max_tokens: 10,
+        temperature: 0.5
+      }),
+      timeout: config.timeoutMs
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error || response.statusText}`);
     }
     
-    Return only valid JSON.
-    `;
-    
-    try {
-      const result = await this.sendMessage(prompt);
-      
-      // Extract JSON from the response
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const jsonData = JSON.parse(jsonMatch[0]);
-          return jsonData;
-        } catch (jsonError) {
-          console.error('Error parsing JSON from Claude response:', jsonError.message);
-          throw new Error('Could not parse structured data from the AI response');
-        }
-      } else {
-        throw new Error('No JSON data found in the AI response');
-      }
-    } catch (error) {
-      console.error('Document analysis failed:', error.message);
-      throw error;
-    }
-  }
-
-  /**
-   * Generate a response letter based on document analysis
-   *
-   * @param {Object} analysis - The analysis results from analyzeDocument
-   * @param {string} originalText - The original document text
-   * @param {Object} userInfo - Optional user information for personalization
-   * @returns {Promise<string>} - Generated response letter in HTML format
-   */
-  async generateResponseLetter(analysis, originalText, userInfo = null) {
-    const userContext = userInfo ? `
-    The letter should be addressed from:
-    Name: ${userInfo.name || 'N/A'}
-    Address: ${userInfo.address || 'N/A'}
-    Email: ${userInfo.email || 'N/A'}
-    Phone: ${userInfo.phone || 'N/A'}
-    ` : '';
-    
-    const prompt = `
-    Based on the analysis of this document and the original text, create a professional
-    response letter that addresses the key issues and provides a strong legal position.
-    
-    Document Analysis:
-    ${JSON.stringify(analysis, null, 2)}
-    
-    Original Document:
-    ${originalText}
-    
-    ${userContext}
-    
-    The response should:
-    1. Use formal legal language appropriate for ${analysis.documentCategory || 'this type of document'}
-    2. Reference relevant laws and statutes from the analysis
-    3. Clearly state the recipient's position and requested actions
-    4. Include proper formatting with date, address blocks, subject line, and signature
-    
-    Format the response as properly formatted HTML that can be directly used in a formal letter.
-    `;
-    
-    try {
-      const responseHtml = await this.sendMessage(prompt);
-      return responseHtml;
-    } catch (error) {
-      console.error('Response generation failed:', error.message);
-      throw error;
-    }
+    const data = await response.json();
+    return data && data.choices && data.choices.length > 0;
+  } catch (error) {
+    console.error('Puter API test failed:', error.message);
+    throw error;
   }
 }
 
-// Create a singleton instance
-const puterService = new PuterService();
+/**
+ * Analyze text using the fallback service
+ * 
+ * @param {string} text - The text to analyze
+ * @param {string} province - The province code (e.g., 'ON' for Ontario)
+ * @returns {object} Analysis results
+ */
+export async function analyzeText(text, province = 'ON') {
+  return await withRetry(async () => {
+    const apiKey = process.env.PUTER_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('PUTER_API_KEY environment variable not set');
+    }
+    
+    const prompt = `
+      As an AI legal assistant for SmartDispute.ai, analyze this document in detail.
+      
+      Document text: """
+      ${text}
+      """
+      
+      Consider that this document is from ${province} province in Canada.
+      
+      Provide the following information in JSON format:
+      1. documentType: The type of legal document
+      2. issueCategory: The main legal issue category
+      3. issueSubcategory: More specific categorization of the issue
+      4. parties: Identified parties involved
+      5. keyDates: Any important dates mentioned
+      6. legalReferences: Any laws, acts, or legal precedents mentioned
+      7. responseSuggestions: Recommended response points
+      8. riskAssessment: Assessment of potential risks
+      9. nextSteps: Recommended actions
+      10. confidenceScore: A number between 0 and 1 indicating confidence in analysis
+      
+      Format your response as valid JSON with no explanations outside the JSON object.
+    `;
+    
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: config.fallbackModel,
+        prompt,
+        max_tokens: config.maxTokens,
+        temperature: config.temperature
+      }),
+      timeout: config.timeoutMs
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    const generatedText = data.choices[0].text;
+    
+    // Parse the JSON from the response
+    const jsonMatch = generatedText.match(/(\{[\s\S]*\})/);
+    if (jsonMatch && jsonMatch[1]) {
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch (parseError) {
+        console.error('Error parsing JSON from response:', parseError.message);
+        return {
+          error: 'Failed to parse analysis results',
+          rawResponse: generatedText
+        };
+      }
+    } else {
+      return {
+        error: 'No valid JSON found in response',
+        rawResponse: generatedText
+      };
+    }
+  });
+}
 
-export default puterService;
+/**
+ * Generate a response letter based on analysis
+ * 
+ * @param {object} analysisResult - The results from analyzeText
+ * @param {string} originalText - The original document text
+ * @param {object} userInfo - Optional user information
+ * @param {string} province - The province code
+ * @returns {string} HTML formatted response letter
+ */
+export async function generateResponse(analysisResult, originalText, userInfo = {}, province = 'ON') {
+  return await withRetry(async () => {
+    const apiKey = process.env.PUTER_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('PUTER_API_KEY environment variable not set');
+    }
+    
+    const userName = userInfo.name || 'Client';
+    const userAddress = userInfo.address || '[CLIENT ADDRESS]';
+    
+    const prompt = `
+      As an AI legal assistant for SmartDispute.ai, generate a formal response letter based on the analysis of a document.
+      
+      Original document: """
+      ${originalText.substring(0, 2000)}... [truncated for brevity]
+      """
+      
+      Analysis results: """
+      ${JSON.stringify(analysisResult)}
+      """
+      
+      Generate a professional response letter addressing the issues in the document. The letter should be from ${userName} at ${userAddress} in ${province} province.
+      
+      The response should:
+      1. Be professionally formatted with proper letter structure
+      2. Address the main issues identified in the analysis
+      3. Include references to relevant laws and regulations
+      4. Provide clear next steps
+      5. Be factual, professional, and assertive
+      6. Include proper headers, date (current date), and signature
+      
+      Format the letter as HTML with proper styling.
+    `;
+    
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: config.fallbackModel,
+        prompt,
+        max_tokens: config.maxTokens * 2,
+        temperature: config.temperature
+      }),
+      timeout: config.timeoutMs * 2
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    const generatedText = data.choices[0].text;
+    
+    // Extract HTML content from response
+    const htmlMatch = generatedText.match(/<html[\s\S]*<\/html>/i) || 
+                      generatedText.match(/<body[\s\S]*<\/body>/i) ||
+                      generatedText.match(/<div[\s\S]*<\/div>/i);
+                      
+    if (htmlMatch && htmlMatch[0]) {
+      return htmlMatch[0];
+    } else {
+      // If no HTML tags found, wrap the response in basic HTML
+      return `<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+                ${generatedText.replace(/\n/g, '<br>')}
+              </div>`;
+    }
+  });
+}
+
+/**
+ * Simple chat interface
+ * 
+ * @param {string} message - User message
+ * @returns {string} AI response
+ */
+export async function chat(message) {
+  return await withRetry(async () => {
+    const apiKey = process.env.PUTER_API_KEY;
+    
+    if (!apiKey) {
+      throw new Error('PUTER_API_KEY environment variable not set');
+    }
+    
+    const response = await fetch(config.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: config.fallbackModel,
+        prompt: message,
+        max_tokens: 500,
+        temperature: config.temperature
+      }),
+      timeout: config.timeoutMs
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.choices[0].text;
+  });
+}
+
+export default {
+  testConnection,
+  analyzeText,
+  generateResponse,
+  chat
+};

@@ -150,6 +150,20 @@ app.use(express.static(path.join(__dirname, '..'), {
     const filePath = path.join(__dirname, '../claude-test.html');
     res.sendFile(filePath);
   });
+  
+  // Add route for AI fallback test page
+  app.get('/ai-fallback-test', (req: Request, res: Response) => {
+    console.log('Serving AI fallback test page');
+    const filePath = path.join(__dirname, '../ai-fallback-test.html');
+    res.sendFile(filePath);
+  });
+  
+  // Add route for AI service test page
+  app.get('/ai-service-test', (req: Request, res: Response) => {
+    console.log('Serving AI service test page');
+    const filePath = path.join(__dirname, '../ai-service-test.html');
+    res.sendFile(filePath);
+  });
 
   const server = await registerRoutes(app);
 
