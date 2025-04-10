@@ -152,9 +152,19 @@ const TutorialModal: React.FC = () => {
     if (currentJourney) {
       markJourneyAsCompleted(currentJourney.id);
 
-      // If this was the general journey, show specialized guide options
-      if (currentJourney.id === 'general-journey') {
-        navigate('/specialized-guides');
+      // Navigate based on journey type
+      switch (currentJourney.type) {
+        case 'tenant':
+          navigate('/ltb-resources');
+          break;
+        case 'cas':
+          navigate('/cas-resources');
+          break;
+        case 'general':
+          navigate('/specialized-guides');
+          break;
+        default:
+          navigate('/resources');
       }
     }
     endOnboarding();
