@@ -15,6 +15,45 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-small {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s, fadeOut 0.3s 1.7s;
+            opacity: 0;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
         .postal-input {
             display: flex;
             gap: 1rem;
@@ -145,6 +184,8 @@
             </nav>
         </div>
     </header>
+
+    <div id="notification" class="notification"></div>
 
     <main>
         <div class="hero-section">
@@ -289,7 +330,22 @@
                         </div>
                         <div class="info-item">
                             <div class="info-label">Contact</div>
-                            <div>${rep.email ? `<a href="mailto:${rep.email}">${rep.email}</a>` : 'No email available'}</div>
+                            <div>${rep.email ? 
+                                `<div>
+                                    <a href="mailto:${rep.email}">${rep.email}</a>
+                                    <div class="action-buttons mt-2">
+                                        <button class="btn-secondary btn-small" onclick="copyToClipboard('${rep.email}')">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                            Copy Email
+                                        </button>
+                                        <button class="btn-primary btn-small" onclick="composeEmail('${rep.email}', '${rep.name}')">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                            Compose Email
+                                        </button>
+                                    </div>
+                                </div>` 
+                                : 'No email available'}
+                            </div>
                         </div>
                     </div>
                 </div>`;
