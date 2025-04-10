@@ -69,6 +69,8 @@ import advancedDocumentAnalysisRoutes from "./routes/advancedDocumentAnalysis";
 import claudeRoutes from "./routes/claude";
 // Import AI service with fallback mechanism
 import aiRoutes from "./routes/ai";
+// Import OCR routes
+import ocrRoutes from "./routes/ocr";
 
 // WebSocket client tracking
 interface WebSocketClient {
@@ -4909,6 +4911,9 @@ const subscription = await stripe.subscriptions.create({
   
   // Register PayPal routes
   app.use("/api/paypal", paypalRoutes);
+  
+  // Register OCR routes
+  app.use("/api/ocr", ocrRoutes);
 
   // Form data routes
   app.get("/api/form-data/:userId/:formType", async (req: Request, res: Response) => {
