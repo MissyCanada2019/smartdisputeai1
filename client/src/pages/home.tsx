@@ -13,7 +13,10 @@ import {
   User 
 } from "lucide-react";
 
+import { useState } from 'react';
+
 export default function Home() {
+  const [videoError, setVideoError] = useState(false);
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Quick Guide Section */}
@@ -622,3 +625,26 @@ export default function Home() {
     </div>
   );
 }
+<section className="py-10 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-red-700 text-center mb-6">
+            Why I Created SmartDispute.ai
+          </h2>
+          <div className="relative aspect-video">
+            {!videoError ? (
+              <video 
+                className="w-full rounded-lg shadow-lg"
+                controls
+                onError={() => setVideoError(true)}
+              >
+                <source src="/videos/SmartDispute_Intro_Teresa_Video.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
+                <p className="text-gray-500">Video could not be loaded</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
