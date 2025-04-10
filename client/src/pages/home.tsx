@@ -16,6 +16,33 @@ import {
 export default function Home() {
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Quick Guide Section */}
+      <div className="bg-white py-8 px-4 mb-12">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-8">How SmartDispute.ai Works</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Start Your Journey</h3>
+              <ol className="list-decimal pl-5 space-y-3">
+                <li>Choose your dispute type (CAS, Landlord, Credit)</li>
+                <li>Upload relevant documents and evidence</li>
+                <li>Get AI-powered analysis of your case</li>
+                <li>Receive customized legal documents</li>
+              </ol>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Our Services</h3>
+              <ul className="space-y-3">
+                <li>✓ Document Analysis ($4.99)</li>
+                <li>✓ Custom Legal Letters</li>
+                <li>✓ Province-Specific Templates</li>
+                <li>✓ AI-Powered Legal Guidance</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <div className="py-12 md:py-20 text-center">
         <h1 className="text-4xl md:text-6xl font-extrabold mb-6 text-gray-900 leading-tight">
