@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDispute.ai - Document OCR Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .drag-drop-area {
+            border: 2px dashed #cbd5e0;
+            background-color: #f7fafc;
+            transition: all 0.3s;
+        }
+        .drag-drop-area.active {
+            border-color: #4299e1;
+            background-color: #ebf8ff;
+        }
+        .preview-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .highlight {
+            background-color: rgba(66, 153, 225, 0.2);
+            border-radius: 0.25rem;
+            padding: 0.25rem;
+            margin: 0 -0.25rem;
+        }
+        .issues-list li {
+            background-color: rgba(247, 250, 252, 0.8);
+            border-left: 3px solid #cbd5e0;
+            padding: 0.5rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .issues-list li.warning {
+            border-left-color: #ed8936;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold text-gray-900">SmartDispute.ai</h1>
+                <nav class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Home</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Documents</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Resources</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Help</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Document OCR Scanner</h2>
+                
+                <div id="upload-section" class="mb-8">
+                    <div class="drag-drop-area rounded-lg p-8 text-center" id="drop-area">
+                        <div class="mb-4">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Drag and drop or click to upload a document image
+                            </p>
+                            <p class="text-xs text-gray-400 mt-2">
+                                Supported formats: PNG, JPG, PDF, TIFF
+                            </p>
+                        </div>
+                        <input type="file" id="file-input" class="hidden" accept=".png, .jpg, .jpeg, .pdf, .tif, .tiff">
+                        <button type="button" id="browse-button" class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Browse files
+                        </button>
+                        <button type="button" id="camera-button" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Take photo
+                        </button>
+                    </div>
+                    
+                    <!-- File preview -->
+                    <div id="file-preview" class="hidden mt-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900">Selected Document</h3>
+                                <p id="file-name" class="text-sm text-gray-500"></p>
+                            </div>
+                            <button type="button" id="cancel-button" class="text-sm text-red-600 hover:text-red-800">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="rounded-lg overflow-hidden border border-gray-200">
+                            <img id="image-preview" class="max-w-full h-auto hidden" alt="Document preview">
+                            <div id="pdf-preview" class="hidden p-4 bg-gray-50 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-500">PDF document (preview not available)</p>
+                            </div>
+                        </div>
+                        <button type="button" id="scan-button" class="mt-4 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            Scan Document
+                        </button>
+                    </div>
+                    
+                    <!-- Loading state -->
+                    <div id="loading-section" class="hidden mt-6 text-center">
+                        <div class="loader"></div>
+                        <p class="mt-4 text-gray-600">Analyzing document...</p>
+                    </div>
+                </div>
+                
+                <!-- Results section -->
+                <div id="results-section" class="hidden">
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-medium text-gray-900">OCR Results</h3>
+                            <button id="edit-mode-toggle" class="text-sm text-blue-600 hover:text-blue-800 focus:outline-none">
+                                Edit text
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Review and edit the extracted information below</p>
+                    </div>
+                    
+                    <!-- Document info -->
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Document Type</label>
+                            <div id="document-type" class="mt-1 text-sm text-gray-900"></div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Date</label>
+                            <input type="text" id="document-date" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Tenant/Respondent Name</label>
+                            <input type="text" id="tenant-name" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" readonly>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Landlord/Applicant Name</label>
+                            <input type="text" id="landlord-name" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" readonly>
+                        </div>
+                        
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Property Address</label>
+                            <input type="text" id="property-address" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" readonly>
+                        </div>
+                        
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">Reason/Details</label>
+                            <input type="text" id="reason" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" readonly>
+                        </div>
+                    </div>
+                    
+                    <!-- Issues section -->
+                    <div id="issues-container" class="hidden mb-6">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2">Potential Issues</h4>
+                        <ul id="issues-list" class="issues-list text-sm text-gray-600">
+                            <!-- Issues will be added here -->
+                        </ul>
+                    </div>
+                    
+                    <!-- Full text content -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Document Text</label>
+                        <div class="relative">
+                            <textarea id="full-text" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md h-48" readonly></textarea>
+                        </div>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="mt-8 flex justify-end">
+                        <button type="button" id="retry-button" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Try Another Image
+                        </button>
+                        <button type="button" id="continue-button" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Looks Good, Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-input');
+            const browseButton = document.getElementById('browse-button');
+            const cameraButton = document.getElementById('camera-button');
+            const cancelButton = document.getElementById('cancel-button');
+            const scanButton = document.getElementById('scan-button');
+            const filePreview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
+            const imagePreview = document.getElementById('image-preview');
+            const pdfPreview = document.getElementById('pdf-preview');
+            const loadingSection = document.getElementById('loading-section');
+            const uploadSection = document.getElementById('upload-section');
+            const resultsSection = document.getElementById('results-section');
+            const editModeToggle = document.getElementById('edit-mode-toggle');
+            const retryButton = document.getElementById('retry-button');
+            const continueButton = document.getElementById('continue-button');
+            
+            // Results DOM elements
+            const documentTypeEl = document.getElementById('document-type');
+            const documentDateEl = document.getElementById('document-date');
+            const tenantNameEl = document.getElementById('tenant-name');
+            const landlordNameEl = document.getElementById('landlord-name');
+            const propertyAddressEl = document.getElementById('property-address');
+            const reasonEl = document.getElementById('reason');
+            const fullTextEl = document.getElementById('full-text');
+            const issuesContainer = document.getElementById('issues-container');
+            const issuesList = document.getElementById('issues-list');
+            
+            // State
+            let selectedFile = null;
+            let isEditMode = false;
+            let ocrResults = null;
+            
+            // Add event listeners
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('active');
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('active');
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            }
+            
+            browseButton.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    handleFiles(fileInput.files);
+                }
+            });
+            
+            cameraButton.addEventListener('click', () => {
+                // This would be implemented in a mobile app
+                alert('Camera functionality is not available in this demo. Please upload an image file instead.');
+            });
+            
+            cancelButton.addEventListener('click', resetUpload);
+            
+            scanButton.addEventListener('click', scanDocument);
+            
+            retryButton.addEventListener('click', () => {
+                resultsSection.classList.add('hidden');
+                uploadSection.classList.remove('hidden');
+                resetUpload();
+            });
+            
+            continueButton.addEventListener('click', () => {
+                // This would continue to the document generation flow
+                alert('This would proceed to document generation with the extracted information.');
+            });
+            
+            editModeToggle.addEventListener('click', toggleEditMode);
+            
+            function handleFiles(files) {
+                selectedFile = files[0];
+                fileName.textContent = selectedFile.name;
+                
+                const fileType = selectedFile.type;
+                
+                // Show preview
+                filePreview.classList.remove('hidden');
+                
+                if (fileType.startsWith('image/')) {
+                    imagePreview.classList.remove('hidden');
+                    pdfPreview.classList.add('hidden');
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                    };
+                    reader.readAsDataURL(selectedFile);
+                } else if (fileType === 'application/pdf') {
+                    imagePreview.classList.add('hidden');
+                    pdfPreview.classList.remove('hidden');
+                }
+            }
+            
+            function resetUpload() {
+                selectedFile = null;
+                fileInput.value = '';
+                filePreview.classList.add('hidden');
+                imagePreview.classList.add('hidden');
+                pdfPreview.classList.add('hidden');
+                imagePreview.src = '';
+            }
+            
+            function scanDocument() {
+                if (!selectedFile) {
+                    alert('Please select a file first.');
+                    return;
+                }
+                
+                // Show loading state
+                loadingSection.classList.remove('hidden');
+                scanButton.disabled = true;
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                // Send to server
+                fetch('/ocr-upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('OCR processing failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Store results
+                    ocrResults = data;
+                    
+                    // Display results
+                    displayResults(data);
+                    
+                    // Show results section
+                    loadingSection.classList.add('hidden');
+                    uploadSection.classList.add('hidden');
+                    resultsSection.classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingSection.classList.add('hidden');
+                    scanButton.disabled = false;
+                    alert('Error processing document: ' + error.message);
+                });
+            }
+            
+            function displayResults(data) {
+                if (data.status !== 'success') {
+                    alert('Error: ' + (data.message || 'OCR processing failed'));
+                    return;
+                }
+                
+                const fields = data.fields;
+                
+                // Set values
+                documentTypeEl.textContent = fields.document_type || 'Unknown';
+                documentDateEl.value = fields.date || '';
+                tenantNameEl.value = fields.tenant_name || '';
+                landlordNameEl.value = fields.landlord_name || '';
+                propertyAddressEl.value = fields.address || '';
+                reasonEl.value = fields.reason || '';
+                fullTextEl.value = fields.full_text || '';
+                
+                // Display issues if any
+                if (fields.issues && fields.issues.length > 0) {
+                    issuesContainer.classList.remove('hidden');
+                    issuesList.innerHTML = '';
+                    
+                    fields.issues.forEach(issue => {
+                        const li = document.createElement('li');
+                        li.classList.add('warning');
+                        li.textContent = issue;
+                        issuesList.appendChild(li);
+                    });
+                } else {
+                    issuesContainer.classList.add('hidden');
+                }
+            }
+            
+            function toggleEditMode() {
+                isEditMode = !isEditMode;
+                
+                // Toggle readonly attribute on input fields
+                const inputs = resultsSection.querySelectorAll('input, textarea');
+                inputs.forEach(input => {
+                    input.readOnly = !isEditMode;
+                });
+                
+                // Update button text
+                editModeToggle.textContent = isEditMode ? 'Save edits' : 'Edit text';
+                
+                // If switching from edit mode to view mode, save the edited values
+                if (!isEditMode && ocrResults) {
+                    // Update the ocrResults object with edited values
+                    ocrResults.fields.date = documentDateEl.value;
+                    ocrResults.fields.tenant_name = tenantNameEl.value;
+                    ocrResults.fields.landlord_name = landlordNameEl.value;
+                    ocrResults.fields.address = propertyAddressEl.value;
+                    ocrResults.fields.reason = reasonEl.value;
+                    ocrResults.fields.full_text = fullTextEl.value;
+                    
+                    // This would normally send the updated data to the server
+                    console.log('Updated OCR results:', ocrResults);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

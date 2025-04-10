@@ -10,6 +10,9 @@ from ai_handler import extract_text_from_file, analyze_text_with_ai
 from pricing_and_pdf import determine_price_and_type, generate_pdf_preview
 from dotenv import load_dotenv
 
+# Import OCR functionality
+from ocr_parser import run_ocr_pipeline
+
 # Load environment variables
 load_dotenv()
 
@@ -19,9 +22,10 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 PREVIEW_FOLDER = 'previews'
-ALLOWED_EXTENSIONS = {'pdf', 'docx', 'jpg', 'jpeg', 'png'}
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'jpg', 'jpeg', 'png', 'tif', 'tiff'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 
 # Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -292,6 +296,31 @@ def download_final_pdf():
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     return "File not found", 404
+
+@app.route("/ocr-upload", methods=["POST"])
+def ocr_upload():
+    """
+    Process an image with OCR and return structured data
+    
+    Accepts images via form-data with the key 'file'
+    Returns a JSON response with the OCR results
+    """
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+        
+    if not allowed_file(file.filename):
+        return jsonify({"error": "File type not allowed"}), 400
+
+    try:
+        # Process the image with OCR
+        results = run_ocr_pipeline(file.stream)
+        return jsonify({"status": "success", "data": results})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)

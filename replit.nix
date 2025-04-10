@@ -1,5 +1,7 @@
 {pkgs}: {
   deps = [
+    pkgs.libGLU
+    pkgs.libGL
     pkgs.nodePackages.prettier
     pkgs.tesseract
     pkgs.zlib

@@ -1,0 +1,62 @@
+# ocr_parser.py
+
+import pytesseract
+from PIL import Image, ImageEnhance, ImageFilter
+import io
+import cv2
+import numpy as np
+import re
+
+def preprocess_image(image_stream):
+    image = Image.open(image_stream).convert('L')  # Convert to grayscale
+    image = image.filter(ImageFilter.MedianFilter())
+    enhancer = ImageEnhance.Contrast(image)
+    image = enhancer.enhance(2)
+    
+    np_img = np.array(image)
+    _, thresh = cv2.threshold(np_img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    return Image.fromarray(thresh)
+
+def extract_text(image):
+    return pytesseract.image_to_string(image)
+
+def parse_legal_fields(text):
+    fields = {
+        "tenant_name": None,
+        "landlord_name": None,
+        "date": None,
+        "document_type": None,
+        "issues": [],
+        "full_text": text.strip()
+    }
+
+    # Simple keyword detection (expandable)
+    if "eviction" in text.lower() or "N4" in text.upper():
+        fields["document_type"] = "Eviction Notice (N4)"
+    if "notice of rent increase" in text.lower():
+        fields["document_type"] = "Rent Increase Notice"
+
+    name_matches = re.findall(r"[A-Z][a-z]+\s[A-Z][a-z]+", text)
+    if name_matches:
+        fields["tenant_name"] = name_matches[0]
+        if len(name_matches) > 1:
+            fields["landlord_name"] = name_matches[1]
+
+    date_match = re.search(r"\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{1,2},\s\d{4}\b", text)
+    if date_match:
+        fields["date"] = date_match.group(0)
+
+    if "non-payment" in text.lower():
+        fields["issues"].append("Non-payment")
+    if "damage" in text.lower():
+        fields["issues"].append("Damage to property")
+    if "signature" not in text.lower():
+        fields["issues"].append("Signature missing")
+
+    return fields
+
+def run_ocr_pipeline(image_stream):
+    preprocessed_image = preprocess_image(image_stream)
+    text = extract_text(preprocessed_image)
+    parsed_fields = parse_legal_fields(text)
+    return parsed_fields
