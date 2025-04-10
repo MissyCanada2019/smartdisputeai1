@@ -73,6 +73,7 @@
     "memorystore": "^1.6.7",
     "mjml": "^4.15.3",
     "multer": "^1.4.5-lts.2",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.0",
     "openai": "^4.91.1",
     "passport": "^0.7.0",
