@@ -152,7 +152,7 @@ router.post('/analyze-document', async (req, res) => {
         const jsonEnd = responseText.lastIndexOf('}') + 1;
         
         if (jsonStart >= 0 && jsonEnd > jsonStart) {
-          const jsonStr = responseText[jsonStart:jsonEnd];
+          const jsonStr = responseText.substring(jsonStart, jsonEnd);
           const analysis = JSON.parse(jsonStr);
           
           // Add pricing based on complexity
@@ -250,8 +250,99 @@ router.post('/analyze-document-file', upload.single('file'), async (req, res) =>
         })
       };
       
-      // Call the text analysis logic (this could be refactored to avoid duplication)
-      return await analyzeDocumentText(mockRequest, mockResponse);
+      // Since we don't have a separate analyzeDocumentText function, let's directly use the analyze-document endpoint handler
+      // We'll create a simplified version here instead of full refactoring
+      const text = mockRequest.body.text;
+      const province = mockRequest.body.province;
+      
+      if (!text) {
+        return res.status(400).json({ error: 'No text extracted from file' });
+      }
+      
+      // Check if API is available
+      if (!anthropic) {
+        return res.status(503).json({
+          error: 'Claude API is not available. Please check your API key.',
+          mockData: true,
+          ...generateMockAnalysis()
+        });
+      }
+      
+      // Process with Claude
+      try {
+        // Define system prompt for the analysis
+        const systemPrompt = `You are a legal assistant for SmartDispute.ai, specialized in Canadian legal matters.
+        Analyze this document from ${province} and identify:
+        
+        1. Type of issue (housing, employment, consumer, CAS/child services, etc.)
+        2. Specific classification (e.g., "T2 - Interference with reasonable enjoyment" for housing)
+        3. Recommended legal forms or responses
+        4. Relevant legal references from ${province}
+        5. Suggested response strategy
+        6. Document complexity (basic, standard, premium, or urgent)
+        
+        Respond in valid JSON format with these fields:
+        {
+            "issue_type": string,
+            "classification": string,
+            "recommended_forms": string,
+            "legal_references": string,
+            "response_strategy": string,
+            "complexity": string,
+            "confidence": number (0-1)
+        }
+        Include detailed explanations for each field based on the document content.`;
+        
+        // The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+        const response = await anthropic.messages.create({
+          model: 'claude-3-7-sonnet-20250219',
+          system: systemPrompt,
+          max_tokens: 1500,
+          messages: [
+            { role: 'user', content: text }
+          ]
+        });
+        
+        // Process the response similar to the text endpoint
+        const responseText = response.content[0].text;
+        const jsonStart = responseText.indexOf('{');
+        const jsonEnd = responseText.lastIndexOf('}') + 1;
+        
+        if (jsonStart >= 0 && jsonEnd > jsonStart) {
+          const jsonStr = responseText.substring(jsonStart, jsonEnd);
+          const analysis = JSON.parse(jsonStr);
+          
+          // Add pricing based on complexity
+          const pricing = {
+            'basic': 4.99,
+            'standard': 14.99,
+            'premium': 29.99,
+            'urgent': 49.99
+          };
+          
+          if (analysis.complexity && pricing[analysis.complexity.toLowerCase()]) {
+            analysis.price = pricing[analysis.complexity.toLowerCase()];
+          } else {
+            analysis.price = pricing.standard;
+          }
+          
+          return res.json(analysis);
+        } else {
+          // Fallback to mock data
+          return res.status(500).json({
+            error: 'Failed to parse Claude response for file analysis',
+            mockData: true,
+            ...generateMockAnalysis()
+          });
+        }
+      } catch (apiError) {
+        console.error('Error calling Claude API for file analysis:', apiError);
+        return res.status(503).json({
+          error: `Error calling Claude API: ${apiError.message}`,
+          mockData: true,
+          ...generateMockAnalysis()
+        });
+      }
       
     } catch (extractError) {
       console.error('Error extracting text from file:', extractError);
