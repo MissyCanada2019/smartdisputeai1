@@ -2,26 +2,31 @@
 SmartDispute.ai Document Upload Handler
 A Flask application that handles document uploads, AI analysis, and payment processing
 """
-from flask import Flask, request, render_template, redirect, url_for, send_file, render_template_string, jsonify
+from flask import Flask, request, render_template, redirect, url_for, send_file, render_template_string, jsonify, Blueprint
 import os
 import stripe
 from werkzeug.utils import secure_filename
 from ai_handler import extract_text_from_file, analyze_text_with_ai
 from pricing_and_pdf import determine_price_and_type, generate_pdf_preview
 from dotenv import load_dotenv
+import logging
 
-# Import OCR functionality
-from ocr_parser import run_ocr_pipeline
+# Import OCR functionality 
+from ocr_routes import ocr_routes
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
 # Initialize Stripe with your secret key
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 
 # Print API key status (just for debugging)
-anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-print(f"ANTHROPIC_API_KEY status: {'Present' if anthropic_key else 'Missing'}")
+anthropic_key = os.getenv("ANTHROPIC_API_KEY", "")
+logger.info(f"ANTHROPIC_API_KEY status: {'Present' if anthropic_key else 'Missing'}")
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
@@ -30,6 +35,9 @@ ALLOWED_EXTENSIONS = {'pdf', 'docx', 'jpg', 'jpeg', 'png', 'tif', 'tiff'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
+
+# Register blueprints
+app.register_blueprint(ocr_routes)
 
 # Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -41,11 +49,6 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     return render_template('upload_form.html')
-    
-@app.route('/ocr')
-def ocr_page():
-    """Display the OCR upload page"""
-    return render_template('ocr_upload_form.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -306,30 +309,7 @@ def download_final_pdf():
         return send_file(file_path, as_attachment=True)
     return "File not found", 404
 
-@app.route("/ocr-upload", methods=["POST"])
-def ocr_upload():
-    """
-    Process an image with OCR and return structured data
-    
-    Accepts images via form-data with the key 'file'
-    Returns a JSON response with the OCR results
-    """
-    if 'file' not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-        
-    if not allowed_file(file.filename):
-        return jsonify({"error": "File type not allowed"}), 400
-
-    try:
-        # Process the image with OCR
-        results = run_ocr_pipeline(file.stream)
-        return jsonify({"status": "success", "data": results})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# OCR routes are now handled by the ocr_routes blueprint
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
