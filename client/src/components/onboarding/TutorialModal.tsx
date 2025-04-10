@@ -4,7 +4,7 @@ import { useOnboarding, TutorialStep } from '@/context/onboardingContext';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Check, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useLocation } from 'wouter'; // Import useLocation from wouter instead
 
 interface SpotlightProps {
   step: TutorialStep;
@@ -20,8 +20,9 @@ const TutorialModal: React.FC = () => {
     nextStep,
     prevStep,
     endOnboarding,
+    markJourneyAsCompleted
   } = useOnboarding();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [location, setLocation] = useLocation(); // Initialize useLocation from wouter
 
   const [targetElement, setTargetElement] = useState<Element | null>(null);
   const [spotlightPosition, setSpotlightPosition] = useState({ x: 0, y: 0 });
@@ -155,16 +156,16 @@ const TutorialModal: React.FC = () => {
       // Navigate based on journey type
       switch (currentJourney.type) {
         case 'tenant':
-          navigate('/ltb-resources');
+          setLocation('/ltb-resources');
           break;
         case 'cas':
-          navigate('/cas-resources');
+          setLocation('/cas-resources');
           break;
         case 'general':
-          navigate('/specialized-guides');
+          setLocation('/specialized-guides');
           break;
         default:
-          navigate('/resources');
+          setLocation('/resources');
       }
     }
     endOnboarding();

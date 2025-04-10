@@ -212,11 +212,20 @@ const generalJourney: TutorialJourney = {
     },
     {
       id: 'completion',
-      title: 'You're All Set!',
+      title: "You're All Set!",
       description: "You've completed the basic setup. Need help with specific topics? Check out our specialized guides for Tenant Rights, CAS Matters, or Credit Disputes.",
       nextButtonText: 'View Specialized Guides'
     }
   ]
+};
+
+// Additional steps journey
+const additionalStepsJourney: TutorialJourney = {
+  id: 'additional-steps-journey',
+  name: 'Advanced Features Tour',
+  type: 'general',
+  description: 'Learn about advanced features to maximize your experience',
+  steps: [
     {
       id: 'general-profile',
       title: 'Your Profile',
@@ -268,6 +277,7 @@ const generalJourney: TutorialJourney = {
 // Create all available journeys
 const tutorialJourneys: TutorialJourney[] = [
   generalJourney,
+  additionalStepsJourney,
   tenantJourney,
   casJourney
 ];
