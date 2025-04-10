@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Legal Resources - SmartDispute.ai</title>
+  
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-5L7PTHJK');</script>
+  <!-- End Google Tag Manager -->
+  
+  <!-- SmartDispute GTM Integration -->
+  <script src="/gtm.js"></script>
+  
+  <style>
+    :root {
+      --primary: #ff0000;
+      --background: #000000;
+      --foreground: #ffffff;
+      --accent-dark: #111111;
+      --accent-light: #222222;
+      --accent-border: #333333;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    nav a {
+      color: var(--primary);
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+    }
+    h1, h2, h3 {
+      color: var(--primary);
+    }
+    .resources-section {
+      margin-bottom: 40px;
+    }
+    .resources-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 20px;
+    }
+    .resource-card {
+      background-color: var(--accent-dark);
+      border: 1px solid var(--accent-border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .resource-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(255, 0, 0, 0.2);
+    }
+    .resource-image {
+      height: 60px;
+      background-color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+      font-size: 24px;
+    }
+    .resource-details {
+      padding: 20px;
+    }
+    .resource-title {
+      font-size: 1.4rem;
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--primary);
+    }
+    .resource-description {
+      color: #cccccc;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .resource-button {
+      display: inline-block;
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    .resource-button:hover {
+      background-color: #cc0000;
+    }
+    .category-title {
+      margin-top: 50px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--accent-border);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .category-icon {
+      margin-right: 10px;
+      font-size: 24px;
+    }
+    .tab-container {
+      margin-bottom: 30px;
+    }
+    .tabs {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-bottom: 1px solid var(--accent-border);
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      position: relative;
+    }
+    .tab.active {
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript>
+    <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5L7PTHJK"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe>
+  </noscript>
+  <!-- End Google Tag Manager (noscript) -->
+  
+  <div class="container">
+    <header>
+      <h1>Legal Resources</h1>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/products.html">Products</a>
+        <a href="/resources.html">Resources</a>
+      </nav>
+    </header>
+    
+    <p>Access reliable legal information and resources to help with your legal matters. These trusted sources provide valuable guidance across various legal issues in Canada.</p>
+    
+    <div class="tab-container">
+      <ul class="tabs">
+        <li class="tab active" onclick="showTab('all')">All Resources</li>
+        <li class="tab" onclick="showTab('housing')">Housing</li>
+        <li class="tab" onclick="showTab('cas')">Child Services</li>
+        <li class="tab" onclick="showTab('credit')">Credit Issues</li>
+        <li class="tab" onclick="showTab('general')">General Legal</li>
+      </ul>
+    </div>
+    
+    <div id="all" class="tab-content">
+      <div class="category-title">
+        <span class="category-icon">⚖️</span>
+        <h2>Legal Research Resources</h2>
+      </div>
+      
+      <div class="resources-grid">
+        <div class="resource-card">
+          <div class="resource-image">📚</div>
+          <div class="resource-details">
+            <h3 class="resource-title">CanLII (Canadian Legal Information Institute)</h3>
+            <p class="resource-description">Free access to Canadian law - legal cases, statutes, and regulations from all Canadian jurisdictions.</p>
+            <a href="https://www.canlii.org/en/" target="_blank" class="resource-button">Visit CanLII</a>
+          </div>
+        </div>
+        
+        <div class="resource-card">
+          <div class="resource-image">📝</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Steps to Justice</h3>
+            <p class="resource-description">Clear, reliable information about common legal problems in family, housing, employment and other areas of law.</p>
+            <a href="https://stepstojustice.ca/" target="_blank" class="resource-button">Visit Steps to Justice</a>
+          </div>
+        </div>
+        
+        <div class="resource-card">
+          <div class="resource-image">🏛️</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Canadian Department of Justice</h3>
+            <p class="resource-description">Official information about Canada's laws, legal system, and access to justice services.</p>
+            <a href="https://www.justice.gc.ca/eng/" target="_blank" class="resource-button">Visit Justice Canada</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-title">
+        <span class="category-icon">🏠</span>
+        <h2>Housing Resources</h2>
+      </div>
+      
+      <div class="resources-grid">
+        <div class="resource-card">
+          <div class="resource-image">🏘️</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Landlord and Tenant Board (Ontario)</h3>
+            <p class="resource-description">Official resources for landlord and tenant disputes in Ontario, including forms and processes.</p>
+            <a href="https://tribunalsontario.ca/ltb/" target="_blank" class="resource-button">Visit LTB</a>
+          </div>
+        </div>
+        
+        <div class="resource-card">
+          <div class="resource-image">📋</div>
+          <div class="resource-details">
+            <h3 class="resource-title">CMHC Housing Rights</h3>
+            <p class="resource-description">Information on housing rights and responsibilities across Canada.</p>
+            <a href="https://www.cmhc-schl.gc.ca/en/consumers/renting-a-home" target="_blank" class="resource-button">Visit CMHC</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-title">
+        <span class="category-icon">👪</span>
+        <h2>Children's Aid Resources</h2>
+      </div>
+      
+      <div class="resources-grid">
+        <div class="resource-card">
+          <div class="resource-image">👨‍👩‍👧‍👦</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Justice for Children and Youth</h3>
+            <p class="resource-description">Legal information for young people and families navigating the child welfare system.</p>
+            <a href="https://jfcy.org/" target="_blank" class="resource-button">Visit JFCY</a>
+          </div>
+        </div>
+        
+        <div class="resource-card">
+          <div class="resource-image">📄</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Your Legal Rights - Child Protection</h3>
+            <p class="resource-description">Resources for dealing with Children's Aid Societies and understanding your rights.</p>
+            <a href="https://stepstojustice.ca/legal-topic/child-protection/" target="_blank" class="resource-button">Learn More</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="category-title">
+        <span class="category-icon">💳</span>
+        <h2>Credit & Financial Resources</h2>
+      </div>
+      
+      <div class="resources-grid">
+        <div class="resource-card">
+          <div class="resource-image">📊</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Financial Consumer Agency of Canada</h3>
+            <p class="resource-description">Information on credit reports, credit scores, and how to resolve errors.</p>
+            <a href="https://www.canada.ca/en/financial-consumer-agency/services/credit-reports-score.html" target="_blank" class="resource-button">Visit FCAC</a>
+          </div>
+        </div>
+        
+        <div class="resource-card">
+          <div class="resource-image">📑</div>
+          <div class="resource-details">
+            <h3 class="resource-title">Credit Bureau Dispute Information</h3>
+            <p class="resource-description">How to dispute information on your credit report with Equifax Canada.</p>
+            <a href="https://www.consumer.equifax.ca/personal/dispute-credit-report/" target="_blank" class="resource-button">Equifax Disputes</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="housing" class="tab-content" style="display: none;">
+      <!-- Housing content will be shown when tab is clicked -->
+    </div>
+    
+    <div id="cas" class="tab-content" style="display: none;">
+      <!-- CAS content will be shown when tab is clicked -->
+    </div>
+    
+    <div id="credit" class="tab-content" style="display: none;">
+      <!-- Credit content will be shown when tab is clicked -->
+    </div>
+    
+    <div id="general" class="tab-content" style="display: none;">
+      <!-- General content will be shown when tab is clicked -->
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Track page view
+      if (window.GTM) {
+        window.GTM.trackPageView('/resources', 'Resources Page');
+      }
+      
+      // Fill other tabs with relevant content from the "all" tab
+      const housingSection = document.querySelector('#all .category-title:nth-of-type(2)').nextElementSibling;
+      document.querySelector('#housing').innerHTML = housingSection.outerHTML;
+      
+      const casSection = document.querySelector('#all .category-title:nth-of-type(3)').nextElementSibling;
+      document.querySelector('#cas').innerHTML = casSection.outerHTML;
+      
+      const creditSection = document.querySelector('#all .category-title:nth-of-type(4)').nextElementSibling;
+      document.querySelector('#credit').innerHTML = creditSection.outerHTML;
+      
+      const generalSection = document.querySelector('#all .category-title:nth-of-type(1)').nextElementSibling;
+      document.querySelector('#general').innerHTML = generalSection.outerHTML;
+      
+      // Track resource link clicks
+      const resourceLinks = document.querySelectorAll('.resource-button');
+      resourceLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          const resourceName = this.closest('.resource-details').querySelector('.resource-title').textContent.trim();
+          const resourceUrl = this.getAttribute('href');
+          
+          // Use GTM tracking if available
+          if (window.GTM) {
+            window.GTM.trackEvent('resource_click', {
+              resource_name: resourceName,
+              resource_url: resourceUrl
+            });
+          }
+        });
+      });
+    });
+    
+    function showTab(tabId) {
+      // Hide all tab content
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabContents.forEach(content => {
+        content.style.display = 'none';
+      });
+      
+      // Show the selected tab content
+      document.getElementById(tabId).style.display = 'block';
+      
+      // Update active tab styling
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Find the clicked tab and make it active
+      const clickedTab = document.querySelector(`.tab[onclick="showTab('${tabId}')"]`);
+      clickedTab.classList.add('active');
+      
+      // Track tab change
+      if (window.GTM) {
+        window.GTM.trackEvent('resource_tab_change', {
+          tab_name: tabId
+        });
+      }
+    }
+  </script>
+</body>
+</html>
