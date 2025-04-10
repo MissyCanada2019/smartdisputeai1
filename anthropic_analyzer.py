@@ -79,7 +79,7 @@ def analyze_text_with_claude(text, province="ON"):
         
         try:
             response = anthropic.messages.create(
-                model="claude-3-5-sonnet-20241022",  # Using the latest stable Claude model
+                model="claude-3-7-sonnet-20250219",  # The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
                 system=system_prompt,
                 max_tokens=1500,
                 messages=[
@@ -153,7 +153,7 @@ def analyze_image_with_claude(image_path):
             image_data = image_file.read()
             
         response = anthropic.messages.create(
-            model="claude-3-5-sonnet-20241022",  # Using the latest stable Claude model
+            model="claude-3-7-sonnet-20250219",  # The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
             max_tokens=1500,
             messages=[{
                 "role": "user",
@@ -226,7 +226,7 @@ def generate_response_with_claude(analysis, text, user_info=None):
         """
         
         response = anthropic.messages.create(
-            model="claude-3-5-sonnet-20241022",  # Using the latest stable Claude model
+            model="claude-3-7-sonnet-20250219",  # The newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
             max_tokens=1500,
             messages=[
                 {"role": "user", "content": prompt}
