@@ -160,9 +160,10 @@
         
         {% if mock_mode and mock_mode.lower() == 'true' %}
         <div style="background-color: #333; border-left: 5px solid #ff0000; padding: 15px; margin-bottom: 20px; border-radius: var(--border-radius);">
-            <h3 style="margin-top: 0; color: #ff0000;">Development Mode</h3>
-            <p>AI service is running in mock mode. Responses are simulated for development purposes.</p>
-            <p style="margin-bottom: 0; font-size: 0.9em;">To use real AI analysis, please add valid API keys to your environment.</p>
+            <h3 style="margin-top: 0; color: #ff0000;">API Key Required</h3>
+            <p>AI service requires a valid Anthropic API key. Currently running in demonstration mode with realistic examples.</p>
+            <p style="margin-bottom: 0; font-size: 0.9em;">To use real AI analysis, please add a valid Anthropic API key.</p>
+            <button onclick="showApiKeyInfo()" style="background-color: #ff0000; color: white; border: none; padding: 5px 10px; margin-top: 10px; border-radius: 4px; cursor: pointer;">Get API Key</button>
         </div>
         {% endif %}
 
@@ -240,6 +241,23 @@
         </footer>
     </div>
 
+    <!-- API Key Info Modal -->
+    <div id="apiKeyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 1000;">
+        <div style="background-color: #222; max-width: 600px; margin: 100px auto; padding: 20px; border-radius: 8px; position: relative;">
+            <button onclick="closeApiKeyModal()" style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+            <h2 style="color: #ff0000; margin-top: 0;">How to Get an Anthropic API Key</h2>
+            <ol style="text-align: left; line-height: 1.6;">
+                <li>Visit <a href="https://console.anthropic.com/signin" target="_blank" style="color: #ff0000;">Anthropic's Console</a> and sign up for an account</li>
+                <li>Once registered, navigate to the API Keys section</li>
+                <li>Create a new API key and copy it</li>
+                <li>Set the key as the ANTHROPIC_API_KEY environment variable</li>
+            </ol>
+            <p>The API key should start with "sk-" and be kept secure.</p>
+            <p>With a valid API key, SmartDispute.ai will use real AI analysis instead of demonstration mode.</p>
+            <button onclick="closeApiKeyModal()" style="background-color: #ff0000; color: white; border: none; padding: 10px 20px; margin-top: 15px; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
     <script>
         function selectModel(element) {
             // Remove selected class from all options
@@ -253,6 +271,14 @@
             // Check the corresponding radio button
             const modelValue = element.getAttribute('data-model');
             document.querySelector(`input[value="${modelValue}"]`).checked = true;
+        }
+
+        function showApiKeyInfo() {
+            document.getElementById('apiKeyModal').style.display = 'block';
+        }
+
+        function closeApiKeyModal() {
+            document.getElementById('apiKeyModal').style.display = 'none';
         }
 
         document.getElementById('upload-form').addEventListener('submit', function() {
