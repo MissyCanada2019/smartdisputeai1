@@ -226,7 +226,7 @@ def generate_response_with_claude(analysis, text, user_info=None):
         """
         
         response = anthropic.messages.create(
-            model="claude-3-7-sonnet-20250219",  # the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+            model="claude-3-5-sonnet-20241022",  # Using the latest stable Claude model
             max_tokens=1500,
             messages=[
                 {"role": "user", "content": prompt}
