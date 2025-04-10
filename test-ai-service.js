@@ -1,165 +1,149 @@
 /**
- * AI Service Integration Test for SmartDispute.ai
+ * Test script for SmartDispute.ai unified AI service
  * 
- * This script tests the unified AI service with automated fallback
- * between Anthropic, OpenAI, and Puter services.
+ * This script tests the AI service functionality including fallback
+ * and retry capabilities.
  */
 
 import * as aiService from './server/services/aiService.js';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+// Sample test text
+const testText = `
+NOTICE OF EVICTION
+
+Date: April 1, 2025
+Property Address: 123 Main Street, Unit 4B
+Tenant Name: John Smith
+
+Dear Mr. Smith,
+
+This letter serves as a formal notice that you are being evicted from the above-referenced premises due to non-payment of rent. According to our records, you have failed to pay rent in the amount of $1,200 for the month of March 2025.
+
+As per the terms of your lease agreement and in accordance with the Residential Tenancies Act, you are hereby given 14 days' notice to vacate the premises. If you fail to vacate by April 15, 2025, we will commence legal proceedings for possession of the property and recovery of all unpaid rent, late fees, and legal costs.
+
+You may prevent this eviction by paying the full amount owed ($1,200) plus the applicable late fee ($50) within 7 days of receipt of this notice.
+
+If you have any questions regarding this notice, please contact our office at (555) 123-4567.
+
+Sincerely,
+Jane Doe
+Property Manager
+ABC Property Management
+`;
+
+// Function to run the tests
 async function runTests() {
-  console.log('===== SmartDispute.ai AI Service Test =====');
-  console.log('Testing started at:', new Date().toISOString());
-  console.log('==========================================');
+  console.log('=== TESTING SMARTDISPUTE.AI AI SERVICE ===');
   
-  // Step 1: Test service status
-  console.log('\n--- Testing AI Service Status ---');
+  // Check service status
+  console.log('\n1. Checking AI service status...');
   try {
-    const status = await aiService.getStatus();
-    console.log('AI Service Status:', JSON.stringify(status, null, 2));
+    const status = await aiService.checkAllServices();
+    console.log('Service status:');
+    console.log('- Anthropic (Primary):', status.anthropic.available ? 'Available' : 'Unavailable');
+    if (!status.anthropic.available) console.log('  Error:', status.anthropic.error);
     
-    if (status.systemStatus === 'operational') {
-      console.log('✅ System operational');
-    } else {
-      console.log('⚠️ System not operational. Check API keys and services.');
-    }
+    console.log('- OpenAI (Secondary):', status.openai.available ? 'Available' : 'Unavailable');
+    if (!status.openai.available) console.log('  Error:', status.openai.error);
+    
+    console.log('- Mock mode:', status.mockMode ? 'Enabled' : 'Disabled');
+    console.log('- Default provider:', status.defaultProvider);
   } catch (error) {
-    console.error('❌ Status check failed:', error.message);
-    return;
+    console.error('Error checking service status:', error.message);
   }
   
-  // Step 2: Test text analysis
-  console.log('\n--- Testing Text Analysis ---');
+  // Test text analysis
+  console.log('\n2. Testing text analysis...');
   try {
-    const sampleText = `
-    NOTICE OF EVICTION
-    
-    Date: March 15, 2025
-    
-    To: John Doe
-    Address: 123 Main Street, Apt 4B, Toronto, ON M4Y 2W7
-    
-    This letter serves as a formal notice that your tenancy at the above address will be terminated in 60 days, 
-    on May 15, 2025, due to the following reason(s):
-    
-    - Non-payment of rent for February and March 2025, totaling $2,400.00
-    - Violation of lease terms regarding noise complaints
-    
-    In accordance with the Ontario Residential Tenancies Act, 2006, you are required to vacate the premises 
-    by the termination date. Failure to do so may result in formal eviction proceedings.
-    
-    If you have questions about this notice or wish to discuss payment arrangements, please contact the property 
-    management office at (416) 555-1234 within 7 days of receiving this notice.
-    
-    Sincerely,
-    
-    Jane Smith
-    Property Manager
-    Maple Leaf Properties
-    `;
-    
-    console.log('Analyzing sample eviction notice text...');
-    const analysisResult = await aiService.analyzeText(sampleText, 'ON');
-    
-    console.log('Analysis completed using:', analysisResult.serviceName, '(', analysisResult.modelName, ')');
-    console.log('Analysis result:', JSON.stringify(analysisResult.result, null, 2));
-    
-    if (analysisResult.result && !analysisResult.error) {
-      console.log('✅ Text analysis successful');
-    } else {
-      console.log('⚠️ Text analysis produced errors or warnings');
+    console.log('Analyzing sample eviction notice...');
+    const analysis = await aiService.analyzeText(testText);
+    console.log('Analysis result:');
+    console.log('- Document type:', analysis.documentType);
+    console.log('- Issue type:', analysis.issueType);
+    console.log('- Relevant law:', analysis.relevantLaw);
+    console.log('- Urgency level:', analysis.urgencyLevel);
+    console.log('- Merit weight:', analysis.meritWeight);
+    console.log('- Merit rating:', aiService.getMeritRating(aiService.calculateMeritWeight(analysis)));
+    console.log('- Confidence score:', analysis.confidenceScore);
+    console.log('\nKey points:');
+    if (analysis.keyPoints) {
+      analysis.keyPoints.forEach((point, index) => {
+        console.log(`  ${index + 1}. ${point}`);
+      });
+    }
+    console.log('\nRecommended next steps:');
+    if (analysis.nextSteps) {
+      analysis.nextSteps.forEach((step, index) => {
+        console.log(`  ${index + 1}. ${step}`);
+      });
     }
   } catch (error) {
-    console.error('❌ Text analysis failed:', error.message);
-    return;
+    console.error('Error analyzing text:', error.message);
   }
   
-  // Step 3: Test response generation
-  console.log('\n--- Testing Response Generation ---');
+  // Test response generation
+  console.log('\n3. Testing response generation...');
   try {
-    // Mock analysis result if the previous test failed
-    const analysisResult = {
-      documentType: "Eviction Notice",
-      issueCategory: "Housing",
-      issueSubcategory: "Tenant Eviction",
-      parties: {
-        landlord: "Maple Leaf Properties (Jane Smith, Property Manager)",
-        tenant: "John Doe"
-      },
-      keyDates: [
-        "March 15, 2025 (Notice Date)",
-        "May 15, 2025 (Eviction Date)"
-      ],
-      legalReferences: ["Ontario Residential Tenancies Act, 2006"],
-      responseSuggestions: [
-        "Challenge the validity of the noise complaints",
-        "Request detailed records of the alleged noise violations",
-        "Propose a payment plan for outstanding rent",
-        "Request mediation through the Landlord and Tenant Board"
-      ],
-      riskAssessment: {
-        evictionRisk: "High",
-        timeframe: "60 days",
-        legalStanding: "Moderate"
-      },
-      nextSteps: [
-        "Contact property management within 7 days",
-        "Review lease agreement for noise policies",
-        "Gather evidence against noise complaints",
-        "Consider filing a T2 application with the Landlord and Tenant Board"
-      ],
-      confidenceScore: 0.85
-    };
-    
-    const sampleText = `NOTICE OF EVICTION: Tenant John Doe at 123 Main Street, Apt 4B, Toronto, ON must vacate in 60 days by May 15, 2025 due to rent non-payment ($2,400.00) and noise violations.`;
-    
+    console.log('Generating response to eviction notice...');
+    const analysis = await aiService.analyzeText(testText);
     const userInfo = {
-      name: "John Doe",
-      address: "123 Main Street, Apt 4B, Toronto, ON M4Y 2W7",
+      name: 'John Smith',
+      address: '123 Main Street, Unit 4B, Toronto, ON',
+      email: 'john.smith@example.com',
+      phone: '(555) 987-6543'
     };
     
-    console.log('Generating response based on analysis...');
-    const responseResult = await aiService.generateResponse(analysisResult, sampleText, userInfo, 'ON');
-    
-    console.log('Response generated using:', responseResult.serviceName, '(', responseResult.modelName, ')');
-    console.log('Response preview:', responseResult.result.substring(0, 500) + '...');
-    
-    if (responseResult.result && !responseResult.error) {
-      console.log('✅ Response generation successful');
-    } else {
-      console.log('⚠️ Response generation produced errors or warnings');
-    }
+    const responseHtml = await aiService.generateResponse(analysis, testText, userInfo);
+    console.log('Response generated successfully. Preview:');
+    console.log('-'.repeat(80));
+    console.log(responseHtml.substring(0, 500) + '...');
+    console.log('-'.repeat(80));
   } catch (error) {
-    console.error('❌ Response generation failed:', error.message);
-    return;
+    console.error('Error generating response:', error.message);
   }
   
-  // Step 4: Test simple chat interface
-  console.log('\n--- Testing Chat Interface ---');
+  // Test chat functionality
+  console.log('\n4. Testing chat functionality...');
   try {
-    console.log('Sending test message to chat interface...');
-    const chatResult = await aiService.chat('What are my rights as a tenant in Ontario if I receive an eviction notice?');
-    
-    console.log('Chat response from:', chatResult.serviceName, '(', chatResult.modelName, ')');
-    console.log('Chat response preview:', chatResult.result.substring(0, 500) + '...');
-    
-    if (chatResult.result && !chatResult.error) {
-      console.log('✅ Chat interface successful');
-    } else {
-      console.log('⚠️ Chat interface produced errors or warnings');
-    }
+    console.log('Sending a chat message...');
+    const chatResponse = await aiService.chat('What are my rights as a tenant facing eviction in Ontario?');
+    console.log('Chat response:');
+    console.log('-'.repeat(80));
+    console.log(chatResponse.substring(0, 500) + '...');
+    console.log('-'.repeat(80));
   } catch (error) {
-    console.error('❌ Chat interface failed:', error.message);
-    return;
+    console.error('Error in chat:', error.message);
   }
   
-  console.log('\n==========================================');
-  console.log('Testing completed at:', new Date().toISOString());
-  console.log('==========================================');
+  // Test merit weight calculation
+  console.log('\n5. Testing merit weight calculation...');
+  const testCases = [
+    { meritWeight: 0.1, confidenceScore: 0.8, urgencyLevel: 'Low' },
+    { meritWeight: undefined, confidenceScore: 0.7, urgencyLevel: 'Medium' },
+    { meritWeight: undefined, confidenceScore: 0.9, urgencyLevel: 'High' },
+    { meritWeight: undefined, confidenceScore: undefined, urgencyLevel: 'Critical' },
+    { meritWeight: undefined, confidenceScore: 0.3, urgencyLevel: undefined }
+  ];
+  
+  testCases.forEach((testCase, index) => {
+    const calculated = aiService.calculateMeritWeight(testCase);
+    const rating = aiService.getMeritRating(calculated);
+    const color = aiService.getMeritColor(calculated);
+    
+    console.log(`Test case ${index + 1}:`);
+    console.log(`- Input: meritWeight=${testCase.meritWeight}, confidenceScore=${testCase.confidenceScore}, urgencyLevel=${testCase.urgencyLevel}`);
+    console.log(`- Calculated merit weight: ${calculated}`);
+    console.log(`- Merit rating: ${rating}`);
+    console.log(`- Color code: ${color}`);
+  });
+  
+  console.log('\n=== TESTS COMPLETED ===');
 }
 
 // Run the tests
 runTests().catch(error => {
-  console.error('Test script error:', error);
+  console.error('Test failed with error:', error);
 });

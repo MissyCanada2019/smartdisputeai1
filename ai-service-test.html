@@ -5,642 +5,579 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SmartDispute.ai - AI Service Test</title>
   <style>
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --error: #ef4444;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-600: #4b5563;
-      --gray-800: #1f2937;
-      --radius: 0.5rem;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-    
     body {
-      background-color: var(--gray-100);
-      color: var(--gray-800);
-      line-height: 1.5;
-      padding: 1rem;
-    }
-    
-    .container {
-      max-width: 1100px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1000px;
       margin: 0 auto;
-      padding: 2rem;
-      background-color: white;
-      border-radius: var(--radius);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 20px;
+      background-color: #f8f9fa;
+      color: #333;
     }
-    
-    header {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--gray-200);
+    h1, h2 {
+      color: #2c3e50;
+      border-bottom: 2px solid #e74c3c;
+      padding-bottom: 10px;
     }
-    
-    h1 {
-      font-size: 1.8rem;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
+    .status-container {
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    p.subtitle {
-      color: var(--gray-600);
-      margin-bottom: 1rem;
-    }
-    
-    .section {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--gray-200);
-    }
-    
-    h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: var(--gray-800);
-    }
-    
-    .section-content {
+    .service-status {
       display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    
-    .card {
-      padding: 1.5rem;
-      border-radius: var(--radius);
-      background-color: var(--gray-100);
-      border: 1px solid var(--gray-300);
-    }
-    
-    .card-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      display: flex;
-      justify-content: space-between;
       align-items: center;
+      margin-bottom: 10px;
     }
-    
-    .card-title .badge {
-      font-size: 0.75rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 9999px;
-      font-weight: 500;
+    .status-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      margin-right: 10px;
     }
-    
-    .badge-pending {
-      background-color: var(--gray-300);
-      color: var(--gray-800);
+    .status-available {
+      background-color: #2ecc71;
     }
-    
-    .badge-success {
-      background-color: var(--success);
-      color: white;
+    .status-unavailable {
+      background-color: #e74c3c;
     }
-    
-    .badge-warning {
-      background-color: var(--warning);
-      color: white;
+    .text-area-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
     }
-    
-    .badge-error {
-      background-color: var(--error);
-      color: white;
+    textarea {
+      flex: 1;
+      min-height: 200px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: inherit;
+      resize: vertical;
+      background-color: #fff;
     }
-    
-    button, .button {
-      background-color: var(--primary);
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #3498db;
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: var(--radius);
+      padding: 10px 15px;
+      border-radius: 4px;
       cursor: pointer;
-      font-weight: 500;
-      transition: background-color 0.2s;
-    }
-    
-    button:hover, .button:hover {
-      background-color: var(--primary-dark);
-    }
-    
-    .button-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    
-    .status-indicator {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 500;
-    }
-    
-    .status-indicator.online::before {
-      content: "";
-      display: inline-block;
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 9999px;
-      background-color: var(--success);
-    }
-    
-    .status-indicator.offline::before {
-      content: "";
-      display: inline-block;
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 9999px;
-      background-color: var(--error);
-    }
-    
-    .status-indicator.unknown::before {
-      content: "";
-      display: inline-block;
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 9999px;
-      background-color: var(--gray-600);
-    }
-    
-    .service-status {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-top: 1rem;
-    }
-    
-    .service-card {
-      padding: 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--gray-300);
-    }
-    
-    .service-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    
-    .service-name {
       font-weight: 600;
+      transition: background-color 0.3s;
     }
-    
-    .service-details {
-      font-size: 0.875rem;
-      color: var(--gray-600);
+    button:hover {
+      background-color: #2980b9;
     }
-    
-    .service-error {
-      margin-top: 0.5rem;
-      font-size: 0.875rem;
-      color: var(--error);
+    button:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
     }
-    
-    textarea, input {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid var(--gray-300);
-      border-radius: var(--radius);
-      font-size: 1rem;
-      color: var(--gray-800);
+    .info-panel {
+      padding: 15px;
+      background-color: #d6eaf8;
+      border-left: 4px solid #3498db;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
     }
-    
-    textarea {
-      min-height: 120px;
-      resize: vertical;
+    .error-panel {
+      padding: 15px;
+      background-color: #fadbd8;
+      border-left: 4px solid #e74c3c;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+      display: none;
     }
-    
-    .form-group {
-      margin-bottom: 1rem;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-    
     .result-container {
-      margin-top: 1rem;
-      padding: 1rem;
-      border-radius: var(--radius);
-      background-color: white;
-      border: 1px solid var(--gray-300);
-      max-height: 300px;
-      overflow-y: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-top: 20px;
     }
-    
-    .json-result {
-      white-space: pre-wrap;
-      font-family: monospace;
-      font-size: 0.875rem;
-      line-height: 1.6;
-    }
-    
-    .html-preview {
-      border: 1px solid var(--gray-300);
-      border-radius: var(--radius);
-      padding: 1rem;
-      margin-top: 1rem;
-    }
-    
     .hidden {
       display: none;
     }
-    
-    /* Loading spinner */
     .spinner {
-      border: 3px solid var(--gray-300);
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      border-top: 3px solid var(--primary);
-      width: 20px;
-      height: 20px;
+      border-left-color: #3498db;
       animation: spin 1s linear infinite;
+      margin-right: 10px;
       display: inline-block;
-      vertical-align: middle;
-      margin-right: 0.5rem;
     }
-    
+    .loading-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      display: none;
+    }
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
-    
-    @media (max-width: 768px) {
-      .container {
-        padding: 1rem;
-      }
-      
-      .service-status {
-        grid-template-columns: 1fr;
-      }
+    .merit-container {
+      margin-bottom: 20px;
+    }
+    .merit-bar {
+      height: 20px;
+      background-color: #ecf0f1;
+      border-radius: 10px;
+      margin-top: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    .merit-value {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71);
+      transition: width 0.5s ease-in-out;
+    }
+    .merit-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #333;
+      font-weight: bold;
+      text-shadow: 0 0 2px white;
+    }
+    .key-points {
+      margin-top: 15px;
+    }
+    .key-points ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .key-points li {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .key-points li:before {
+      content: "•";
+      color: #3498db;
+      font-weight: bold;
+      display: inline-block;
+      width: 1em;
+      margin-left: -1em;
+    }
+    .response-html {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #fff;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>SmartDispute.ai - AI Service Test</h1>
-      <p class="subtitle">Test and debug the multi-provider AI service system with fallback capabilities</p>
-      <div>
-        <span class="status-indicator unknown" id="system-status">System status: Unknown</span>
-      </div>
-    </header>
-    
-    <section class="section">
-      <h2>Service Status</h2>
-      <div class="section-content">
-        <div class="card">
-          <div class="card-title">
-            <span>AI Service Status</span>
-            <span class="badge badge-pending" id="status-badge">Checking...</span>
-          </div>
-          <p>Check the status of all available AI service providers and their configurations.</p>
-          <div class="button-row">
-            <button id="check-status">Check Status</button>
-          </div>
-          <div class="service-status" id="service-status-cards">
-            <!-- Service status cards will be added here -->
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <section class="section">
-      <h2>Text Analysis</h2>
-      <div class="section-content">
-        <div class="card">
-          <div class="card-title">
-            <span>Analyze Text</span>
-            <span class="badge badge-pending" id="analysis-badge">Ready</span>
-          </div>
-          <div class="form-group">
-            <label for="text-input">Text to analyze:</label>
-            <textarea id="text-input" placeholder="Enter the text you want to analyze..."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="province-input">Province code:</label>
-            <input type="text" id="province-input" value="ON" placeholder="e.g., ON, BC, AB">
-          </div>
-          <div class="button-row">
-            <button id="analyze-text">Analyze Text</button>
-            <button id="load-sample">Load Sample Text</button>
-          </div>
-          <div class="result-container hidden" id="analysis-result-container">
-            <div class="service-details" id="analysis-service-info"></div>
-            <div class="json-result" id="analysis-result"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <section class="section">
-      <h2>Response Generation</h2>
-      <div class="section-content">
-        <div class="card">
-          <div class="card-title">
-            <span>Generate Response</span>
-            <span class="badge badge-pending" id="response-badge">Ready</span>
-          </div>
-          <p>Generate a response based on the analysis results above.</p>
-          <div class="form-group">
-            <label for="user-name">User Name:</label>
-            <input type="text" id="user-name" value="John Doe">
-          </div>
-          <div class="form-group">
-            <label for="user-address">User Address:</label>
-            <input type="text" id="user-address" value="123 Main Street, Toronto, ON">
-          </div>
-          <div class="button-row">
-            <button id="generate-response">Generate Response</button>
-          </div>
-          <div class="result-container hidden" id="response-result-container">
-            <div class="service-details" id="response-service-info"></div>
-            <div id="response-result"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <section class="section">
-      <h2>Chat Interface</h2>
-      <div class="section-content">
-        <div class="card">
-          <div class="card-title">
-            <span>Simple Chat</span>
-            <span class="badge badge-pending" id="chat-badge">Ready</span>
-          </div>
-          <div class="form-group">
-            <label for="message-input">Your message:</label>
-            <textarea id="message-input" placeholder="Enter your message..."></textarea>
-          </div>
-          <div class="button-row">
-            <button id="send-message">Send Message</button>
-            <button id="load-sample-message">Load Sample Message</button>
-          </div>
-          <div class="result-container hidden" id="chat-result-container">
-            <div class="service-details" id="chat-service-info"></div>
-            <div id="chat-result"></div>
-          </div>
-        </div>
-      </div>
-    </section>
+  <h1>SmartDispute.ai - AI Service Test</h1>
+  
+  <div class="info-panel">
+    <p>This test page allows you to verify the functionality of the SmartDispute.ai unified AI service. It supports multiple AI providers with automatic fallback.</p>
   </div>
+  
+  <div class="error-panel" id="error-panel">
+    <p id="error-message"></p>
+  </div>
+  
+  <h2>Service Status</h2>
+  <div class="status-container">
+    <div class="service-status">
+      <div class="status-dot" id="anthropic-status-dot"></div>
+      <span>Anthropic Claude: <span id="anthropic-status">Checking...</span></span>
+    </div>
+    <div class="service-status">
+      <div class="status-dot" id="openai-status-dot"></div>
+      <span>OpenAI GPT-4o: <span id="openai-status">Checking...</span></span>
+    </div>
+    <div class="service-status">
+      <div class="status-dot" id="mock-status-dot"></div>
+      <span>Mock Mode: <span id="mock-status">Checking...</span></span>
+    </div>
+    <div class="service-status">
+      <span>Default Provider: <span id="default-provider">Checking...</span></span>
+    </div>
+  </div>
+  
+  <h2>Document Analysis Test</h2>
+  <div class="text-area-container">
+    <textarea id="input-text" placeholder="Paste your document text here...">NOTICE OF EVICTION
 
-  <script>
-    // Base URL for API endpoints
-    const API_BASE_URL = '/api/ai';
-    
-    // UI Elements
-    const systemStatus = document.getElementById('system-status');
-    const statusBadge = document.getElementById('status-badge');
-    const serviceStatusCards = document.getElementById('service-status-cards');
-    const checkStatusButton = document.getElementById('check-status');
-    
-    const textInput = document.getElementById('text-input');
-    const provinceInput = document.getElementById('province-input');
-    const analyzeTextButton = document.getElementById('analyze-text');
-    const loadSampleButton = document.getElementById('load-sample');
-    const analysisBadge = document.getElementById('analysis-badge');
-    const analysisResultContainer = document.getElementById('analysis-result-container');
-    const analysisServiceInfo = document.getElementById('analysis-service-info');
-    const analysisResult = document.getElementById('analysis-result');
-    
-    const userName = document.getElementById('user-name');
-    const userAddress = document.getElementById('user-address');
-    const generateResponseButton = document.getElementById('generate-response');
-    const responseBadge = document.getElementById('response-badge');
-    const responseResultContainer = document.getElementById('response-result-container');
-    const responseServiceInfo = document.getElementById('response-service-info');
-    const responseResult = document.getElementById('response-result');
-    
-    const messageInput = document.getElementById('message-input');
-    const sendMessageButton = document.getElementById('send-message');
-    const loadSampleMessageButton = document.getElementById('load-sample-message');
-    const chatBadge = document.getElementById('chat-badge');
-    const chatResultContainer = document.getElementById('chat-result-container');
-    const chatServiceInfo = document.getElementById('chat-service-info');
-    const chatResult = document.getElementById('chat-result');
-    
-    // Sample data
-    const sampleText = `
-NOTICE OF EVICTION
+Date: April 1, 2025
+Property Address: 123 Main Street, Unit 4B
+Tenant Name: John Smith
 
-Date: March 15, 2025
+Dear Mr. Smith,
 
-To: John Doe
-Address: 123 Main Street, Apt 4B, Toronto, ON M4Y 2W7
+This letter serves as a formal notice that you are being evicted from the above-referenced premises due to non-payment of rent. According to our records, you have failed to pay rent in the amount of $1,200 for the month of March 2025.
 
-This letter serves as a formal notice that your tenancy at the above address will be terminated in 60 days, 
-on May 15, 2025, due to the following reason(s):
+As per the terms of your lease agreement and in accordance with the Residential Tenancies Act, you are hereby given 14 days' notice to vacate the premises. If you fail to vacate by April 15, 2025, we will commence legal proceedings for possession of the property and recovery of all unpaid rent, late fees, and legal costs.
 
-- Non-payment of rent for February and March 2025, totaling $2,400.00
-- Violation of lease terms regarding noise complaints
+You may prevent this eviction by paying the full amount owed ($1,200) plus the applicable late fee ($50) within 7 days of receipt of this notice.
 
-In accordance with the Ontario Residential Tenancies Act, 2006, you are required to vacate the premises 
-by the termination date. Failure to do so may result in formal eviction proceedings.
-
-If you have questions about this notice or wish to discuss payment arrangements, please contact the property 
-management office at (416) 555-1234 within 7 days of receiving this notice.
+If you have any questions regarding this notice, please contact our office at (555) 123-4567.
 
 Sincerely,
-
-Jane Smith
+Jane Doe
 Property Manager
-Maple Leaf Properties
-    `;
+ABC Property Management</textarea>
+    <div id="analysis-result" class="hidden">
+      <div class="merit-container">
+        <h3>Document Strength Rating</h3>
+        <p id="merit-description"></p>
+        <div class="merit-bar">
+          <div class="merit-value" id="merit-value"></div>
+          <span class="merit-label" id="merit-label"></span>
+        </div>
+      </div>
+      
+      <div>
+        <h3>Document Analysis</h3>
+        <p><strong>Document Type:</strong> <span id="document-type"></span></p>
+        <p><strong>Issue Type:</strong> <span id="issue-type"></span></p>
+        <p><strong>Relevant Law:</strong> <span id="relevant-law"></span></p>
+        <p><strong>Urgency Level:</strong> <span id="urgency-level"></span></p>
+        <p><strong>Confidence Score:</strong> <span id="confidence-score"></span></p>
+      </div>
+      
+      <div class="key-points">
+        <h3>Key Points</h3>
+        <ul id="key-points-list"></ul>
+      </div>
+      
+      <div>
+        <h3>Recommended Next Steps</h3>
+        <ul id="next-steps-list"></ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="buttons">
+    <button id="analyze-btn">Analyze Document</button>
+    <button id="generate-response-btn" disabled>Generate Response</button>
+    <button id="chat-btn">Ask AI Assistant</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+  
+  <div class="loading-bar" id="loading-bar">
+    <div class="spinner"></div>
+    <span>Processing...</span>
+  </div>
+  
+  <div id="response-container" class="result-container hidden">
+    <h2>Generated Response</h2>
+    <div id="response-html" class="response-html"></div>
+  </div>
+  
+  <div id="chat-container" class="result-container hidden">
+    <h2>AI Assistant Chat</h2>
+    <div>
+      <textarea id="chat-input" placeholder="Ask a question about tenant rights, eviction notices, or legal advice..."></textarea>
+      <button id="send-chat-btn">Send</button>
+    </div>
+    <div id="chat-result" class="response-html"></div>
+  </div>
+  
+  <script>
+    // Elements
+    const inputText = document.getElementById('input-text');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const generateResponseBtn = document.getElementById('generate-response-btn');
+    const chatBtn = document.getElementById('chat-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const loadingBar = document.getElementById('loading-bar');
+    const analysisResult = document.getElementById('analysis-result');
+    const responseContainer = document.getElementById('response-container');
+    const responseHtml = document.getElementById('response-html');
+    const chatContainer = document.getElementById('chat-container');
+    const chatInput = document.getElementById('chat-input');
+    const sendChatBtn = document.getElementById('send-chat-btn');
+    const chatResult = document.getElementById('chat-result');
+    const errorPanel = document.getElementById('error-panel');
+    const errorMessage = document.getElementById('error-message');
     
-    const sampleMessage = "What are my rights as a tenant in Ontario if I receive an eviction notice?";
+    // Status indicators
+    const anthropicStatusDot = document.getElementById('anthropic-status-dot');
+    const openaiStatusDot = document.getElementById('openai-status-dot');
+    const mockStatusDot = document.getElementById('mock-status-dot');
+    const anthropicStatus = document.getElementById('anthropic-status');
+    const openaiStatus = document.getElementById('openai-status');
+    const mockStatus = document.getElementById('mock-status');
+    const defaultProvider = document.getElementById('default-provider');
     
-    // Global analysis result for response generation
+    // Analysis result elements
+    const documentType = document.getElementById('document-type');
+    const issueType = document.getElementById('issue-type');
+    const relevantLaw = document.getElementById('relevant-law');
+    const urgencyLevel = document.getElementById('urgency-level');
+    const confidenceScore = document.getElementById('confidence-score');
+    const keyPointsList = document.getElementById('key-points-list');
+    const nextStepsList = document.getElementById('next-steps-list');
+    const meritDescription = document.getElementById('merit-description');
+    const meritValue = document.getElementById('merit-value');
+    const meritLabel = document.getElementById('merit-label');
+    
+    // Current analysis result
     let currentAnalysis = null;
     
-    // Helper functions
-    function updateStatus(element, status, message) {
-      element.className = `badge badge-${status}`;
-      element.textContent = message || status;
-    }
+    // Check service status on page load
+    window.addEventListener('DOMContentLoaded', checkServiceStatus);
     
-    function showSpinner(element) {
-      element.innerHTML = '<span class="spinner"></span> Processing...';
-      element.disabled = true;
-    }
+    // Event listeners
+    analyzeBtn.addEventListener('click', analyzeDocument);
+    generateResponseBtn.addEventListener('click', generateResponse);
+    chatBtn.addEventListener('click', toggleChat);
+    resetBtn.addEventListener('click', resetAll);
+    sendChatBtn.addEventListener('click', sendChatMessage);
     
-    function hideSpinner(element, text) {
-      element.innerHTML = text || element.getAttribute('data-original-text') || 'Submit';
-      element.disabled = false;
-    }
-    
-    // Save original button texts
-    document.querySelectorAll('button').forEach(button => {
-      button.setAttribute('data-original-text', button.textContent);
-    });
-    
-    // API calls
-    async function checkStatus() {
+    async function checkServiceStatus() {
       try {
-        updateStatus(statusBadge, 'pending', 'Checking...');
-        showSpinner(checkStatusButton);
-        
-        const response = await fetch(`${API_BASE_URL}/status`);
+        const response = await fetch('/api/ai/status');
         const data = await response.json();
         
-        // Update system status
-        if (data.systemStatus === 'operational') {
-          systemStatus.className = 'status-indicator online';
-          systemStatus.textContent = 'System status: Online';
-          updateStatus(statusBadge, 'success', 'Online');
-        } else {
-          systemStatus.className = 'status-indicator offline';
-          systemStatus.textContent = 'System status: Offline';
-          updateStatus(statusBadge, 'error', 'Offline');
-        }
+        updateStatusIndicator(anthropicStatusDot, anthropicStatus, data.anthropic.available);
+        updateStatusIndicator(openaiStatusDot, openaiStatus, data.openai.available);
+        updateStatusIndicator(mockStatusDot, mockStatus, data.mockMode);
         
-        // Generate service cards
-        serviceStatusCards.innerHTML = '';
-        for (const [serviceName, serviceData] of Object.entries(data.services)) {
-          const card = document.createElement('div');
-          card.className = 'service-card';
-          
-          const header = document.createElement('div');
-          header.className = 'service-header';
-          
-          const name = document.createElement('span');
-          name.className = 'service-name';
-          name.textContent = serviceName.charAt(0).toUpperCase() + serviceName.slice(1);
-          
-          const status = document.createElement('span');
-          status.className = `status-indicator ${serviceData.available ? 'online' : 'offline'}`;
-          status.textContent = serviceData.available ? 'Online' : 'Offline';
-          
-          header.appendChild(name);
-          header.appendChild(status);
-          
-          const details = document.createElement('div');
-          details.className = 'service-details';
-          details.textContent = `Model: ${serviceData.model}`;
-          
-          card.appendChild(header);
-          card.appendChild(details);
-          
-          if (serviceData.error) {
-            const error = document.createElement('div');
-            error.className = 'service-error';
-            error.textContent = `Error: ${serviceData.error}`;
-            card.appendChild(error);
-          }
-          
-          serviceStatusCards.appendChild(card);
-        }
+        defaultProvider.textContent = data.defaultProvider || 'None';
         
-        return data;
+        if (!data.anthropic.available && !data.openai.available && !data.mockMode) {
+          showError('No AI services are available. Please configure API keys or enable mock mode.');
+        }
       } catch (error) {
-        console.error('Status check failed:', error);
-        updateStatus(statusBadge, 'error', 'Check Failed');
-        systemStatus.className = 'status-indicator unknown';
-        systemStatus.textContent = 'System status: Unknown';
-      } finally {
-        hideSpinner(checkStatusButton);
+        console.error('Error checking service status:', error);
+        showError('Could not connect to the AI service. Please check your internet connection or server status.');
       }
     }
     
-    async function analyzeText(text, province) {
-      try {
-        updateStatus(analysisBadge, 'pending', 'Analyzing...');
-        showSpinner(analyzeTextButton);
-        
-        const response = await fetch(`${API_BASE_URL}/analyze`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ text, province }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.error) {
-          updateStatus(analysisBadge, 'error', 'Error');
-          analysisResult.textContent = data.error;
-        } else {
-          updateStatus(analysisBadge, 'success', 'Completed');
-          analysisResult.textContent = JSON.stringify(data.analysis, null, 2);
-          analysisServiceInfo.textContent = `Analyzed using: ${data.serviceName} (${data.useModelName})`;
-          currentAnalysis = data.analysis;
-        }
-        
-        analysisResultContainer.classList.remove('hidden');
-        return data;
-      } catch (error) {
-        console.error('Analysis failed:', error);
-        updateStatus(analysisBadge, 'error', 'Failed');
-        analysisResult.textContent = `Error: ${error.message}`;
-        analysisResultContainer.classList.remove('hidden');
-      } finally {
-        hideSpinner(analyzeTextButton);
+    function updateStatusIndicator(dot, text, isAvailable) {
+      if (isAvailable) {
+        dot.className = 'status-dot status-available';
+        text.textContent = 'Available';
+      } else {
+        dot.className = 'status-dot status-unavailable';
+        text.textContent = 'Unavailable';
       }
     }
     
-    async function generateResponse(analysisResult, originalText, userInfo) {
+    async function analyzeDocument() {
+      if (!inputText.value.trim()) {
+        showError('Please enter document text to analyze.');
+        return;
+      }
+      
+      showLoading(true);
+      hideError();
+      
       try {
-        updateStatus(responseBadge, 'pending', 'Generating...');
-        showSpinner(generateResponseButton);
-        
-        const response = await fetch(`${API_BASE_URL}/generate-response`, {
+        const response = await fetch('/api/ai/analyze', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            analysisResult,
-            originalText,
-            userInfo,
-            province: provinceInput.value
+            text: inputText.value,
+            province: 'ON' // Default to Ontario
           }),
         });
         
-        const data = await response.json();
-        
-        if (data.error) {
-          updateStatus(responseBadge, 'error', 'Error');
-          responseResult.textContent = data.error;
-        } else {
-          updateStatus(responseBadge, 'success', 'Completed');
-          responseResult.innerHTML = data.response;
-          responseServiceInfo.textContent = `Generated using: ${data.serviceName} (${data.useModelName})`;
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
         
-        responseResultContainer.classList.remove('hidden');
-        return data;
+        const result = await response.json();
+        currentAnalysis = result;
+        displayAnalysisResult(result);
+        generateResponseBtn.disabled = false;
       } catch (error) {
-        console.error('Response generation failed:', error);
-        updateStatus(responseBadge, 'error', 'Failed');
-        responseResult.textContent = `Error: ${error.message}`;
-        responseResultContainer.classList.remove('hidden');
+        console.error('Error analyzing document:', error);
+        showError(`Failed to analyze document: ${error.message}`);
       } finally {
-        hideSpinner(generateResponseButton);
+        showLoading(false);
       }
     }
     
-    async function sendChatMessage(message) {
+    function displayAnalysisResult(result) {
+      // Set text values
+      documentType.textContent = result.documentType || 'Unknown';
+      issueType.textContent = result.issueType || 'Unknown';
+      relevantLaw.textContent = result.relevantLaw || 'Not specified';
+      urgencyLevel.textContent = result.urgencyLevel || 'Medium';
+      confidenceScore.textContent = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) + '%' : 'N/A';
+      
+      // Calculate merit weight
+      const meritWeight = result.meritWeight !== undefined ? result.meritWeight : calculateMeritWeight(result);
+      
+      // Update merit bar
+      updateMeritBar(meritWeight);
+      
+      // Populate key points
+      keyPointsList.innerHTML = '';
+      if (result.keyPoints && result.keyPoints.length > 0) {
+        result.keyPoints.forEach(point => {
+          const li = document.createElement('li');
+          li.textContent = point;
+          keyPointsList.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.textContent = 'No key points identified.';
+        keyPointsList.appendChild(li);
+      }
+      
+      // Populate next steps
+      nextStepsList.innerHTML = '';
+      if (result.nextSteps && result.nextSteps.length > 0) {
+        result.nextSteps.forEach(step => {
+          const li = document.createElement('li');
+          li.textContent = step;
+          nextStepsList.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.textContent = 'No specific next steps recommended.';
+        nextStepsList.appendChild(li);
+      }
+      
+      // Show the analysis result
+      analysisResult.classList.remove('hidden');
+      responseContainer.classList.add('hidden');
+      chatContainer.classList.add('hidden');
+    }
+    
+    function calculateMeritWeight(analysis) {
+      if (analysis.meritWeight !== undefined) {
+        return analysis.meritWeight;
+      }
+      
+      // Fallback calculation
+      let weight = 0.5; // Default moderate
+      
+      if (analysis.confidenceScore !== undefined) {
+        weight = Math.min(0.95, Math.max(0.05, analysis.confidenceScore));
+      } else if (analysis.urgencyLevel) {
+        // Adjust based on urgency
+        if (analysis.urgencyLevel.toLowerCase() === 'critical') weight = 0.85;
+        else if (analysis.urgencyLevel.toLowerCase() === 'high') weight = 0.7;
+        else if (analysis.urgencyLevel.toLowerCase() === 'medium') weight = 0.5;
+        else if (analysis.urgencyLevel.toLowerCase() === 'low') weight = 0.3;
+      }
+      
+      return weight;
+    }
+    
+    function updateMeritBar(weight) {
+      const percentage = Math.min(100, Math.max(0, weight * 100));
+      meritValue.style.width = `${percentage}%`;
+      
+      // Get the merit rating based on weight
+      let rating = 'Moderate';
+      let color = '#f39c12';
+      
+      if (weight >= 0.8) {
+        rating = 'Very Strong';
+        color = '#27ae60';
+      } else if (weight >= 0.6) {
+        rating = 'Strong';
+        color = '#2ecc71';
+      } else if (weight >= 0.4) {
+        rating = 'Moderate';
+        color = '#f39c12';
+      } else if (weight >= 0.2) {
+        rating = 'Weak';
+        color = '#e67e22';
+      } else {
+        rating = 'Very Weak';
+        color = '#e74c3c';
+      }
+      
+      meritLabel.textContent = `${Math.round(percentage)}% - ${rating}`;
+      meritDescription.textContent = `This document has a ${rating.toLowerCase()} strength rating, which indicates your position in a potential dispute.`;
+      meritValue.style.background = color;
+    }
+    
+    async function generateResponse() {
+      if (!currentAnalysis) {
+        showError('Please analyze a document first.');
+        return;
+      }
+      
+      showLoading(true);
+      hideError();
+      
       try {
-        updateStatus(chatBadge, 'pending', 'Sending...');
-        showSpinner(sendMessageButton);
+        const response = await fetch('/api/ai/generate-response', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            analysis: currentAnalysis,
+            originalText: inputText.value,
+            userInfo: {
+              name: 'John Doe',
+              address: '123 Main Street, Toronto, ON',
+              email: 'john.doe@example.com',
+              phone: '(555) 123-4567'
+            }
+          }),
+        });
         
-        const response = await fetch(`${API_BASE_URL}/chat`, {
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+        const result = await response.text();
+        responseHtml.innerHTML = result;
+        responseContainer.classList.remove('hidden');
+        analysisResult.classList.remove('hidden');
+        chatContainer.classList.add('hidden');
+      } catch (error) {
+        console.error('Error generating response:', error);
+        showError(`Failed to generate response: ${error.message}`);
+      } finally {
+        showLoading(false);
+      }
+    }
+    
+    function toggleChat() {
+      chatContainer.classList.toggle('hidden');
+      if (!chatContainer.classList.contains('hidden')) {
+        chatInput.focus();
+        responseContainer.classList.add('hidden');
+      }
+    }
+    
+    async function sendChatMessage() {
+      const message = chatInput.value.trim();
+      if (!message) {
+        return;
+      }
+      
+      showLoading(true);
+      hideError();
+      
+      try {
+        const response = await fetch('/api/ai/chat', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -648,72 +585,48 @@ Maple Leaf Properties
           body: JSON.stringify({ message }),
         });
         
-        const data = await response.json();
-        
-        if (data.error) {
-          updateStatus(chatBadge, 'error', 'Error');
-          chatResult.textContent = data.error;
-        } else {
-          updateStatus(chatBadge, 'success', 'Completed');
-          chatResult.innerHTML = data.response.replace(/\n/g, '<br>');
-          chatServiceInfo.textContent = `Response from: ${data.serviceName} (${data.useModelName})`;
+        if (!response.ok) {
+          throw new Error(`Server responded with status: ${response.status}`);
         }
         
-        chatResultContainer.classList.remove('hidden');
-        return data;
+        const result = await response.text();
+        chatResult.innerHTML = `<p><strong>You:</strong> ${message}</p><p><strong>AI:</strong> ${result}</p>`;
+        chatInput.value = '';
       } catch (error) {
-        console.error('Chat failed:', error);
-        updateStatus(chatBadge, 'error', 'Failed');
-        chatResult.textContent = `Error: ${error.message}`;
-        chatResultContainer.classList.remove('hidden');
+        console.error('Error sending chat message:', error);
+        showError(`Failed to send message: ${error.message}`);
       } finally {
-        hideSpinner(sendMessageButton);
+        showLoading(false);
       }
     }
     
-    // Event Listeners
-    checkStatusButton.addEventListener('click', checkStatus);
+    function resetAll() {
+      currentAnalysis = null;
+      inputText.value = '';
+      analysisResult.classList.add('hidden');
+      responseContainer.classList.add('hidden');
+      chatContainer.classList.add('hidden');
+      generateResponseBtn.disabled = true;
+      hideError();
+    }
     
-    loadSampleButton.addEventListener('click', () => {
-      textInput.value = sampleText;
-    });
+    function showLoading(isLoading) {
+      loadingBar.style.display = isLoading ? 'flex' : 'none';
+      analyzeBtn.disabled = isLoading;
+      generateResponseBtn.disabled = isLoading || !currentAnalysis;
+      chatBtn.disabled = isLoading;
+      resetBtn.disabled = isLoading;
+      sendChatBtn.disabled = isLoading;
+    }
     
-    analyzeTextButton.addEventListener('click', () => {
-      if (textInput.value) {
-        analyzeText(textInput.value, provinceInput.value);
-      } else {
-        alert('Please enter text to analyze');
-      }
-    });
+    function showError(message) {
+      errorPanel.style.display = 'block';
+      errorMessage.textContent = message;
+    }
     
-    generateResponseButton.addEventListener('click', () => {
-      if (!currentAnalysis) {
-        alert('Please analyze text first');
-        return;
-      }
-      
-      const userInfo = {
-        name: userName.value,
-        address: userAddress.value,
-      };
-      
-      generateResponse(currentAnalysis, textInput.value, userInfo);
-    });
-    
-    loadSampleMessageButton.addEventListener('click', () => {
-      messageInput.value = sampleMessage;
-    });
-    
-    sendMessageButton.addEventListener('click', () => {
-      if (messageInput.value) {
-        sendChatMessage(messageInput.value);
-      } else {
-        alert('Please enter a message');
-      }
-    });
-    
-    // Initial status check
-    checkStatus();
+    function hideError() {
+      errorPanel.style.display = 'none';
+    }
   </script>
 </body>
 </html>

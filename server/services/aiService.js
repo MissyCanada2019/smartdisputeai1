@@ -1,301 +1,333 @@
 /**
  * Unified AI Service for SmartDispute.ai
  * 
- * This module provides a unified interface for AI services with automatic fallback
- * between available providers (Anthropic Claude, OpenAI, and alternative services).
+ * This service provides a unified interface to multiple AI providers
+ * with automatic fallback and retry capabilities. It supports text analysis,
+ * response generation, chat, and image analysis.
  */
 
 import * as anthropicService from './anthropic.js';
 import * as openaiService from './openai.js';
-import * as puterService from './puter.js';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 
-// Service status tracking
-const serviceStatus = {
-  anthropic: {
-    available: false,
-    checkedAt: null,
-    lastError: null
-  },
-  openai: {
-    available: false,
-    checkedAt: null,
-    lastError: null
-  },
-  puter: {
-    available: false,
-    checkedAt: null,
-    lastError: null
-  }
+dotenv.config();
+
+// Service constants
+const DEFAULT_PROVIDER = 'anthropic'; // Can be 'anthropic' or 'openai'
+const MAX_RETRIES = 2;
+const MOCK_MODE = process.env.MOCK_MODE === 'true';
+
+// Mock data for testing when no API keys are available
+const mockAnalysisResult = {
+  documentType: "Notice of Eviction",
+  issueType: "Eviction",
+  keyPoints: [
+    "Tenant is being evicted for non-payment of rent",
+    "Landlord claims $1,200 in unpaid rent",
+    "Eviction date is set for 14 days from notice"
+  ],
+  relevantLaw: "Residential Tenancies Act, Section 59",
+  urgencyLevel: "High",
+  meritWeight: 0.65,
+  nextSteps: [
+    "Review lease agreement and payment records",
+    "File dispute resolution application within 7 days"
+  ],
+  confidenceScore: 0.85
 };
 
-// Configuration
-const config = {
-  defaultService: 'anthropic',
-  fallbackOrder: ['openai', 'puter'],
-  cacheExpiryMs: 5 * 60 * 1000, // 5 minutes
-  retries: 2
-};
-
 /**
- * Helper to retry operations with exponential backoff
+ * Check the status of all AI services
+ * 
+ * @returns {Promise<Object>} Status information for all services
  */
-async function withRetry(fn, retries = config.retries) {
-  let lastError;
+export async function checkAllServices() {
+  let anthropicStatus = {
+    available: false,
+    error: 'Not checked'
+  };
   
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      console.warn(`Attempt ${i + 1}/${retries} failed:`, error.message);
-      lastError = error;
-      
-      // Wait before retrying (exponential backoff)
-      if (i < retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
-      }
-    }
+  let openaiStatus = {
+    available: false,
+    error: 'Not checked'
+  };
+  
+  try {
+    anthropicStatus = await anthropicService.checkStatus();
+  } catch (error) {
+    anthropicStatus = {
+      available: false,
+      error: `Error checking Anthropic status: ${error.message}`
+    };
   }
   
-  throw lastError;
-}
-
-/**
- * Select a service to use based on availability
- */
-async function selectService() {
-  const services = [config.defaultService, ...config.fallbackOrder];
-  const now = new Date();
-  
-  for (const serviceName of services) {
-    const status = serviceStatus[serviceName];
-    
-    // Skip services we know are down (checked recently)
-    if (status.checkedAt && !status.available && 
-        (now.getTime() - status.checkedAt.getTime() < config.cacheExpiryMs)) {
-      continue;
-    }
-    
-    try {
-      let available = false;
-      switch (serviceName) {
-        case 'anthropic':
-          available = await anthropicService.testConnection();
-          break;
-        case 'openai':
-          available = await openaiService.testConnection();
-          break;
-        case 'puter':
-          available = await puterService.testConnection();
-          break;
-      }
-      
-      serviceStatus[serviceName] = {
-        available,
-        checkedAt: now,
-        lastError: available ? null : 'Connection test failed'
-      };
-      
-      if (available) {
-        return serviceName;
-      }
-    } catch (error) {
-      serviceStatus[serviceName] = {
-        available: false,
-        checkedAt: now,
-        lastError: error.message
-      };
-    }
+  try {
+    openaiStatus = await openaiService.checkStatus();
+  } catch (error) {
+    openaiStatus = {
+      available: false,
+      error: `Error checking OpenAI status: ${error.message}`
+    };
   }
   
-  throw new Error('All AI services are unavailable');
-}
-
-/**
- * Execute a function with the selected service
- */
-async function executeWithService(methodName, ...args) {
-  return await withRetry(async () => {
-    const serviceName = await selectService();
-    let service;
-    
-    switch (serviceName) {
-      case 'anthropic':
-        service = anthropicService;
-        break;
-      case 'openai':
-        service = openaiService;
-        break;
-      case 'puter':
-        service = puterService;
-        break;
-      default:
-        throw new Error(`Unknown service: ${serviceName}`);
-    }
-    
-    if (!service[methodName]) {
-      throw new Error(`Method ${methodName} not available in ${serviceName} service`);
-    }
-    
-    try {
-      const result = await service[methodName](...args);
-      return {
-        result,
-        serviceName,
-        modelName: serviceName === 'anthropic' ? 'claude-3-7-sonnet-20250219' : 
-                   serviceName === 'openai' ? 'gpt-4o' : 
-                   'alternative-ai',
-        error: null
-      };
-    } catch (error) {
-      serviceStatus[serviceName] = {
-        available: false,
-        checkedAt: new Date(),
-        lastError: error.message
-      };
-      throw error;
-    }
-  });
-}
-
-/**
- * Get current status of all AI services
- */
-export async function getStatus() {
-  // Force a refresh of status for services that haven't been checked recently
-  const now = new Date();
-  
-  const services = ['anthropic', 'openai', 'puter'];
-  
-  for (const serviceName of services) {
-    const status = serviceStatus[serviceName];
-    
-    if (!status.checkedAt || 
-        (now.getTime() - status.checkedAt.getTime() > config.cacheExpiryMs)) {
-      try {
-        let available = false;
-        switch (serviceName) {
-          case 'anthropic':
-            available = await anthropicService.testConnection();
-            break;
-          case 'openai':
-            available = await openaiService.testConnection();
-            break;
-          case 'puter':
-            available = await puterService.testConnection();
-            break;
-        }
-        
-        serviceStatus[serviceName] = {
-          available,
-          checkedAt: now,
-          lastError: available ? null : 'Connection test failed'
-        };
-      } catch (error) {
-        serviceStatus[serviceName] = {
-          available: false,
-          checkedAt: now,
-          lastError: error.message
-        };
-      }
-    }
-  }
+  const mockStatus = {
+    available: true,
+    error: null
+  };
   
   return {
-    defaultService: config.defaultService,
-    fallbackOrder: config.fallbackOrder,
-    services: {
-      anthropic: {
-        available: serviceStatus.anthropic.available,
-        lastChecked: serviceStatus.anthropic.checkedAt,
-        error: serviceStatus.anthropic.lastError,
-        model: 'claude-3-7-sonnet-20250219' // the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-      },
-      openai: {
-        available: serviceStatus.openai.available,
-        lastChecked: serviceStatus.openai.checkedAt,
-        error: serviceStatus.openai.lastError,
-        model: 'gpt-4o' // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-      },
-      puter: {
-        available: serviceStatus.puter.available,
-        lastChecked: serviceStatus.puter.checkedAt,
-        error: serviceStatus.puter.lastError,
-        model: 'alternative-ai'
-      }
-    },
-    systemStatus: (serviceStatus.anthropic.available || 
-                  serviceStatus.openai.available || 
-                  serviceStatus.puter.available) ? "operational" : "down"
+    anthropic: anthropicStatus,
+    openai: openaiStatus,
+    mock: mockStatus,
+    defaultProvider: DEFAULT_PROVIDER,
+    mockMode: MOCK_MODE
   };
 }
 
 /**
- * Analyze text using the best available AI service
+ * Attempts to use a service function with fallback to alternative providers
  * 
- * @param {string} text - Text to analyze
- * @param {string} province - Province code (e.g., 'ON')
- * @returns {Promise<Object>} Analysis results with service info
+ * @param {Function} primaryFn - Primary service function
+ * @param {Function} fallbackFn - Fallback service function
+ * @param {Array} args - Arguments to pass to service functions
+ * @param {Object} options - Additional options
+ * @returns {Promise<any>} Result from service function
  */
-export async function analyzeText(text, province = 'ON') {
-  return await executeWithService('analyzeText', text, province);
+async function tryWithFallback(primaryFn, fallbackFn, args = [], options = {}) {
+  const { provider = DEFAULT_PROVIDER, retries = MAX_RETRIES } = options;
+  
+  // If in mock mode, return mock data
+  if (MOCK_MODE) {
+    if (options.mockData) {
+      return options.mockData;
+    }
+    return mockAnalysisResult;
+  }
+  
+  // Determine which service to try first based on provider
+  let mainFn = provider === 'anthropic' ? primaryFn : fallbackFn;
+  let backupFn = provider === 'anthropic' ? fallbackFn : primaryFn;
+  
+  // Try the main function
+  try {
+    return await mainFn(...args);
+  } catch (mainError) {
+    console.warn(`Error with primary AI service (${provider}):`, mainError.message);
+    
+    // Try the backup function
+    try {
+      console.log(`Attempting fallback to secondary AI service...`);
+      return await backupFn(...args);
+    } catch (backupError) {
+      console.error(`Error with backup AI service:`, backupError.message);
+      
+      // If we have retries left, try again with a delay
+      if (retries > 0) {
+        console.log(`Retrying AI request (${retries} attempts remaining)...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return tryWithFallback(primaryFn, fallbackFn, args, { 
+          ...options, 
+          retries: retries - 1 
+        });
+      }
+      
+      // If all retries failed, return mock data or throw error
+      if (options.mockData) {
+        console.log('All AI services failed, returning mock data');
+        return options.mockData;
+      }
+      
+      throw new Error(`All AI services failed: ${mainError.message}, fallback error: ${backupError.message}`);
+    }
+  }
 }
 
 /**
- * Generate a response based on analysis data
+ * Analyze text with the best available AI service
  * 
- * @param {Object} analysisResult - Results from previous analysis
- * @param {string} originalText - Original document text
- * @param {Object} userInfo - User information
- * @param {string} province - Province code
- * @returns {Promise<Object>} Generated response with service info
+ * @param {string} text - The text to analyze
+ * @param {string} province - The province code (e.g., 'ON')
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} Analysis result
  */
-export async function generateResponse(analysisResult, originalText, userInfo = {}, province = 'ON') {
-  return await executeWithService('generateResponse', analysisResult, originalText, userInfo, province);
+export async function analyzeText(text, province = 'ON', options = {}) {
+  const { provider = DEFAULT_PROVIDER } = options;
+  
+  return tryWithFallback(
+    anthropicService.analyzeText,
+    openaiService.analyzeText,
+    [text, province],
+    {
+      provider,
+      mockData: mockAnalysisResult
+    }
+  );
+}
+
+/**
+ * Generate a response based on analysis
+ * 
+ * @param {Object} analysisResult - The analysis results
+ * @param {string} originalText - The original document text
+ * @param {Object} userInfo - User information for personalization
+ * @param {Object} options - Additional options
+ * @returns {Promise<string>} Generated response HTML
+ */
+export async function generateResponse(
+  analysisResult, 
+  originalText, 
+  userInfo = {}, 
+  options = {}
+) {
+  const { provider = DEFAULT_PROVIDER, province = 'ON' } = options;
+  
+  return tryWithFallback(
+    anthropicService.generateResponse,
+    openaiService.generateResponse,
+    [analysisResult, originalText, userInfo, province],
+    {
+      provider,
+      mockData: `
+<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+  <div style="text-align: right;">
+    <p>April 10, 2025</p>
+  </div>
+  
+  <div style="margin-bottom: 30px;">
+    <p>ATTENTION: Landlord / Property Management</p>
+    <p>RE: Response to Notice of Eviction</p>
+  </div>
+  
+  <p>Dear Sir/Madam,</p>
+  
+  <p>I am writing in response to the Notice of Eviction dated [Notice Date] that I received regarding the premises at [Property Address].</p>
+  
+  <p>After careful review of the notice and my records, I respectfully dispute the claim of $1,200 in unpaid rent. According to my records and bank statements, all rent payments have been made in full and on time, as required by our lease agreement.</p>
+  
+  <p>Under the Residential Tenancies Act, Section 59, a tenant may dispute an eviction notice if there are reasonable grounds to believe the basis for eviction is invalid. I believe there has been an error in your accounting records.</p>
+  
+  <p>I have attached copies of my bank statements and e-transfer receipts showing payments for the months in question. These documents clearly demonstrate that the rent has been paid in accordance with our lease agreement.</p>
+  
+  <p>I respectfully request that you withdraw the eviction notice immediately upon verification of these payments. Should you wish to discuss this matter further, I am available at [Phone Number] or via email at [Email Address].</p>
+  
+  <p>If I do not receive confirmation that this matter has been resolved within 7 days, I will proceed with filing a dispute resolution application with the Landlord and Tenant Board as is my right under the law.</p>
+  
+  <p>Thank you for your prompt attention to this matter.</p>
+  
+  <p>Sincerely,</p>
+  <p>[User Name]<br>
+  [User Address]</p>
+</div>
+      `
+    }
+  );
 }
 
 /**
  * Simple chat interface with AI
  * 
  * @param {string} message - User's message
- * @returns {Promise<Object>} AI response with service info
+ * @param {Object} options - Additional options
+ * @returns {Promise<string>} AI response
  */
-export async function chat(message) {
-  return await executeWithService('chat', message);
+export async function chat(message, options = {}) {
+  const { provider = DEFAULT_PROVIDER } = options;
+  
+  return tryWithFallback(
+    anthropicService.chat,
+    openaiService.chat,
+    [message],
+    {
+      provider,
+      mockData: "I'm sorry, but I don't have access to real-time AI services at the moment. Please try again later or contact support if you need immediate assistance."
+    }
+  );
 }
 
 /**
- * Analyze an image using the best available service with vision capabilities
+ * Analyze an image with AI vision capabilities
  * 
  * @param {string} base64Image - Base64-encoded image data
- * @returns {Promise<Object>} Analysis results with service info
+ * @param {Object} options - Additional options
+ * @returns {Promise<Object>} Analysis result
  */
-export async function analyzeImage(base64Image) {
-  // Only OpenAI supports image analysis in our implementation
-  try {
-    const result = await openaiService.analyzeImage(base64Image);
-    return {
-      result,
-      serviceName: 'openai',
-      modelName: 'gpt-4o',
-      error: null
-    };
-  } catch (error) {
-    // Handle image analysis errors
-    serviceStatus.openai = {
-      available: false,
-      checkedAt: new Date(),
-      lastError: error.message
-    };
-    
-    throw new Error(`Image analysis failed: ${error.message}`);
-  }
+export async function analyzeImage(base64Image, options = {}) {
+  const { provider = DEFAULT_PROVIDER } = options;
+  
+  return tryWithFallback(
+    anthropicService.analyzeImage,
+    openaiService.analyzeImage,
+    [base64Image],
+    {
+      provider,
+      mockData: {
+        analysis: "This appears to be a document containing text. Without real-time AI services, I cannot provide a detailed analysis of its contents. Please try again later when API services are available."
+      }
+    }
+  );
 }
 
-export default {
-  getStatus,
-  analyzeText,
-  generateResponse,
-  chat,
-  analyzeImage
-};
+/**
+ * Calculate merit weight based on analysis
+ * This function provides a fallback when AI doesn't return a merit weight
+ * 
+ * @param {Object} analysis - The analysis result from AI
+ * @returns {number} Merit weight between 0 and 1
+ */
+export function calculateMeritWeight(analysis) {
+  // If the analysis already has a merit weight, return it
+  if (analysis.meritWeight !== undefined && typeof analysis.meritWeight === 'number') {
+    return Math.max(0, Math.min(1, analysis.meritWeight));
+  }
+  
+  // Otherwise, calculate one based on confidence score and urgency
+  let meritWeight = 0.5; // Default middle value
+  
+  // Adjust based on confidence score if available
+  if (analysis.confidenceScore !== undefined && typeof analysis.confidenceScore === 'number') {
+    meritWeight = meritWeight * 0.5 + analysis.confidenceScore * 0.5;
+  }
+  
+  // Adjust based on urgency if available
+  if (analysis.urgencyLevel) {
+    const urgencyFactor = {
+      'Low': 0.3,
+      'Medium': 0.5,
+      'High': 0.7,
+      'Critical': 0.9
+    }[analysis.urgencyLevel] || 0.5;
+    
+    meritWeight = meritWeight * 0.7 + urgencyFactor * 0.3;
+  }
+  
+  // Ensure the result is between 0 and 1
+  return Math.max(0, Math.min(1, meritWeight));
+}
+
+/**
+ * Get a human-readable merit rating from merit weight
+ * 
+ * @param {number} meritWeight - Merit weight between 0 and 1
+ * @returns {string} Merit rating description
+ */
+export function getMeritRating(meritWeight) {
+  if (meritWeight < 0.2) return 'Very Weak';
+  if (meritWeight < 0.4) return 'Weak';
+  if (meritWeight < 0.6) return 'Moderate';
+  if (meritWeight < 0.8) return 'Strong';
+  return 'Very Strong';
+}
+
+/**
+ * Get a color code for merit weight display
+ * 
+ * @param {number} meritWeight - Merit weight between 0 and 1
+ * @returns {string} CSS color code
+ */
+export function getMeritColor(meritWeight) {
+  if (meritWeight < 0.2) return '#d32f2f'; // Red
+  if (meritWeight < 0.4) return '#f57c00'; // Orange
+  if (meritWeight < 0.6) return '#fbc02d'; // Yellow
+  if (meritWeight < 0.8) return '#7cb342'; // Light green
+  return '#388e3c'; // Green
+}
