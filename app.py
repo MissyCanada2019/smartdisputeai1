@@ -37,6 +37,11 @@ def allowed_file(filename):
 @app.route('/')
 def index():
     return render_template('upload_form.html')
+    
+@app.route('/ocr')
+def ocr_page():
+    """Display the OCR upload page"""
+    return render_template('ocr_upload_form.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
