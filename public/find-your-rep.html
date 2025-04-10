@@ -165,6 +165,38 @@
             width: 16px;
             height: 16px;
         }
+        
+        .alert {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+        
+        .mt-3 {
+            margin-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -455,6 +487,54 @@
                 document.getElementById("rep-result").innerHTML = '<div class="alert alert-danger">Geolocation is not supported by your browser. Please use your postal code instead.</div>';
             }
         }
+        
+        // Function to copy email to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    showNotification('Email copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Failed to copy email. Please try again.');
+                });
+        }
+        
+        // Function to open email composer
+        function composeEmail(email, name) {
+            // Create email draft with template
+            const subject = 'Inquiry from Constituent';
+            const body = `Dear ${name},\n\nI am writing to you as a constituent regarding...\n\n`;
+            
+            // Encode the subject and body for a mailto link
+            const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Open the mail client
+            window.open(mailtoLink, '_blank');
+        }
+        
+        // Function to show notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            notification.style.opacity = '1';
+            
+            // Hide after 2 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 2000);
+        }
+        
+        // Add event listener to postal code input to trigger search on Enter key
+        document.getElementById('postal').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                findRep();
+            }
+        });
     </script>
 </body>
 </html>
