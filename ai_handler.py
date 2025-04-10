@@ -11,18 +11,28 @@ from dotenv import load_dotenv
 import time
 
 # Import the Anthropic analyzer module
-from anthropic_analyzer import (
-    analyze_text_with_claude, 
-    analyze_image_with_claude, 
-    generate_response_with_claude
-)
+try:
+    from anthropic_analyzer import (
+        analyze_text_with_claude, 
+        analyze_image_with_claude, 
+        generate_response_with_claude
+    )
+    ANTHROPIC_IMPORTS_AVAILABLE = True
+except Exception as e:
+    print(f"Warning: Could not import Anthropic functions: {e}")
+    ANTHROPIC_IMPORTS_AVAILABLE = False
 
 # Initialize environment variables
 load_dotenv()
 
-# Check if Anthropic API key is available
+# Check if Anthropic API key is available 
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
-USE_ANTHROPIC = ANTHROPIC_API_KEY is not None
+
+# For now, we'll force the use of mock data until we get a valid API key
+USE_ANTHROPIC = False
+
+print("Using mock data for AI document analysis (Anthropic API not properly configured)")
+print("To enable AI analysis, please provide a valid Anthropic API key")
 
 # PDF text extraction support
 try:

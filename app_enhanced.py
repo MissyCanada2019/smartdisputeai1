@@ -14,6 +14,9 @@ from fpdf import FPDF
 # Import our enhanced document analyzer
 from enhanced_document_analyzer import extract_content, analyze_document, generate_response_preview, is_mock_mode, initialize_clients
 
+# Import our updated AI handler for better error handling
+import ai_handler
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)

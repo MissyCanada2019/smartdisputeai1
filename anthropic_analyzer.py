@@ -11,8 +11,16 @@ from anthropic import Anthropic
 # Load environment variables
 load_dotenv()
 
-# Initialize Anthropic client
-anthropic = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+# Initialize Anthropic client with support for different API key formats
+api_key = os.getenv('ANTHROPIC_API_KEY')
+
+# Try to initialize the Anthropic client
+try:
+    anthropic = Anthropic(api_key=api_key)
+    print(f"Anthropic client initialized successfully")
+except Exception as e:
+    print(f"Error initializing Anthropic client: {e}")
+    anthropic = None
 
 # Pricing configuration (same as OpenAI for consistency)
 PRICING = {
@@ -34,6 +42,19 @@ def analyze_text_with_claude(text, province="ON"):
         dict: Analysis results including classification, recommended response, and pricing
     """
     try:
+        # Check if Anthropic client is available
+        if anthropic is None:
+            print("Anthropic client is not available, returning mock analysis")
+            return {
+                "issue_type": "Mock Analysis",
+                "classification": "API Unavailable",
+                "recommended_forms": "Please configure a valid Anthropic API key",
+                "legal_references": "N/A",
+                "response_strategy": "This is a mock response since the Anthropic API is not properly configured",
+                "complexity": "standard",
+                "confidence": 0.5
+            }
+            
         system_prompt = f"""You are a legal assistant for SmartDispute.ai, specialized in Canadian legal matters.
         Analyze this document from {province} and identify:
         
@@ -56,14 +77,18 @@ def analyze_text_with_claude(text, province="ON"):
         }}
         Include detailed explanations for each field based on the document content."""
         
-        response = anthropic.messages.create(
-            model="claude-3-7-sonnet-20250219",  # the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
-            system=system_prompt,
-            max_tokens=1500,
-            messages=[
-                {"role": "user", "content": text}
-            ]
-        )
+        try:
+            response = anthropic.messages.create(
+                model="claude-3-7-sonnet-20250219",  # the newest Anthropic model is "claude-3-7-sonnet-20250219" which was released February 24, 2025
+                system=system_prompt,
+                max_tokens=1500,
+                messages=[
+                    {"role": "user", "content": text}
+                ]
+            )
+        except Exception as api_error:
+            print(f"API error when calling Anthropic: {api_error}")
+            raise Exception(f"Anthropic API call failed: {api_error}")
         
         # Parse the JSON response - Claude doesn't have a structured JSON format option so we need to extract it
         response_text = response.content[0].text
