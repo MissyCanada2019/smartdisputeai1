@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" width="1200" height="600">
+  <!-- Sky gradient -->
+  <defs>
+    <linearGradient id="sky-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a3a8f;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5d7cb4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sky background -->
+  <rect width="1200" height="600" fill="url(#sky-gradient)" />
+  
+  <!-- Distant mountains -->
+  <path d="M0,300 Q150,150 300,250 Q450,150 600,200 Q750,100 900,180 Q1050,120 1200,250 L1200,600 L0,600 Z" fill="#39537b" />
+  
+  <!-- Middle mountains -->
+  <path d="M0,350 Q100,250 200,320 Q300,200 400,280 Q500,200 600,300 Q700,220 800,310 Q900,220 1000,300 Q1100,220 1200,350 L1200,600 L0,600 Z" fill="#2c3e57" />
+  
+  <!-- Foreground evergreen forest -->
+  <path d="M0,400 L1200,400 L1200,600 L0,600 Z" fill="#1a2c33" />
+  
+  <!-- Lake reflection -->
+  <path d="M200,400 Q400,380 600,400 Q800,380 1000,400 L1000,500 Q800,480 600,500 Q400,480 200,500 Z" fill="#5d7cb4" opacity="0.7" />
+  
+  <!-- Moon -->
+  <circle cx="900" cy="100" r="40" fill="#ffffff" opacity="0.9" />
+  
+  <!-- Stars -->
+  <g fill="#ffffff" opacity="0.8">
+    <circle cx="100" cy="50" r="1.5" />
+    <circle cx="200" cy="80" r="1" />
+    <circle cx="350" cy="60" r="1.2" />
+    <circle cx="450" cy="90" r="1" />
+    <circle cx="550" cy="40" r="1.8" />
+    <circle cx="650" cy="70" r="1" />
+    <circle cx="750" cy="30" r="1.5" />
+    <circle cx="850" cy="60" r="1" />
+    <circle cx="950" cy="80" r="1.2" />
+    <circle cx="1050" cy="50" r="1" />
+    <circle cx="1150" cy="70" r="1.5" />
+    <circle cx="150" cy="120" r="1" />
+    <circle cx="250" cy="110" r="1.2" />
+    <circle cx="400" cy="130" r="1" />
+    <circle cx="500" cy="100" r="1.8" />
+    <circle cx="600" cy="120" r="1" />
+    <circle cx="700" cy="150" r="1.5" />
+    <circle cx="800" cy="120" r="1" />
+    <circle cx="1000" cy="140" r="1.2" />
+    <circle cx="1100" cy="130" r="1" />
+  </g>
+  
+  <!-- Reflection on lake -->
+  <line x1="900" y1="100" x2="900" y2="450" stroke="#ffffff" stroke-width="1" opacity="0.2" />
+</svg>

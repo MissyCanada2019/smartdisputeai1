@@ -3,478 +3,522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartDispute.ai - Document Analysis</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>SmartDispute.ai - Document Upload</title>
+    <link rel="stylesheet" href="/css/canadian-theme.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #343a40;
-        }
-        .logo {
-            max-width: 200px;
-            margin-bottom: 1rem;
-        }
         .upload-container {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 2rem auto;
             padding: 2rem;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .main-heading {
-            color: #0d6efd;
-            font-weight: 600;
-        }
+        
         .upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: 5px;
-            padding: 3rem 1rem;
-            text-align: center;
-            cursor: pointer;
-            margin-bottom: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        .upload-area:hover, .upload-area.highlight {
-            border-color: #0d6efd;
-            background-color: #f8f9ff;
-        }
-        .upload-icon {
-            font-size: 3rem;
-            color: #6c757d;
-            margin-bottom: 1rem;
-        }
-        .file-type-badge {
-            background-color: #e9ecef;
-            color: #495057;
-            padding: 0.25rem 0.5rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            margin-right: 0.25rem;
-            margin-bottom: 0.25rem;
-            display: inline-block;
-        }
-        .submit-btn {
-            background-color: #0d6efd;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-weight: 500;
-        }
-        .results-container {
-            display: none;
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 2px dashed #d32f2f;
+            border-radius: 8px;
             padding: 2rem;
-            margin-top: 1rem;
-            margin-bottom: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+            transition: all 0.3s ease;
+            background-color: #f9f9f9;
         }
-        .result-card {
-            margin-bottom: 1rem;
-            border-left: 4px solid #0d6efd;
+        
+        .upload-area:hover {
+            background-color: #f5f5f5;
+            border-color: #b71c1c;
         }
-        .field-label {
-            font-weight: 500;
-            color: #495057;
-        }
-        .field-value {
-            font-weight: 400;
-            color: #212529;
-        }
-        .issue-badge {
-            background-color: #dc3545;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            margin-right: 0.25rem;
-            margin-bottom: 0.25rem;
-            display: inline-block;
-        }
-        .loading-overlay {
+        
+        .file-preview {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+            margin: 1.5rem 0;
+            text-align: center;
         }
-        .error-container {
-            display: none;
-            background-color: #f8d7da;
-            border-radius: 10px;
-            border-left: 4px solid #dc3545;
-            padding: 1rem;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
-        .analysis-actions {
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid #dee2e6;
-        }
-        .preview-image {
+        
+        .file-preview img {
             max-width: 100%;
             max-height: 300px;
-            margin-bottom: 1rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .text-content {
-            max-height: 200px;
-            overflow-y: auto;
-            background-color: #f8f9fa;
+        
+        .results-container {
+            display: none;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d32f2f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .field-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        
+        .field-table th {
+            background-color: #d32f2f;
+            color: white;
+            text-align: left;
+            padding: 0.75rem;
+        }
+        
+        .field-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .field-table tr:nth-child(even) {
+            background-color: #f5f5f5;
+        }
+        
+        .issues-list {
+            margin-top: 1.5rem;
+        }
+        
+        .issue-item {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
             padding: 1rem;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 0.9rem;
-            white-space: pre-wrap;
+            margin-bottom: 0.75rem;
+            border-radius: 0 4px 4px 0;
         }
-        @media (max-width: 768px) {
-            .upload-container, .results-container {
-                padding: 1.5rem;
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .badge-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .badge-primary {
+            background-color: #d32f2f;
+            color: white;
+        }
+        
+        .document-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        
+        .meta-item {
+            flex: 1 1 200px;
+            margin: 0.5rem;
+            padding: 1rem;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .meta-item h4 {
+            margin-top: 0;
+            color: #555;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+        
+        .meta-item p {
+            margin-bottom: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .actions {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 600px) {
+            .actions button {
+                width: 100%;
+                margin-bottom: 0.75rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-10 col-lg-8">
-                <div class="text-center mt-4">
-                    <h1 class="main-heading">SmartDispute.ai</h1>
-                    <p class="lead">Document Analysis with Advanced OCR</p>
+    <header class="header-with-bg">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin: 0;">
+                <svg width="30" height="30" viewBox="0 0 512 512" style="vertical-align: middle; margin-right: 10px;">
+                    <path fill="#ffffff" d="M256,5.12c-0.2,10.53 8.4,48.9 10.99,55.15c8.69,20.97 20.02,33.98 34.26,41.05c7.03,3.5 12.27,9.84 10.5,19.14c18.48,-1.71 32.86,-6.54 43.14,-15.14c-8.3,15.89 -27.51,27.19 -46.05,34.52c28.97,0.48 52.52,-6.92 72.55,-19.76c-7.12,16.08 -32.46,27.74 -47.48,35.37c18.92,7.56 32.94,7.21 53.01,-2.12c-4.89,11.66 -13.4,16.37 -33.59,26.15c7.21,2.61 13.31,0.36 21.06,-2.64c-6.35,12.99 -22.58,17.27 -34.8,18.61c10.23,10.77 19.18,22.38 26.82,44.56c-12.99,-9.08 -26.91,-13.46 -41.93,-15.52c2.21,4.29 4.13,8.3 8.36,15.66c-15.06,-8.08 -33.43,-12.99 -48.18,-12.5c-1.13,21.75 -1.54,53.22 -6.27,66.21c-4.73,-12.99 -6.38,-44.46 -7.51,-66.21c-14.75,-0.49 -33.12,4.42 -48.18,12.5c4.23,-7.36 6.16,-11.37 8.36,-15.66c-15.01,2.06 -28.93,6.44 -41.93,15.52c7.65,-22.17 16.6,-33.78 26.82,-44.56c-12.21,-1.34 -28.44,-5.62 -34.8,-18.61c7.76,3 13.85,5.25 21.06,2.64c-20.19,-9.78 -28.7,-14.49 -33.59,-26.15c20.07,9.32 34.09,9.68 53.01,2.12c-15.01,-7.63 -40.36,-19.29 -47.48,-35.37c20.03,12.84 43.58,20.24 72.55,19.76c-18.54,-7.33 -37.75,-18.63 -46.05,-34.52c10.28,8.61 24.66,13.43 43.14,15.14c-1.77,-9.3 3.47,-15.63 10.5,-19.14c14.24,-7.07 25.57,-20.08 34.26,-41.05c2.59,-6.25 11.19,-44.62 10.99,-55.15Z"/>
+                </svg>
+                SmartDispute.ai
+            </h1>
+            <nav>
+                <a href="/" style="margin-right: 15px;">Home</a>
+                <a href="/documents" style="margin-right: 15px;">Documents</a>
+                <a href="/ocr-upload" style="margin-right: 15px;">OCR Upload</a>
+                <a href="/resources">Resources</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1>Document Analysis</h1>
+                <p>Upload any document for our AI-powered OCR system to analyze. We'll identify important information from legal notices, tenant agreements, and other legal documents.</p>
+            </div>
+        </div>
+
+        <div class="upload-container">
+            <h2 class="text-center">Upload Your Document</h2>
+            <p class="text-center">Upload an image or PDF of your document to extract text and analyze content</p>
+            
+            <form id="upload-form" action="/ocr-upload" method="post" enctype="multipart/form-data">
+                <div class="upload-area" id="drop-area">
+                    <p>Drag and drop your file here or</p>
+                    <input type="file" id="file-input" name="file" accept=".png,.jpg,.jpeg,.pdf,.tif,.tiff" style="display: none;">
+                    <button type="button" class="btn-primary" id="select-file-btn">Select File</button>
+                    <p class="mt-2"><small>Supported formats: PNG, JPG, PDF, TIFF</small></p>
                 </div>
                 
-                <div class="upload-container">
-                    <h2>Upload Your Document</h2>
-                    <p>Upload a legal document for automated analysis. Our OCR system will extract key information and help identify potential issues.</p>
-                    
-                    <form id="upload-form" enctype="multipart/form-data">
-                        <div id="upload-area" class="upload-area">
-                            <i class="fas fa-file-upload upload-icon"></i>
-                            <h4>Drag & Drop Your Document</h4>
-                            <p>or click to select a file</p>
-                            <div>
-                                <span class="file-type-badge">PNG</span>
-                                <span class="file-type-badge">JPG</span>
-                                <span class="file-type-badge">PDF</span>
-                                <span class="file-type-badge">TIFF</span>
-                            </div>
-                            <input type="file" id="file-input" name="file" style="display: none;" accept=".png,.jpg,.jpeg,.pdf,.tif,.tiff">
-                        </div>
-                        
-                        <div id="file-info" class="mb-3" style="display: none;">
-                            <div class="alert alert-info">
-                                <i class="fas fa-file-alt me-2"></i>
-                                <span id="file-name">No file selected</span>
-                                <button type="button" id="remove-file" class="btn btn-sm btn-outline-danger float-end">
-                                    <i class="fas fa-times"></i> Remove
-                                </button>
-                            </div>
-                            <div class="text-center">
-                                <img id="image-preview" class="preview-image" style="display: none;">
-                            </div>
-                        </div>
-                        
-                        <div class="text-center">
-                            <button type="submit" id="submit-btn" class="btn btn-primary submit-btn" disabled>
-                                <i class="fas fa-search me-2"></i>Analyze Document
-                            </button>
-                        </div>
-                    </form>
+                <div class="file-preview" id="file-preview">
+                    <h3>Selected File:</h3>
+                    <p id="file-name"></p>
+                    <div id="image-preview"></div>
                 </div>
                 
-                <div id="error-container" class="error-container">
-                    <h4><i class="fas fa-exclamation-circle me-2"></i>Error</h4>
-                    <p id="error-message">There was an error processing your document.</p>
+                <div class="text-center">
+                    <button type="submit" class="btn-primary" id="upload-btn">Analyze Document</button>
+                </div>
+            </form>
+            
+            <div class="loading-spinner" id="loading-spinner">
+                <div class="spinner"></div>
+                <p class="mt-3">Processing your document...</p>
+            </div>
+            
+            <div class="results-container" id="results-container">
+                <h3 class="text-center">Document Analysis Results</h3>
+                
+                <div class="document-meta">
+                    <div class="meta-item">
+                        <h4>Document Type</h4>
+                        <p id="document-type">Unknown</p>
+                    </div>
+                    <div class="meta-item">
+                        <h4>Date</h4>
+                        <p id="document-date">Not found</p>
+                    </div>
+                    <div class="meta-item">
+                        <h4>Status</h4>
+                        <p><span class="badge badge-success" id="document-status">Valid</span></p>
+                    </div>
                 </div>
                 
-                <div id="results-container" class="results-container">
-                    <h2><i class="fas fa-file-search me-2"></i>Analysis Results</h2>
-                    
-                    <div class="card result-card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Document Information</h5>
-                            <div class="row mb-2">
-                                <div class="col-md-4 field-label">Document Type:</div>
-                                <div class="col-md-8 field-value" id="document-type">Loading...</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 field-label">Date:</div>
-                                <div class="col-md-8 field-value" id="document-date">Loading...</div>
-                            </div>
-                        </div>
+                <h4>Extracted Information</h4>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fields-table-body">
+                        <tr>
+                            <td>Tenant Name</td>
+                            <td id="tenant-name">Not found</td>
+                        </tr>
+                        <tr>
+                            <td>Landlord Name</td>
+                            <td id="landlord-name">Not found</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="issues-list" id="issues-container">
+                    <h4>Potential Issues</h4>
+                    <div id="issues-list">
+                        <!-- Issues will be added here dynamically -->
                     </div>
-                    
-                    <div class="card result-card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Parties</h5>
-                            <div class="row mb-2">
-                                <div class="col-md-4 field-label">Tenant/Recipient:</div>
-                                <div class="col-md-8 field-value" id="tenant-name">Loading...</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-md-4 field-label">Landlord/Sender:</div>
-                                <div class="col-md-8 field-value" id="landlord-name">Loading...</div>
-                            </div>
-                        </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h4>Full Text</h4>
+                    <div style="background-color: #f5f5f5; border-radius: 4px; padding: 1rem; max-height: 300px; overflow-y: auto;">
+                        <pre id="full-text" style="white-space: pre-wrap; margin: 0;"></pre>
                     </div>
-                    
-                    <div class="card result-card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Identified Issues</h5>
-                            <div id="issues-container">
-                                <p>Analyzing document for potential issues...</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Full Text</h5>
-                            <div class="text-content" id="full-text">
-                                Loading extracted text...
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="analysis-actions text-center">
-                        <button id="reset-button" class="btn btn-outline-secondary me-2">
-                            <i class="fas fa-redo me-1"></i> Analyze Another Document
-                        </button>
-                        <button id="generate-response-button" class="btn btn-success">
-                            <i class="fas fa-file-signature me-1"></i> Generate Response
-                        </button>
-                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button class="btn-secondary" id="copy-text-btn">Copy Text</button>
+                    <button class="btn-primary" id="download-pdf-btn">Generate Report</button>
+                    <button class="btn-primary" id="proceed-btn">Proceed with Analysis</button>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-            <span class="visually-hidden">Loading...</span>
+    </main>
+
+    <footer class="footer-with-bg">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 1rem; text-align: center;">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h3>SmartDispute.ai</h3>
+                    <p>Empowering Canadians through accessible legal assistance</p>
+                </div>
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h4>Quick Links</h4>
+                    <p><a href="/about">About Us</a> | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+                </div>
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h4>Contact</h4>
+                    <p>support@smartdispute.ai | 1-800-123-4567</p>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1rem;">
+                <p>&copy; 2025 SmartDispute.ai. All rights reserved.</p>
+            </div>
         </div>
-        <h4>Analyzing Document...</h4>
-        <p>This may take a few moments</p>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </footer>
+
     <script>
-        // DOM elements
-        const uploadForm = document.getElementById('upload-form');
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('file-input');
-        const fileInfo = document.getElementById('file-info');
-        const fileName = document.getElementById('file-name');
-        const removeFileBtn = document.getElementById('remove-file');
-        const submitBtn = document.getElementById('submit-btn');
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const resultsContainer = document.getElementById('results-container');
-        const errorContainer = document.getElementById('error-container');
-        const errorMessage = document.getElementById('error-message');
-        const resetButton = document.getElementById('reset-button');
-        const generateResponseButton = document.getElementById('generate-response-button');
-        const imagePreview = document.getElementById('image-preview');
-        
-        // Result fields
-        const documentType = document.getElementById('document-type');
-        const documentDate = document.getElementById('document-date');
-        const tenantName = document.getElementById('tenant-name');
-        const landlordName = document.getElementById('landlord-name');
-        const issuesContainer = document.getElementById('issues-container');
-        const fullText = document.getElementById('full-text');
-        
-        // Event listeners for drag and drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-        
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-        
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-        
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-        
-        function highlight() {
-            uploadArea.classList.add('highlight');
-        }
-        
-        function unhighlight() {
-            uploadArea.classList.remove('highlight');
-        }
-        
-        // Handle file drop
-        uploadArea.addEventListener('drop', handleDrop, false);
-        
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-input');
+            const selectFileBtn = document.getElementById('select-file-btn');
+            const uploadForm = document.getElementById('upload-form');
+            const filePreview = document.getElementById('file-preview');
+            const fileName = document.getElementById('file-name');
+            const imagePreview = document.getElementById('image-preview');
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const resultsContainer = document.getElementById('results-container');
+            const documentType = document.getElementById('document-type');
+            const documentDate = document.getElementById('document-date');
+            const documentStatus = document.getElementById('document-status');
+            const tenantName = document.getElementById('tenant-name');
+            const landlordName = document.getElementById('landlord-name');
+            const issuesList = document.getElementById('issues-list');
+            const fullText = document.getElementById('full-text');
+            const copyTextBtn = document.getElementById('copy-text-btn');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            const proceedBtn = document.getElementById('proceed-btn');
             
-            if (files.length) {
-                fileInput.files = files;
-                handleFiles(files);
-            }
-        }
-        
-        // Handle file selection via click
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
-        fileInput.addEventListener('change', (e) => {
-            if (fileInput.files.length) {
-                handleFiles(fileInput.files);
-            }
-        });
-        
-        function handleFiles(files) {
-            const file = files[0];
-            
-            // Check if the file type is allowed
-            const fileType = file.type.toLowerCase();
-            const allowedTypes = ['image/png', 'image/jpeg', 'application/pdf', 'image/tiff'];
-            
-            if (!allowedTypes.includes(fileType)) {
-                showError('File type not supported. Please upload a PNG, JPG, PDF, or TIFF file.');
-                resetForm();
-                return;
-            }
-            
-            // Update UI
-            fileName.textContent = file.name;
-            fileInfo.style.display = 'block';
-            submitBtn.disabled = false;
-            
-            // Show image preview if it's an image
-            if (fileType.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                imagePreview.style.display = 'none';
-            }
-        }
-        
-        // Remove file
-        removeFileBtn.addEventListener('click', resetForm);
-        
-        function resetForm() {
-            fileInput.value = '';
-            fileInfo.style.display = 'none';
-            submitBtn.disabled = true;
-            imagePreview.style.display = 'none';
-        }
-        
-        // Form submission
-        uploadForm.addEventListener('submit', handleSubmit);
-        
-        function handleSubmit(e) {
-            e.preventDefault();
-            
-            if (!fileInput.files.length) {
-                showError('Please select a file to analyze.');
-                return;
-            }
-            
-            const formData = new FormData(uploadForm);
-            
-            // Show loading overlay
-            loadingOverlay.style.display = 'flex';
-            
-            // Hide any previous results or errors
-            resultsContainer.style.display = 'none';
-            errorContainer.style.display = 'none';
-            
-            // Send the file to the server
-            fetch('/api/ocr/ocr-upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Failed to process document');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Hide loading overlay
-                loadingOverlay.style.display = 'none';
-                
-                if (data.status === 'success') {
-                    // Display results
-                    displayResults(data.fields);
-                    resultsContainer.style.display = 'block';
-                } else {
-                    showError(data.message || 'An unexpected error occurred');
-                }
-            })
-            .catch(error => {
-                // Hide loading overlay
-                loadingOverlay.style.display = 'none';
-                
-                showError(error.message || 'An unexpected error occurred');
+            // Event listeners for drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
             });
-        }
-        
-        function displayResults(fields) {
-            // Update document info
-            documentType.textContent = fields.document_type || 'Unknown Document Type';
-            documentDate.textContent = fields.date || 'No date found';
             
-            // Update parties
-            tenantName.textContent = fields.tenant_name || 'Not found';
-            landlordName.textContent = fields.landlord_name || 'Not found';
-            
-            // Update issues
-            if (fields.issues && fields.issues.length > 0) {
-                let issuesHTML = '';
-                fields.issues.forEach(issue => {
-                    issuesHTML += `<span class="issue-badge">${issue}</span> `;
-                });
-                issuesContainer.innerHTML = issuesHTML;
-            } else {
-                issuesContainer.innerHTML = '<p>No issues detected</p>';
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
             
-            // Update full text
-            fullText.textContent = fields.full_text || 'No text could be extracted';
-        }
-        
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorContainer.style.display = 'block';
-        }
-        
-        // Reset button click
-        resetButton.addEventListener('click', () => {
-            resetForm();
-            resultsContainer.style.display = 'none';
-        });
-        
-        // Generate response button
-        generateResponseButton.addEventListener('click', () => {
-            alert('Response generation feature will be available in the next update.');
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.style.borderColor = '#b71c1c';
+                dropArea.style.backgroundColor = '#f5f5f5';
+            }
+            
+            function unhighlight() {
+                dropArea.style.borderColor = '#d32f2f';
+                dropArea.style.backgroundColor = '#f9f9f9';
+            }
+            
+            // Handle file drop
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length) {
+                    fileInput.files = files;
+                    handleFiles(files);
+                }
+            }
+            
+            // Handle file selection via button
+            selectFileBtn.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length) {
+                    handleFiles(fileInput.files);
+                }
+            });
+            
+            function handleFiles(files) {
+                const file = files[0];
+                fileName.textContent = file.name;
+                
+                // Show file preview
+                filePreview.style.display = 'block';
+                
+                // Clear previous preview
+                imagePreview.innerHTML = '';
+                
+                // If it's an image, show preview
+                if (file.type.match('image.*')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        imagePreview.appendChild(img);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                } else {
+                    // For PDFs or other files, show an icon
+                    const icon = document.createElement('div');
+                    icon.innerHTML = '<svg width="64" height="64" viewBox="0 0 32 32"><path d="M24 24H8V8h8V0H8C5.8 0 4 1.8 4 4v16c0 2.2 1.8 4 4 4h16c2.2 0 4-1.8 4-4v-8h-8v8zm-4-20V0h-2v4h-4v2h4v4h2V6h4V4h-4z" fill="#d32f2f"/></svg>';
+                    imagePreview.appendChild(icon);
+                }
+            }
+            
+            // Handle form submission
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (!fileInput.files.length) {
+                    alert('Please select a file to upload.');
+                    return;
+                }
+                
+                // Show loading spinner
+                loadingSpinner.style.display = 'block';
+                
+                // Submit form data via AJAX
+                const formData = new FormData(uploadForm);
+                
+                fetch('/ocr-upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    if (data.status === 'error') {
+                        alert('Error: ' + data.message);
+                        return;
+                    }
+                    
+                    // Display results
+                    displayResults(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loadingSpinner.style.display = 'none';
+                    alert('An error occurred while processing the document. Please try again.');
+                });
+            });
+            
+            function displayResults(data) {
+                // Show results container
+                resultsContainer.style.display = 'block';
+                
+                // Update fields with data
+                documentType.textContent = data.fields.document_type;
+                documentDate.textContent = data.fields.date;
+                tenantName.textContent = data.fields.tenant_name;
+                landlordName.textContent = data.fields.landlord_name;
+                fullText.textContent = data.fields.full_text;
+                
+                // Update status badge based on issues
+                if (data.fields.issues && data.fields.issues.length > 0) {
+                    documentStatus.textContent = 'Issues Detected';
+                    documentStatus.className = 'badge badge-warning';
+                } else {
+                    documentStatus.textContent = 'Valid';
+                    documentStatus.className = 'badge badge-success';
+                }
+                
+                // Clear previous issues
+                issuesList.innerHTML = '';
+                
+                // Add issues to the list
+                if (data.fields.issues && data.fields.issues.length > 0) {
+                    data.fields.issues.forEach(issue => {
+                        const issueElement = document.createElement('div');
+                        issueElement.className = 'issue-item';
+                        issueElement.innerHTML = `
+                            <p><strong>${issue.issue_type}</strong></p>
+                            <p>${issue.description}</p>
+                        `;
+                        issuesList.appendChild(issueElement);
+                    });
+                } else {
+                    // No issues found
+                    const noIssuesElement = document.createElement('div');
+                    noIssuesElement.innerHTML = '<p>No issues detected in the document.</p>';
+                    issuesList.appendChild(noIssuesElement);
+                }
+                
+                // Scroll to results
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            // Handle copy text button
+            copyTextBtn.addEventListener('click', function() {
+                const textToCopy = fullText.textContent;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert('Text copied to clipboard!');
+                }).catch(err => {
+                    console.error('Error copying text: ', err);
+                });
+            });
+            
+            // Handle download PDF button
+            downloadPdfBtn.addEventListener('click', function() {
+                alert('This feature is coming soon!');
+            });
+            
+            // Handle proceed button
+            proceedBtn.addEventListener('click', function() {
+                alert('This feature is coming soon!');
+            });
         });
     </script>
 </body>

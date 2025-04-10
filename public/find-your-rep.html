@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartDispute.ai - Find Your Representative</title>
+    <link rel="stylesheet" href="/css/canadian-theme.css">
+    <style>
+        .rep-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .postal-input {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        @media (max-width: 576px) {
+            .postal-input {
+                flex-direction: column;
+            }
+        }
+        
+        .rep-card {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #d32f2f;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .rep-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .rep-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 1rem;
+            font-weight: 600;
+            background-color: #e0e0e0;
+        }
+        
+        .rep-badge.liberal {
+            background-color: #d71920;
+            color: white;
+        }
+        
+        .rep-badge.conservative {
+            background-color: #1a4782;
+            color: white;
+        }
+        
+        .rep-badge.ndp {
+            background-color: #f89921;
+            color: white;
+        }
+        
+        .rep-badge.green {
+            background-color: #3d9b35;
+            color: white;
+        }
+        
+        .rep-badge.bloc {
+            background-color: #00a5de;
+            color: white;
+        }
+        
+        .rep-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .info-item {
+            flex: 1 1 200px;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #d32f2f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .location-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .location-icon {
+            width: 16px;
+            height: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header-with-bg">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 1rem; display: flex; align-items: center; justify-content: space-between;">
+            <h1 style="margin: 0;">
+                <svg width="30" height="30" viewBox="0 0 512 512" style="vertical-align: middle; margin-right: 10px;">
+                    <path fill="#ffffff" d="M256,5.12c-0.2,10.53 8.4,48.9 10.99,55.15c8.69,20.97 20.02,33.98 34.26,41.05c7.03,3.5 12.27,9.84 10.5,19.14c18.48,-1.71 32.86,-6.54 43.14,-15.14c-8.3,15.89 -27.51,27.19 -46.05,34.52c28.97,0.48 52.52,-6.92 72.55,-19.76c-7.12,16.08 -32.46,27.74 -47.48,35.37c18.92,7.56 32.94,7.21 53.01,-2.12c-4.89,11.66 -13.4,16.37 -33.59,26.15c7.21,2.61 13.31,0.36 21.06,-2.64c-6.35,12.99 -22.58,17.27 -34.8,18.61c10.23,10.77 19.18,22.38 26.82,44.56c-12.99,-9.08 -26.91,-13.46 -41.93,-15.52c2.21,4.29 4.13,8.3 8.36,15.66c-15.06,-8.08 -33.43,-12.99 -48.18,-12.5c-1.13,21.75 -1.54,53.22 -6.27,66.21c-4.73,-12.99 -6.38,-44.46 -7.51,-66.21c-14.75,-0.49 -33.12,4.42 -48.18,12.5c4.23,-7.36 6.16,-11.37 8.36,-15.66c-15.01,2.06 -28.93,6.44 -41.93,15.52c7.65,-22.17 16.6,-33.78 26.82,-44.56c-12.21,-1.34 -28.44,-5.62 -34.8,-18.61c7.76,3 13.85,5.25 21.06,2.64c-20.19,-9.78 -28.7,-14.49 -33.59,-26.15c20.07,9.32 34.09,9.68 53.01,2.12c-15.01,-7.63 -40.36,-19.29 -47.48,-35.37c20.03,12.84 43.58,20.24 72.55,19.76c-18.54,-7.33 -37.75,-18.63 -46.05,-34.52c10.28,8.61 24.66,13.43 43.14,15.14c-1.77,-9.3 3.47,-15.63 10.5,-19.14c14.24,-7.07 25.57,-20.08 34.26,-41.05c2.59,-6.25 11.19,-44.62 10.99,-55.15Z"/>
+                </svg>
+                SmartDispute.ai
+            </h1>
+            <nav>
+                <a href="/" style="margin-right: 15px;">Home</a>
+                <a href="/documents" style="margin-right: 15px;">Documents</a>
+                <a href="/ocr-upload" style="margin-right: 15px;">OCR Upload</a>
+                <a href="/resources">Resources</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1>Find Your Representatives</h1>
+                <p>Quickly locate your elected officials using your postal code or location. Get contact information for your MP, MPP, and local representatives.</p>
+            </div>
+        </div>
+
+        <div class="rep-container">
+            <h2>Find My Representative</h2>
+            <p>Enter your postal code to find your elected representatives at all levels of government. This service uses the Represent API, an open data service that provides representative information for Canadians.</p>
+            
+            <div class="postal-input">
+                <div style="flex-grow: 1;">
+                    <label for="postal">Enter Your Postal Code:</label>
+                    <input type="text" id="postal" maxlength="7" placeholder="e.g. N2H 4X8" style="text-transform: uppercase;">
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+                    <button class="btn-primary" onclick="findRep()">Find Representatives</button>
+                    <button class="btn-secondary location-btn" onclick="useMyLocation()">
+                        <svg class="location-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        Use My Location
+                    </button>
+                </div>
+            </div>
+            
+            <div class="loading-spinner" id="loading-spinner">
+                <div class="spinner"></div>
+                <p class="mt-3">Looking up your representatives...</p>
+            </div>
+            
+            <div id="rep-result"></div>
+        </div>
+    </main>
+
+    <footer class="footer-with-bg">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 1rem; text-align: center;">
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h3>SmartDispute.ai</h3>
+                    <p>Empowering Canadians through accessible legal assistance</p>
+                </div>
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h4>Quick Links</h4>
+                    <p><a href="/about">About Us</a> | <a href="/privacy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+                </div>
+                <div style="flex: 1 1 300px; margin-bottom: 1rem;">
+                    <h4>Contact</h4>
+                    <p>support@smartdispute.ai | 1-800-123-4567</p>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 1rem;">
+                <p>&copy; 2025 SmartDispute.ai. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function findRep() {
+            const postal = document.getElementById("postal").value.replace(/\s/g, '');
+            
+            if (!postal || postal.length < 6) {
+                document.getElementById("rep-result").innerHTML = '<div class="alert alert-danger">Please enter a valid postal code.</div>';
+                return;
+            }
+            
+            // Show loading spinner
+            document.getElementById("loading-spinner").style.display = "block";
+            document.getElementById("rep-result").innerHTML = "";
+            
+            fetch(`https://represent.opennorth.ca/postcodes/${postal}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Hide loading spinner
+                    document.getElementById("loading-spinner").style.display = "none";
+                    
+                    const reps = data.representatives_centroid;
+                    if (!reps || reps.length === 0) {
+                        document.getElementById("rep-result").innerHTML = '<div class="alert alert-warning">No representatives found for this postal code.</div>';
+                        return;
+                    }
+                    
+                    let html = '<h3>Your Representatives:</h3>';
+                    
+                    // Group representatives by role
+                    const federal = reps.filter(rep => rep.representative_set_name.includes('Federal'));
+                    const provincial = reps.filter(rep => rep.representative_set_name.includes('Provincial'));
+                    const municipal = reps.filter(rep => !rep.representative_set_name.includes('Federal') && !rep.representative_set_name.includes('Provincial'));
+                    
+                    if (federal.length) {
+                        html += '<h4>Federal Representatives</h4>';
+                        html += createRepCards(federal);
+                    }
+                    
+                    if (provincial.length) {
+                        html += '<h4>Provincial Representatives</h4>';
+                        html += createRepCards(provincial);
+                    }
+                    
+                    if (municipal.length) {
+                        html += '<h4>Municipal Representatives</h4>';
+                        html += createRepCards(municipal);
+                    }
+                    
+                    document.getElementById("rep-result").innerHTML = html;
+                })
+                .catch(err => {
+                    // Hide loading spinner
+                    document.getElementById("loading-spinner").style.display = "none";
+                    
+                    console.error(err);
+                    document.getElementById("rep-result").innerHTML = '<div class="alert alert-danger">Could not find any representatives for that postal code. Please check your input and try again.</div>';
+                });
+        }
+        
+        function createRepCards(reps) {
+            let html = '';
+            
+            reps.forEach(rep => {
+                const partyClass = getPartyClass(rep.party_name);
+                
+                html += `
+                <div class="rep-card">
+                    <div class="rep-title">
+                        <h4>${rep.name}</h4>
+                        <span class="rep-badge ${partyClass}">${rep.party_name || 'Independent'}</span>
+                    </div>
+                    <div>${rep.elected_office}</div>
+                    <div class="rep-info">
+                        <div class="info-item">
+                            <div class="info-label">Riding/District</div>
+                            <div>${rep.district_name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contact</div>
+                            <div>${rep.email ? `<a href="mailto:${rep.email}">${rep.email}</a>` : 'No email available'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            
+            return html;
+        }
+        
+        function getPartyClass(partyName) {
+            if (!partyName) return '';
+            
+            const partyLower = partyName.toLowerCase();
+            if (partyLower.includes('liberal')) return 'liberal';
+            if (partyLower.includes('conservative') || partyLower.includes('pc')) return 'conservative';
+            if (partyLower.includes('ndp') || partyLower.includes('new democratic')) return 'ndp';
+            if (partyLower.includes('green')) return 'green';
+            if (partyLower.includes('bloc') || partyLower.includes('québécois')) return 'bloc';
+            
+            return '';
+        }
+        
+        function useMyLocation() {
+            if (navigator.geolocation) {
+                // Show loading spinner
+                document.getElementById("loading-spinner").style.display = "block";
+                document.getElementById("rep-result").innerHTML = "";
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        fetch(`https://represent.opennorth.ca/representatives/geo/?point=${latitude},${longitude}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                // Hide loading spinner
+                                document.getElementById("loading-spinner").style.display = "none";
+                                
+                                const reps = data.objects;
+                                if (!reps || reps.length === 0) {
+                                    document.getElementById("rep-result").innerHTML = '<div class="alert alert-warning">No representatives found for your location.</div>';
+                                    return;
+                                }
+                                
+                                let html = '<h3>Your Representatives:</h3>';
+                                
+                                // Group representatives by role
+                                const federal = reps.filter(rep => rep.representative_set_name.includes('Federal'));
+                                const provincial = reps.filter(rep => rep.representative_set_name.includes('Provincial'));
+                                const municipal = reps.filter(rep => !rep.representative_set_name.includes('Federal') && !rep.representative_set_name.includes('Provincial'));
+                                
+                                if (federal.length) {
+                                    html += '<h4>Federal Representatives</h4>';
+                                    html += createRepCards(federal);
+                                }
+                                
+                                if (provincial.length) {
+                                    html += '<h4>Provincial Representatives</h4>';
+                                    html += createRepCards(provincial);
+                                }
+                                
+                                if (municipal.length) {
+                                    html += '<h4>Municipal Representatives</h4>';
+                                    html += createRepCards(municipal);
+                                }
+                                
+                                document.getElementById("rep-result").innerHTML = html;
+                            })
+                            .catch(err => {
+                                // Hide loading spinner
+                                document.getElementById("loading-spinner").style.display = "none";
+                                
+                                console.error(err);
+                                document.getElementById("rep-result").innerHTML = '<div class="alert alert-danger">Could not find representatives for your location. Please try using your postal code instead.</div>';
+                            });
+                    },
+                    error => {
+                        // Hide loading spinner
+                        document.getElementById("loading-spinner").style.display = "none";
+                        
+                        console.error(error);
+                        let errorMessage = 'Unable to access your location. ';
+                        
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Location access was denied. Please enable location services in your browser or try using your postal code instead.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable. Please try using your postal code instead.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'The request to get your location timed out. Please try using your postal code instead.';
+                                break;
+                            default:
+                                errorMessage += 'An unknown error occurred. Please try using your postal code instead.';
+                                break;
+                        }
+                        
+                        document.getElementById("rep-result").innerHTML = `<div class="alert alert-danger">${errorMessage}</div>`;
+                    }
+                );
+            } else {
+                document.getElementById("rep-result").innerHTML = '<div class="alert alert-danger">Geolocation is not supported by your browser. Please use your postal code instead.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
