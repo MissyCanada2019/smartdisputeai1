@@ -314,18 +314,123 @@
         window.GTM.trackPageView('/resources', 'Resources Page');
       }
       
-      // Fill other tabs with relevant content from the "all" tab
-      const housingSection = document.querySelector('#all .category-title:nth-of-type(2)').nextElementSibling;
-      document.querySelector('#housing').innerHTML = housingSection.outerHTML;
+      // Copy category content to respective tabs
+      document.querySelector('#housing').innerHTML = `
+        <div class="category-title">
+          <span class="category-icon">🏠</span>
+          <h2>Housing Resources</h2>
+        </div>
+        
+        <div class="resources-grid">
+          <div class="resource-card">
+            <div class="resource-image">🏘️</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Landlord and Tenant Board (Ontario)</h3>
+              <p class="resource-description">Official resources for landlord and tenant disputes in Ontario, including forms and processes.</p>
+              <a href="https://tribunalsontario.ca/ltb/" target="_blank" class="resource-button">Visit LTB</a>
+            </div>
+          </div>
+          
+          <div class="resource-card">
+            <div class="resource-image">📋</div>
+            <div class="resource-details">
+              <h3 class="resource-title">CMHC Housing Rights</h3>
+              <p class="resource-description">Information on housing rights and responsibilities across Canada.</p>
+              <a href="https://www.cmhc-schl.gc.ca/en/consumers/renting-a-home" target="_blank" class="resource-button">Visit CMHC</a>
+            </div>
+          </div>
+        </div>
+      `;
       
-      const casSection = document.querySelector('#all .category-title:nth-of-type(3)').nextElementSibling;
-      document.querySelector('#cas').innerHTML = casSection.outerHTML;
+      document.querySelector('#cas').innerHTML = `
+        <div class="category-title">
+          <span class="category-icon">👪</span>
+          <h2>Children's Aid Resources</h2>
+        </div>
+        
+        <div class="resources-grid">
+          <div class="resource-card">
+            <div class="resource-image">👨‍👩‍👧‍👦</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Justice for Children and Youth</h3>
+              <p class="resource-description">Legal information for young people and families navigating the child welfare system.</p>
+              <a href="https://jfcy.org/" target="_blank" class="resource-button">Visit JFCY</a>
+            </div>
+          </div>
+          
+          <div class="resource-card">
+            <div class="resource-image">📄</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Your Legal Rights - Child Protection</h3>
+              <p class="resource-description">Resources for dealing with Children's Aid Societies and understanding your rights.</p>
+              <a href="https://stepstojustice.ca/legal-topic/child-protection/" target="_blank" class="resource-button">Learn More</a>
+            </div>
+          </div>
+        </div>
+      `;
       
-      const creditSection = document.querySelector('#all .category-title:nth-of-type(4)').nextElementSibling;
-      document.querySelector('#credit').innerHTML = creditSection.outerHTML;
+      document.querySelector('#credit').innerHTML = `
+        <div class="category-title">
+          <span class="category-icon">💳</span>
+          <h2>Credit & Financial Resources</h2>
+        </div>
+        
+        <div class="resources-grid">
+          <div class="resource-card">
+            <div class="resource-image">📊</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Financial Consumer Agency of Canada</h3>
+              <p class="resource-description">Information on credit reports, credit scores, and how to resolve errors.</p>
+              <a href="https://www.canada.ca/en/financial-consumer-agency/services/credit-reports-score.html" target="_blank" class="resource-button">Visit FCAC</a>
+            </div>
+          </div>
+          
+          <div class="resource-card">
+            <div class="resource-image">📑</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Credit Bureau Dispute Information</h3>
+              <p class="resource-description">How to dispute information on your credit report with Equifax Canada.</p>
+              <a href="https://www.consumer.equifax.ca/personal/dispute-credit-report/" target="_blank" class="resource-button">Equifax Disputes</a>
+            </div>
+          </div>
+        </div>
+      `;
       
-      const generalSection = document.querySelector('#all .category-title:nth-of-type(1)').nextElementSibling;
-      document.querySelector('#general').innerHTML = generalSection.outerHTML;
+      document.querySelector('#general').innerHTML = `
+        <div class="category-title">
+          <span class="category-icon">⚖️</span>
+          <h2>Legal Research Resources</h2>
+        </div>
+        
+        <div class="resources-grid">
+          <div class="resource-card">
+            <div class="resource-image">📚</div>
+            <div class="resource-details">
+              <h3 class="resource-title">CanLII (Canadian Legal Information Institute)</h3>
+              <p class="resource-description">Free access to Canadian law - legal cases, statutes, and regulations from all Canadian jurisdictions.</p>
+              <a href="https://www.canlii.org/en/" target="_blank" class="resource-button">Visit CanLII</a>
+            </div>
+          </div>
+          
+          <div class="resource-card">
+            <div class="resource-image">📝</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Steps to Justice</h3>
+              <p class="resource-description">Clear, reliable information about common legal problems in family, housing, employment and other areas of law.</p>
+              <a href="https://stepstojustice.ca/" target="_blank" class="resource-button">Visit Steps to Justice</a>
+            </div>
+          </div>
+          
+          <div class="resource-card">
+            <div class="resource-image">🏛️</div>
+            <div class="resource-details">
+              <h3 class="resource-title">Canadian Department of Justice</h3>
+              <p class="resource-description">Official information about Canada's laws, legal system, and access to justice services.</p>
+              <a href="https://www.justice.gc.ca/eng/" target="_blank" class="resource-button">Visit Justice Canada</a>
+            </div>
+          </div>
+        </div>
+      `;
       
       // Track resource link clicks
       const resourceLinks = document.querySelectorAll('.resource-button');
