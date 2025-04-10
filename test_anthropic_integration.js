@@ -67,17 +67,15 @@ async function testAnthropicConnection() {
   }
 }
 
-// Run the test when this script is executed directly
-if (require.main === module) {
-  console.log('Starting Anthropic API test...');
-  testAnthropicConnection().then((success) => {
-    if (!success) {
-      console.log('\nTest failed! Please check your API key and network connection.');
-      // Exit with non-zero status to indicate failure
-      process.exit(1);
-    }
-  });
-}
+// Run the test immediately
+console.log('Starting Anthropic API test...');
+testAnthropicConnection().then((success) => {
+  if (!success) {
+    console.log('\nTest failed! Please check your API key and network connection.');
+    // Exit with non-zero status to indicate failure
+    process.exit(1);
+  }
+});
 
-// Export for use in other scripts
-module.exports = { testAnthropicConnection };
+// Export for use in other modules
+export { testAnthropicConnection };
