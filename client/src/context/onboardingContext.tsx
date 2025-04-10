@@ -163,17 +163,60 @@ const casJourney: TutorialJourney = {
 
 const generalJourney: TutorialJourney = {
   id: 'general-journey',
-  name: 'General Platform Tour',
+  name: 'Getting Started Tour',
   type: 'general',
-  description: 'Discover the key features of SmartDispute.ai',
+  description: 'Quick setup guide for your legal journey',
   steps: [
     {
       id: 'general-welcome',
       title: 'Welcome to SmartDispute.ai',
-      description: "This tour will introduce you to our platform's key features and how they can help you navigate legal challenges more effectively.",
-      nextButtonText: 'Start Tour',
-      skipButtonText: 'Skip Tour'
+      description: "Let's get you set up with everything you need. We'll help you select your province, organize your documents, and choose the right package for your needs.",
+      nextButtonText: 'Start Setup',
+      skipButtonText: 'Skip Setup'
     },
+    {
+      id: 'province-selection',
+      title: 'Select Your Province',
+      description: "First, let's set your province to ensure you get the right templates and legal information.",
+      element: '.province-selector',
+      position: 'bottom',
+      spotlightRadius: 180,
+      nextButtonText: 'Next'
+    },
+    {
+      id: 'document-organization',
+      title: 'Document Organization',
+      description: "Create folders to keep your documents organized by case or topic. Click 'New Folder' to get started.",
+      element: '.folder-creation-section',
+      position: 'right',
+      spotlightRadius: 180,
+      nextButtonText: 'Next'
+    },
+    {
+      id: 'first-upload',
+      title: 'Upload Your First Document',
+      description: "Let's upload your first document. You can drag and drop files or click to browse.",
+      element: '.document-upload-section',
+      position: 'bottom',
+      spotlightRadius: 200,
+      nextButtonText: 'Next'
+    },
+    {
+      id: 'package-selection',
+      title: 'Choose Your Package',
+      description: "Select the package that best fits your needs. We offer different levels of analysis and support.",
+      element: '.pricing-packages',
+      position: 'left',
+      spotlightRadius: 180,
+      nextButtonText: 'Next'
+    },
+    {
+      id: 'completion',
+      title: 'You're All Set!',
+      description: "You've completed the basic setup. Need help with specific topics? Check out our specialized guides for Tenant Rights, CAS Matters, or Credit Disputes.",
+      nextButtonText: 'View Specialized Guides'
+    }
+  ]
     {
       id: 'general-profile',
       title: 'Your Profile',
