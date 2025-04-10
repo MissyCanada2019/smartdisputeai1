@@ -5,78 +5,147 @@
  * and shows which ones are available, with basic testing capabilities.
  */
 
-import * as aiService from './server/services/aiService.js';
+// Import required modules
 import dotenv from 'dotenv';
+import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// Load environment variables
 dotenv.config();
 
-// Helper to mask API keys for display
+// Function to mask API keys for display
 function maskApiKey(key) {
   if (!key) return 'Not configured';
-  
-  // Show first 4 and last 4 characters, mask the rest
-  const firstPart = key.slice(0, 4);
-  const lastPart = key.slice(-4);
-  const middle = '*'.repeat(Math.min(key.length - 8, 8));
-  
-  return `${firstPart}${middle}${lastPart}`;
+  if (key.length <= 8) return '****';
+  return key.substring(0, 4) + '****' + key.substring(key.length - 4);
 }
 
-// Function to run the status check
+// Main function to check API status
 async function checkApiStatus() {
-  console.log('=== SMARTDISPUTE.AI API SERVICE STATUS ===');
-  
-  // Environment variables check
-  console.log('\nAPI KEY CONFIGURATION:');
-  console.log('- ANTHROPIC_API_KEY:', maskApiKey(process.env.ANTHROPIC_API_KEY));
-  console.log('- OPENAI_API_KEY:', maskApiKey(process.env.OPENAI_API_KEY));
-  console.log('- MOCK_MODE:', process.env.MOCK_MODE === 'true' ? 'Enabled' : 'Disabled');
-  
-  // Check service status
-  console.log('\nSERVICE AVAILABILITY:');
-  try {
-    const status = await aiService.checkAllServices();
-    
-    console.log('- Anthropic (Claude):', status.anthropic.available ? '✅ Available' : '❌ Unavailable');
-    if (!status.anthropic.available && status.anthropic.error) {
-      console.log('  Error:', status.anthropic.error);
+  console.log('=== SmartDispute.ai API Status Check ===');
+  console.log('Checking API keys and service availability...\n');
+
+  // Check Anthropic Claude
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const anthropicStatus = {
+    configured: !!anthropicKey,
+    available: false,
+    version: 'claude-3-7-sonnet-20250219',
+    error: null
+  };
+
+  console.log('Anthropic Claude:');
+  console.log(`API Key: ${anthropicKey ? maskApiKey(anthropicKey) : 'Not configured'}`);
+
+  if (anthropicKey) {
+    try {
+      const anthropic = new Anthropic({ apiKey: anthropicKey });
+      const response = await anthropic.messages.create({
+        model: 'claude-3-7-sonnet-20250219',
+        max_tokens: 10,
+        messages: [{ role: 'user', content: 'Hello, are you working? Reply with only yes or no.' }],
+      });
+      anthropicStatus.available = true;
+      console.log('Status: ✅ Available');
+      console.log(`Model: ${anthropicStatus.version}`);
+      console.log(`Response: ${response.content[0].text.trim()}\n`);
+    } catch (error) {
+      anthropicStatus.error = error.message;
+      console.log('Status: ❌ Error');
+      console.log(`Error: ${error.message}\n`);
     }
-    
-    console.log('- OpenAI (GPT-4o):', status.openai.available ? '✅ Available' : '❌ Unavailable');
-    if (!status.openai.available && status.openai.error) {
-      console.log('  Error:', status.openai.error);
-    }
-    
-    console.log('- Mock service:', status.mock.available ? '✅ Available' : '❌ Unavailable');
-    console.log('- Default provider:', status.defaultProvider);
-    
-    // Summary of status
-    if (status.anthropic.available || status.openai.available) {
-      console.log('\n✅ AI SERVICES ARE OPERATIONAL');
-      if (status.anthropic.available && status.openai.available) {
-        console.log('Both Anthropic and OpenAI services are available. Fallback system is fully operational.');
-      } else if (status.anthropic.available) {
-        console.log('Anthropic service is available but OpenAI service is not. Limited fallback capability.');
-      } else {
-        console.log('OpenAI service is available but Anthropic service is not. Limited fallback capability.');
-      }
-    } else if (status.mockMode) {
-      console.log('\n⚠️ USING MOCK MODE - NO LIVE AI SERVICES');
-      console.log('The system will use mock data for AI responses.');
-      console.log('To enable real AI services, set up API keys in .env file.');
-    } else {
-      console.log('\n❌ NO AI SERVICES ARE AVAILABLE');
-      console.log('Configure either ANTHROPIC_API_KEY or OPENAI_API_KEY in the .env file.');
-      console.log('Or enable MOCK_MODE=true for testing with mock responses.');
-    }
-  } catch (error) {
-    console.error('\n❌ ERROR CHECKING SERVICE STATUS:', error.message);
+  } else {
+    console.log('Status: ⚠️ Not configured\n');
   }
-  
-  console.log('\n=== STATUS CHECK COMPLETE ===');
+
+  // Check OpenAI
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const openaiStatus = {
+    configured: !!openaiKey,
+    available: false,
+    version: 'gpt-4o',
+    error: null
+  };
+
+  console.log('OpenAI:');
+  console.log(`API Key: ${openaiKey ? maskApiKey(openaiKey) : 'Not configured'}`);
+
+  if (openaiKey) {
+    try {
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      const openai = new OpenAI({ apiKey: openaiKey });
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: "Hello, are you working? Reply with only yes or no." }],
+        max_tokens: 10,
+      });
+      openaiStatus.available = true;
+      console.log('Status: ✅ Available');
+      console.log(`Model: ${openaiStatus.version}`);
+      console.log(`Response: ${response.choices[0].message.content.trim()}\n`);
+    } catch (error) {
+      openaiStatus.error = error.message;
+      console.log('Status: ❌ Error');
+      console.log(`Error: ${error.message}\n`);
+    }
+  } else {
+    console.log('Status: ⚠️ Not configured\n');
+  }
+
+  // Check if mock mode is enabled
+  const mockModeEnabled = process.env.ENABLE_MOCK_MODE === 'true';
+  console.log('Mock Mode:');
+  console.log(`Status: ${mockModeEnabled ? '✅ Enabled' : '❌ Disabled'}`);
+
+  // Determine default provider
+  let defaultProvider = 'None';
+  if (anthropicStatus.available) {
+    defaultProvider = 'Anthropic Claude';
+  } else if (openaiStatus.available) {
+    defaultProvider = 'OpenAI';
+  } else if (mockModeEnabled) {
+    defaultProvider = 'Mock Mode';
+  }
+
+  console.log(`\nDefault Provider: ${defaultProvider}`);
+
+  // Display summary
+  console.log('\n=== SUMMARY ===');
+  console.log(`Anthropic Claude: ${anthropicStatus.available ? '✅ Available' : anthropicStatus.configured ? '❌ Error' : '⚠️ Not configured'}`);
+  console.log(`OpenAI: ${openaiStatus.available ? '✅ Available' : openaiStatus.configured ? '❌ Error' : '⚠️ Not configured'}`);
+  console.log(`Mock Mode: ${mockModeEnabled ? '✅ Enabled' : '❌ Disabled'}`);
+  console.log(`Default Provider: ${defaultProvider}`);
+
+  // Provide recommendations
+  console.log('\n=== RECOMMENDATIONS ===');
+  if (!anthropicStatus.available && !openaiStatus.available && !mockModeEnabled) {
+    console.log('❌ Critical: No AI providers are available. Configure at least one API key or enable mock mode.');
+  } else if ((anthropicStatus.available || openaiStatus.available) && !mockModeEnabled) {
+    console.log('⚠️ Warning: Consider enabling mock mode as a fallback for when API services are unavailable.');
+  } else if (!anthropicStatus.available && !openaiStatus.available && mockModeEnabled) {
+    console.log('⚠️ Warning: Running in mock mode only. For production use, configure at least one API service.');
+  } else {
+    console.log('✅ Good configuration: Multiple providers available with fallback options.');
+  }
+
+  // Return full status object for potential use by other scripts
+  return {
+    anthropic: anthropicStatus,
+    openai: openaiStatus,
+    mockMode: mockModeEnabled,
+    defaultProvider
+  };
 }
 
-// Run the check
-checkApiStatus().catch(error => {
-  console.error('Status check failed with error:', error);
-});
+// Execute the check if this script is run directly
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  checkApiStatus().catch(error => {
+    console.error('Fatal error running API status check:', error);
+  });
+}
+
+// Export the function for use in other modules
+export default checkApiStatus;

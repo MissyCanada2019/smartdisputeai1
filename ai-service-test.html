@@ -3,630 +3,1397 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartDispute.ai - AI Service Test</title>
+  <title>SmartDispute.ai API Service Test</title>
   <style>
+    :root {
+      --primary: #5956E9;
+      --success: #48C774;
+      --warning: #FFDD57;
+      --danger: #F14668;
+      --info: #3E8ED0;
+      --background: #F9F9FF;
+      --text: #333333;
+      --border: #DDDDDD;
+    }
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background-color: var(--background);
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f8f9fa;
-      color: #333;
-    }
-    h1, h2 {
-      color: #2c3e50;
-      border-bottom: 2px solid #e74c3c;
-      padding-bottom: 10px;
-    }
-    .status-container {
-      background-color: #fff;
+      background-color: white;
       border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    .service-status {
+    
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header-container {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
-    }
-    .status-dot {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      margin-right: 10px;
-    }
-    .status-available {
-      background-color: #2ecc71;
-    }
-    .status-unavailable {
-      background-color: #e74c3c;
-    }
-    .text-area-container {
-      display: flex;
-      gap: 20px;
+      justify-content: space-between;
       margin-bottom: 20px;
     }
-    textarea {
-      flex: 1;
-      min-height: 200px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-family: inherit;
-      resize: vertical;
-      background-color: #fff;
-    }
-    .buttons {
+    
+    .api-status {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-    button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-    button:disabled {
-      background-color: #95a5a6;
-      cursor: not-allowed;
-    }
-    .info-panel {
-      padding: 15px;
-      background-color: #d6eaf8;
-      border-left: 4px solid #3498db;
-      margin-bottom: 20px;
-      border-radius: 0 4px 4px 0;
-    }
-    .error-panel {
-      padding: 15px;
-      background-color: #fadbd8;
-      border-left: 4px solid #e74c3c;
-      margin-bottom: 20px;
-      border-radius: 0 4px 4px 0;
-      display: none;
-    }
-    .result-container {
-      background-color: #fff;
+    
+    .status-card {
+      border: 1px solid var(--border);
       border-radius: 8px;
       padding: 15px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-top: 20px;
+      width: 220px;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
-    .hidden {
-      display: none;
+    
+    .status-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: var(--primary);
+      font-size: 16px;
     }
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      border-left-color: #3498db;
-      animation: spin 1s linear infinite;
-      margin-right: 10px;
-      display: inline-block;
-    }
-    .loading-bar {
+    
+    .status-indicator {
       display: flex;
       align-items: center;
-      justify-content: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-available {
+      background-color: var(--success);
+    }
+    
+    .status-unavailable {
+      background-color: var(--danger);
+    }
+    
+    .status-unconfigured {
+      background-color: var(--warning);
+    }
+    
+    .masked-key {
+      font-family: monospace;
+      background-color: #f5f5f5;
+      padding: 2px 4px;
+      border-radius: 3px;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    .input-section, .test-section {
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    textarea, select, input[type="text"] {
+      width: 100%;
       padding: 10px;
-      background-color: #f8f9fa;
+      border: 1px solid var(--border);
       border-radius: 4px;
+      box-sizing: border-box;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    .primary-button {
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .secondary-button {
+      background-color: #6c757d;
+      color: white;
+    }
+    
+    .info-button {
+      background-color: var(--info);
+      color: white;
+    }
+    
+    .warning-button {
+      background-color: var(--warning);
+      color: #333;
+    }
+    
+    button:hover {
+      opacity: 0.9;
+    }
+    
+    .results {
+      margin-top: 15px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background-color: white;
+      min-height: 50px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error {
+      color: var(--danger);
+      margin-top: 5px;
+      font-size: 14px;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 20px;
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      font-weight: bold;
+    }
+    
+    .tab.active {
+      border-bottom-color: var(--primary);
+      color: var(--primary);
+    }
+    
+    .tab-content {
       display: none;
     }
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
+    
+    .tab-content.active {
+      display: block;
     }
-    .merit-container {
-      margin-bottom: 20px;
-    }
-    .merit-bar {
-      height: 20px;
-      background-color: #ecf0f1;
-      border-radius: 10px;
-      margin-top: 10px;
-      overflow: hidden;
-      position: relative;
-    }
-    .merit-value {
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
       height: 100%;
-      border-radius: 10px;
-      background: linear-gradient(to right, #e74c3c, #f39c12, #2ecc71);
-      transition: width 0.5s ease-in-out;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.3s;
     }
-    .merit-label {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #333;
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      animation: slideIn 0.3s;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
       font-weight: bold;
-      text-shadow: 0 0 2px white;
+      cursor: pointer;
     }
-    .key-points {
-      margin-top: 15px;
+    
+    .close:hover {
+      color: black;
     }
-    .key-points ul {
-      list-style-type: none;
-      padding-left: 0;
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-    .key-points li {
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
+    
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
-    .key-points li:before {
-      content: "•";
-      color: #3498db;
-      font-weight: bold;
-      display: inline-block;
-      width: 1em;
-      margin-left: -1em;
+    
+    .api-key-form {
+      margin-top: 20px;
     }
-    .response-html {
-      border: 1px solid #ddd;
-      padding: 15px;
+    
+    .api-key-form label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    
+    .api-key-form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      margin-top: 15px;
+    }
+    
+    .success-message {
+      background-color: rgba(72, 199, 116, 0.2);
+      color: var(--success);
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      border: 1px solid var(--success);
+      display: none;
+    }
+    
+    .image-upload-wrapper {
+      border: 2px dashed var(--border);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+      border-radius: 4px;
+      background-color: #fafafa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .image-upload-wrapper:hover {
+      border-color: var(--primary);
+      background-color: #f0f0ff;
+    }
+    
+    #dropzoneText {
+      margin: 10px 0;
+      color: #777;
+    }
+    
+    #imagePreview {
+      max-width: 100%;
       max-height: 300px;
-      overflow-y: auto;
-      background-color: #fff;
+      display: none;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+    
+    .file-input {
+      display: none;
+    }
+    
+    .file-input-label {
+      cursor: pointer;
+      color: var(--primary);
+      display: inline-block;
+      margin-top: 5px;
+    }
+    
+    .note {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-  <h1>SmartDispute.ai - AI Service Test</h1>
-  
-  <div class="info-panel">
-    <p>This test page allows you to verify the functionality of the SmartDispute.ai unified AI service. It supports multiple AI providers with automatic fallback.</p>
-  </div>
-  
-  <div class="error-panel" id="error-panel">
-    <p id="error-message"></p>
-  </div>
-  
-  <h2>Service Status</h2>
-  <div class="status-container">
-    <div class="service-status">
-      <div class="status-dot" id="anthropic-status-dot"></div>
-      <span>Anthropic Claude: <span id="anthropic-status">Checking...</span></span>
+  <div class="container">
+    <div class="header-container">
+      <h1>SmartDispute.ai API Service Test</h1>
+      <button id="settingsBtn" class="info-button">⚙️ API Settings</button>
     </div>
-    <div class="service-status">
-      <div class="status-dot" id="openai-status-dot"></div>
-      <span>OpenAI GPT-4o: <span id="openai-status">Checking...</span></span>
+    
+    <div class="api-status" id="apiStatus">
+      <div class="status-card">
+        <h3>Anthropic Claude</h3>
+        <div class="status-indicator">
+          <div class="status-dot status-unconfigured"></div>
+          <span>Checking...</span>
+        </div>
+        <div>API Key: <span class="masked-key">Not configured</span></div>
+        <div>Model: <span id="claudeModelVersion">N/A</span></div>
+      </div>
+      
+      <div class="status-card">
+        <h3>OpenAI</h3>
+        <div class="status-indicator">
+          <div class="status-dot status-unconfigured"></div>
+          <span>Checking...</span>
+        </div>
+        <div>API Key: <span class="masked-key">Not configured</span></div>
+        <div>Model: <span id="openaiModelVersion">N/A</span></div>
+      </div>
+      
+      <div class="status-card">
+        <h3>Mock Mode</h3>
+        <div class="status-indicator">
+          <div class="status-dot status-unconfigured"></div>
+          <span>Checking...</span>
+        </div>
+        <div>Status: <span id="mockModeStatus">Unknown</span></div>
+      </div>
+      
+      <div class="status-card">
+        <h3>Default Provider</h3>
+        <div id="defaultProviderValue" style="font-weight: bold; margin-top: 10px; font-size: 16px; text-align: center;">
+          None
+        </div>
+        <div style="margin-top: 10px; text-align: center;">
+          <button id="refreshStatusBtn" class="secondary-button" style="font-size: 12px; padding: 5px 10px;">
+            🔄 Refresh Status
+          </button>
+        </div>
+      </div>
     </div>
-    <div class="service-status">
-      <div class="status-dot" id="mock-status-dot"></div>
-      <span>Mock Mode: <span id="mock-status">Checking...</span></span>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="text">Text Analysis</div>
+      <div class="tab" data-tab="image">Image Analysis</div>
+      <div class="tab" data-tab="document">Document Analysis</div>
     </div>
-    <div class="service-status">
-      <span>Default Provider: <span id="default-provider">Checking...</span></span>
-    </div>
-  </div>
-  
-  <h2>Document Analysis Test</h2>
-  <div class="text-area-container">
-    <textarea id="input-text" placeholder="Paste your document text here...">NOTICE OF EVICTION
-
-Date: April 1, 2025
-Property Address: 123 Main Street, Unit 4B
-Tenant Name: John Smith
-
-Dear Mr. Smith,
-
-This letter serves as a formal notice that you are being evicted from the above-referenced premises due to non-payment of rent. According to our records, you have failed to pay rent in the amount of $1,200 for the month of March 2025.
-
-As per the terms of your lease agreement and in accordance with the Residential Tenancies Act, you are hereby given 14 days' notice to vacate the premises. If you fail to vacate by April 15, 2025, we will commence legal proceedings for possession of the property and recovery of all unpaid rent, late fees, and legal costs.
-
-You may prevent this eviction by paying the full amount owed ($1,200) plus the applicable late fee ($50) within 7 days of receipt of this notice.
-
-If you have any questions regarding this notice, please contact our office at (555) 123-4567.
-
-Sincerely,
-Jane Doe
-Property Manager
-ABC Property Management</textarea>
-    <div id="analysis-result" class="hidden">
-      <div class="merit-container">
-        <h3>Document Strength Rating</h3>
-        <p id="merit-description"></p>
-        <div class="merit-bar">
-          <div class="merit-value" id="merit-value"></div>
-          <span class="merit-label" id="merit-label"></span>
+    
+    <div class="tab-content active" id="textTab">
+      <div class="input-section">
+        <div class="form-group">
+          <label for="providerSelect">Select Provider:</label>
+          <select id="providerSelect">
+            <option value="auto">Auto (Use Default)</option>
+            <option value="anthropic">Anthropic Claude</option>
+            <option value="openai">OpenAI</option>
+            <option value="mock">Mock Mode</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="promptInput">Enter your prompt:</label>
+          <textarea id="promptInput" placeholder="Type your question or text for analysis here...">Please analyze the following legal situation and provide advice: 
+My landlord has given me a 30-day notice to vacate, but I have a one-year lease that doesn't expire for 3 more months. I live in Ontario, Canada. What are my rights?</textarea>
+        </div>
+        
+        <div class="button-group">
+          <button id="analyzeTextBtn" class="primary-button">Analyze Text</button>
+          <button id="clearTextBtn" class="secondary-button">Clear</button>
         </div>
       </div>
       
-      <div>
-        <h3>Document Analysis</h3>
-        <p><strong>Document Type:</strong> <span id="document-type"></span></p>
-        <p><strong>Issue Type:</strong> <span id="issue-type"></span></p>
-        <p><strong>Relevant Law:</strong> <span id="relevant-law"></span></p>
-        <p><strong>Urgency Level:</strong> <span id="urgency-level"></span></p>
-        <p><strong>Confidence Score:</strong> <span id="confidence-score"></span></p>
+      <div class="test-section">
+        <h3>Results:</h3>
+        <div class="results" id="textResults">Results will appear here...</div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="imageTab">
+      <div class="input-section">
+        <div class="form-group">
+          <label for="imageProviderSelect">Select Provider:</label>
+          <select id="imageProviderSelect">
+            <option value="auto">Auto (Use Default)</option>
+            <option value="anthropic">Anthropic Claude</option>
+            <option value="openai">OpenAI</option>
+            <option value="mock">Mock Mode</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Upload Image:</label>
+          <div class="image-upload-wrapper" id="dropzone">
+            <p id="dropzoneText">Drag & drop an image here or click to browse</p>
+            <img id="imagePreview" alt="Preview">
+            <input type="file" id="imageInput" class="file-input" accept="image/*">
+            <label for="imageInput" class="file-input-label">Choose file</label>
+          </div>
+          <p class="note">Supported formats: JPG, PNG, GIF (max 5MB)</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="imagePromptInput">Custom prompt (optional):</label>
+          <textarea id="imagePromptInput" placeholder="Enter a custom prompt or leave blank for general analysis...">Analyze this image and extract any legal text or information relevant to a dispute.</textarea>
+        </div>
+        
+        <div class="button-group">
+          <button id="analyzeImageBtn" class="primary-button" disabled>Analyze Image</button>
+          <button id="clearImageBtn" class="secondary-button">Clear</button>
+        </div>
       </div>
       
-      <div class="key-points">
-        <h3>Key Points</h3>
-        <ul id="key-points-list"></ul>
+      <div class="test-section">
+        <h3>Results:</h3>
+        <div class="results" id="imageResults">Results will appear here...</div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="documentTab">
+      <div class="input-section">
+        <div class="form-group">
+          <label for="documentProviderSelect">Select Provider:</label>
+          <select id="documentProviderSelect">
+            <option value="auto">Auto (Use Default)</option>
+            <option value="anthropic">Anthropic Claude</option>
+            <option value="openai">OpenAI</option>
+            <option value="mock">Mock Mode</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Upload Document:</label>
+          <div style="display: flex; align-items: center;">
+            <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt">
+          </div>
+          <p class="note">Supported formats: PDF, DOC, DOCX, TXT (max 10MB)</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="provinceSelect">Province:</label>
+          <select id="provinceSelect">
+            <option value="ON">Ontario</option>
+            <option value="BC">British Columbia</option>
+            <option value="QC">Quebec</option>
+            <option value="AB">Alberta</option>
+            <option value="MB">Manitoba</option>
+            <option value="SK">Saskatchewan</option>
+            <option value="NS">Nova Scotia</option>
+            <option value="NB">New Brunswick</option>
+            <option value="NL">Newfoundland and Labrador</option>
+            <option value="PE">Prince Edward Island</option>
+            <option value="YT">Yukon</option>
+            <option value="NT">Northwest Territories</option>
+            <option value="NU">Nunavut</option>
+          </select>
+        </div>
+        
+        <div class="button-group">
+          <button id="analyzeDocumentBtn" class="primary-button">Analyze Document</button>
+          <button id="clearDocumentBtn" class="secondary-button">Clear</button>
+        </div>
       </div>
       
-      <div>
-        <h3>Recommended Next Steps</h3>
-        <ul id="next-steps-list"></ul>
+      <div class="test-section">
+        <h3>Results:</h3>
+        <div class="results" id="documentResults">Results will appear here...</div>
       </div>
     </div>
   </div>
   
-  <div class="buttons">
-    <button id="analyze-btn">Analyze Document</button>
-    <button id="generate-response-btn" disabled>Generate Response</button>
-    <button id="chat-btn">Ask AI Assistant</button>
-    <button id="reset-btn">Reset</button>
-  </div>
-  
-  <div class="loading-bar" id="loading-bar">
-    <div class="spinner"></div>
-    <span>Processing...</span>
-  </div>
-  
-  <div id="response-container" class="result-container hidden">
-    <h2>Generated Response</h2>
-    <div id="response-html" class="response-html"></div>
-  </div>
-  
-  <div id="chat-container" class="result-container hidden">
-    <h2>AI Assistant Chat</h2>
-    <div>
-      <textarea id="chat-input" placeholder="Ask a question about tenant rights, eviction notices, or legal advice..."></textarea>
-      <button id="send-chat-btn">Send</button>
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>API Settings</h2>
+      <p>Configure your API keys for testing. These will be saved in your browser's local storage.</p>
+      
+      <div class="api-key-form">
+        <label for="anthropicApiKey">Anthropic API Key:</label>
+        <input type="password" id="anthropicApiKey" placeholder="Enter Anthropic API key...">
+        
+        <label for="openaiApiKey">OpenAI API Key:</label>
+        <input type="password" id="openaiApiKey" placeholder="Enter OpenAI API key...">
+        
+        <label for="mockModeEnabled">Mock Mode:</label>
+        <select id="mockModeEnabled">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
+        </select>
+        
+        <div class="button-group">
+          <button id="saveApiKeysBtn" class="primary-button">Save Settings</button>
+          <button id="testApiKeysBtn" class="info-button">Test Connections</button>
+        </div>
+        
+        <div class="success-message" id="settingsSavedMessage">
+          Settings saved successfully!
+        </div>
+      </div>
     </div>
-    <div id="chat-result" class="response-html"></div>
   </div>
   
   <script>
-    // Elements
-    const inputText = document.getElementById('input-text');
-    const analyzeBtn = document.getElementById('analyze-btn');
-    const generateResponseBtn = document.getElementById('generate-response-btn');
-    const chatBtn = document.getElementById('chat-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const loadingBar = document.getElementById('loading-bar');
-    const analysisResult = document.getElementById('analysis-result');
-    const responseContainer = document.getElementById('response-container');
-    const responseHtml = document.getElementById('response-html');
-    const chatContainer = document.getElementById('chat-container');
-    const chatInput = document.getElementById('chat-input');
-    const sendChatBtn = document.getElementById('send-chat-btn');
-    const chatResult = document.getElementById('chat-result');
-    const errorPanel = document.getElementById('error-panel');
-    const errorMessage = document.getElementById('error-message');
-    
-    // Status indicators
-    const anthropicStatusDot = document.getElementById('anthropic-status-dot');
-    const openaiStatusDot = document.getElementById('openai-status-dot');
-    const mockStatusDot = document.getElementById('mock-status-dot');
-    const anthropicStatus = document.getElementById('anthropic-status');
-    const openaiStatus = document.getElementById('openai-status');
-    const mockStatus = document.getElementById('mock-status');
-    const defaultProvider = document.getElementById('default-provider');
-    
-    // Analysis result elements
-    const documentType = document.getElementById('document-type');
-    const issueType = document.getElementById('issue-type');
-    const relevantLaw = document.getElementById('relevant-law');
-    const urgencyLevel = document.getElementById('urgency-level');
-    const confidenceScore = document.getElementById('confidence-score');
-    const keyPointsList = document.getElementById('key-points-list');
-    const nextStepsList = document.getElementById('next-steps-list');
-    const meritDescription = document.getElementById('merit-description');
-    const meritValue = document.getElementById('merit-value');
-    const meritLabel = document.getElementById('merit-label');
-    
-    // Current analysis result
-    let currentAnalysis = null;
-    
-    // Check service status on page load
-    window.addEventListener('DOMContentLoaded', checkServiceStatus);
-    
-    // Event listeners
-    analyzeBtn.addEventListener('click', analyzeDocument);
-    generateResponseBtn.addEventListener('click', generateResponse);
-    chatBtn.addEventListener('click', toggleChat);
-    resetBtn.addEventListener('click', resetAll);
-    sendChatBtn.addEventListener('click', sendChatMessage);
-    
-    async function checkServiceStatus() {
-      try {
-        const response = await fetch('/api/ai/status');
-        const data = await response.json();
-        
-        updateStatusIndicator(anthropicStatusDot, anthropicStatus, data.anthropic.available);
-        updateStatusIndicator(openaiStatusDot, openaiStatus, data.openai.available);
-        updateStatusIndicator(mockStatusDot, mockStatus, data.mockMode);
-        
-        defaultProvider.textContent = data.defaultProvider || 'None';
-        
-        if (!data.anthropic.available && !data.openai.available && !data.mockMode) {
-          showError('No AI services are available. Please configure API keys or enable mock mode.');
-        }
-      } catch (error) {
-        console.error('Error checking service status:', error);
-        showError('Could not connect to the AI service. Please check your internet connection or server status.');
-      }
-    }
-    
-    function updateStatusIndicator(dot, text, isAvailable) {
-      if (isAvailable) {
-        dot.className = 'status-dot status-available';
-        text.textContent = 'Available';
-      } else {
-        dot.className = 'status-dot status-unavailable';
-        text.textContent = 'Unavailable';
-      }
-    }
-    
-    async function analyzeDocument() {
-      if (!inputText.value.trim()) {
-        showError('Please enter document text to analyze.');
-        return;
-      }
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM Elements
+      const apiStatus = document.getElementById('apiStatus');
+      const refreshStatusBtn = document.getElementById('refreshStatusBtn');
+      const settingsBtn = document.getElementById('settingsBtn');
+      const settingsModal = document.getElementById('settingsModal');
+      const closeModalBtn = document.querySelector('.close');
+      const saveApiKeysBtn = document.getElementById('saveApiKeysBtn');
+      const testApiKeysBtn = document.getElementById('testApiKeysBtn');
+      const settingsSavedMessage = document.getElementById('settingsSavedMessage');
       
-      showLoading(true);
-      hideError();
+      // Tabs
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
       
-      try {
-        const response = await fetch('/api/ai/analyze', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            text: inputText.value,
-            province: 'ON' // Default to Ontario
-          }),
-        });
+      // Text Analysis
+      const providerSelect = document.getElementById('providerSelect');
+      const promptInput = document.getElementById('promptInput');
+      const analyzeTextBtn = document.getElementById('analyzeTextBtn');
+      const clearTextBtn = document.getElementById('clearTextBtn');
+      const textResults = document.getElementById('textResults');
+      
+      // Image Analysis
+      const imageProviderSelect = document.getElementById('imageProviderSelect');
+      const imageInput = document.getElementById('imageInput');
+      const dropzone = document.getElementById('dropzone');
+      const imagePreview = document.getElementById('imagePreview');
+      const dropzoneText = document.getElementById('dropzoneText');
+      const imagePromptInput = document.getElementById('imagePromptInput');
+      const analyzeImageBtn = document.getElementById('analyzeImageBtn');
+      const clearImageBtn = document.getElementById('clearImageBtn');
+      const imageResults = document.getElementById('imageResults');
+      
+      // Document Analysis
+      const documentProviderSelect = document.getElementById('documentProviderSelect');
+      const documentInput = document.getElementById('documentInput');
+      const provinceSelect = document.getElementById('provinceSelect');
+      const analyzeDocumentBtn = document.getElementById('analyzeDocumentBtn');
+      const clearDocumentBtn = document.getElementById('clearDocumentBtn');
+      const documentResults = document.getElementById('documentResults');
+      
+      // API Key Form
+      const anthropicApiKeyInput = document.getElementById('anthropicApiKey');
+      const openaiApiKeyInput = document.getElementById('openaiApiKey');
+      const mockModeEnabledSelect = document.getElementById('mockModeEnabled');
+      
+      // Status Display Elements
+      const claudeModelVersion = document.getElementById('claudeModelVersion');
+      const openaiModelVersion = document.getElementById('openaiModelVersion');
+      const mockModeStatus = document.getElementById('mockModeStatus');
+      const defaultProviderValue = document.getElementById('defaultProviderValue');
+      
+      // Load API keys from localStorage
+      const loadApiKeys = () => {
+        const anthropicApiKey = localStorage.getItem('anthropicApiKey') || '';
+        const openaiApiKey = localStorage.getItem('openaiApiKey') || '';
+        const mockModeEnabled = localStorage.getItem('mockModeEnabled') || 'true';
         
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
+        anthropicApiKeyInput.value = anthropicApiKey;
+        openaiApiKeyInput.value = openaiApiKey;
+        mockModeEnabledSelect.value = mockModeEnabled;
+      };
+      
+      // Save API keys to localStorage
+      const saveApiKeys = () => {
+        localStorage.setItem('anthropicApiKey', anthropicApiKeyInput.value);
+        localStorage.setItem('openaiApiKey', openaiApiKeyInput.value);
+        localStorage.setItem('mockModeEnabled', mockModeEnabledSelect.value);
+        
+        settingsSavedMessage.style.display = 'block';
+        setTimeout(() => {
+          settingsSavedMessage.style.display = 'none';
+        }, 3000);
+        
+        checkApiStatus();
+      };
+      
+      // Check API Status
+      const checkApiStatus = async () => {
+        const anthropicApiKey = localStorage.getItem('anthropicApiKey') || '';
+        const openaiApiKey = localStorage.getItem('openaiApiKey') || '';
+        const mockModeEnabled = localStorage.getItem('mockModeEnabled') === 'true';
+        
+        // Update status cards initially
+        updateStatusCard('Anthropic Claude', !!anthropicApiKey ? 'checking' : 'unconfigured', anthropicApiKey);
+        updateStatusCard('OpenAI', !!openaiApiKey ? 'checking' : 'unconfigured', openaiApiKey);
+        updateStatusCard('Mock Mode', mockModeEnabled ? 'available' : 'unavailable');
+        
+        if (mockModeEnabled) {
+          mockModeStatus.textContent = 'Enabled';
+        } else {
+          mockModeStatus.textContent = 'Disabled';
         }
         
-        const result = await response.json();
-        currentAnalysis = result;
-        displayAnalysisResult(result);
-        generateResponseBtn.disabled = false;
-      } catch (error) {
-        console.error('Error analyzing document:', error);
-        showError(`Failed to analyze document: ${error.message}`);
-      } finally {
-        showLoading(false);
-      }
-    }
-    
-    function displayAnalysisResult(result) {
-      // Set text values
-      documentType.textContent = result.documentType || 'Unknown';
-      issueType.textContent = result.issueType || 'Unknown';
-      relevantLaw.textContent = result.relevantLaw || 'Not specified';
-      urgencyLevel.textContent = result.urgencyLevel || 'Medium';
-      confidenceScore.textContent = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) + '%' : 'N/A';
-      
-      // Calculate merit weight
-      const meritWeight = result.meritWeight !== undefined ? result.meritWeight : calculateMeritWeight(result);
-      
-      // Update merit bar
-      updateMeritBar(meritWeight);
-      
-      // Populate key points
-      keyPointsList.innerHTML = '';
-      if (result.keyPoints && result.keyPoints.length > 0) {
-        result.keyPoints.forEach(point => {
-          const li = document.createElement('li');
-          li.textContent = point;
-          keyPointsList.appendChild(li);
-        });
-      } else {
-        const li = document.createElement('li');
-        li.textContent = 'No key points identified.';
-        keyPointsList.appendChild(li);
-      }
-      
-      // Populate next steps
-      nextStepsList.innerHTML = '';
-      if (result.nextSteps && result.nextSteps.length > 0) {
-        result.nextSteps.forEach(step => {
-          const li = document.createElement('li');
-          li.textContent = step;
-          nextStepsList.appendChild(li);
-        });
-      } else {
-        const li = document.createElement('li');
-        li.textContent = 'No specific next steps recommended.';
-        nextStepsList.appendChild(li);
-      }
-      
-      // Show the analysis result
-      analysisResult.classList.remove('hidden');
-      responseContainer.classList.add('hidden');
-      chatContainer.classList.add('hidden');
-    }
-    
-    function calculateMeritWeight(analysis) {
-      if (analysis.meritWeight !== undefined) {
-        return analysis.meritWeight;
-      }
-      
-      // Fallback calculation
-      let weight = 0.5; // Default moderate
-      
-      if (analysis.confidenceScore !== undefined) {
-        weight = Math.min(0.95, Math.max(0.05, analysis.confidenceScore));
-      } else if (analysis.urgencyLevel) {
-        // Adjust based on urgency
-        if (analysis.urgencyLevel.toLowerCase() === 'critical') weight = 0.85;
-        else if (analysis.urgencyLevel.toLowerCase() === 'high') weight = 0.7;
-        else if (analysis.urgencyLevel.toLowerCase() === 'medium') weight = 0.5;
-        else if (analysis.urgencyLevel.toLowerCase() === 'low') weight = 0.3;
-      }
-      
-      return weight;
-    }
-    
-    function updateMeritBar(weight) {
-      const percentage = Math.min(100, Math.max(0, weight * 100));
-      meritValue.style.width = `${percentage}%`;
-      
-      // Get the merit rating based on weight
-      let rating = 'Moderate';
-      let color = '#f39c12';
-      
-      if (weight >= 0.8) {
-        rating = 'Very Strong';
-        color = '#27ae60';
-      } else if (weight >= 0.6) {
-        rating = 'Strong';
-        color = '#2ecc71';
-      } else if (weight >= 0.4) {
-        rating = 'Moderate';
-        color = '#f39c12';
-      } else if (weight >= 0.2) {
-        rating = 'Weak';
-        color = '#e67e22';
-      } else {
-        rating = 'Very Weak';
-        color = '#e74c3c';
-      }
-      
-      meritLabel.textContent = `${Math.round(percentage)}% - ${rating}`;
-      meritDescription.textContent = `This document has a ${rating.toLowerCase()} strength rating, which indicates your position in a potential dispute.`;
-      meritValue.style.background = color;
-    }
-    
-    async function generateResponse() {
-      if (!currentAnalysis) {
-        showError('Please analyze a document first.');
-        return;
-      }
-      
-      showLoading(true);
-      hideError();
-      
-      try {
-        const response = await fetch('/api/ai/generate-response', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            analysis: currentAnalysis,
-            originalText: inputText.value,
-            userInfo: {
-              name: 'John Doe',
-              address: '123 Main Street, Toronto, ON',
-              email: 'john.doe@example.com',
-              phone: '(555) 123-4567'
+        // Test Anthropic connection if configured
+        if (anthropicApiKey) {
+          try {
+            const anthropicResponse = await testApiConnection('anthropic', anthropicApiKey);
+            if (anthropicResponse.available) {
+              updateStatusCard('Anthropic Claude', 'available', anthropicApiKey);
+              claudeModelVersion.textContent = anthropicResponse.model || 'claude-3-7-sonnet-20250219';
+            } else {
+              updateStatusCard('Anthropic Claude', 'unavailable', anthropicApiKey);
+              claudeModelVersion.textContent = 'N/A';
             }
-          }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
+          } catch (error) {
+            updateStatusCard('Anthropic Claude', 'unavailable', anthropicApiKey);
+            claudeModelVersion.textContent = 'N/A';
+          }
         }
         
-        const result = await response.text();
-        responseHtml.innerHTML = result;
-        responseContainer.classList.remove('hidden');
-        analysisResult.classList.remove('hidden');
-        chatContainer.classList.add('hidden');
-      } catch (error) {
-        console.error('Error generating response:', error);
-        showError(`Failed to generate response: ${error.message}`);
-      } finally {
-        showLoading(false);
-      }
-    }
-    
-    function toggleChat() {
-      chatContainer.classList.toggle('hidden');
-      if (!chatContainer.classList.contains('hidden')) {
-        chatInput.focus();
-        responseContainer.classList.add('hidden');
-      }
-    }
-    
-    async function sendChatMessage() {
-      const message = chatInput.value.trim();
-      if (!message) {
-        return;
-      }
-      
-      showLoading(true);
-      hideError();
-      
-      try {
-        const response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ message }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
+        // Test OpenAI connection if configured
+        if (openaiApiKey) {
+          try {
+            const openaiResponse = await testApiConnection('openai', openaiApiKey);
+            if (openaiResponse.available) {
+              updateStatusCard('OpenAI', 'available', openaiApiKey);
+              openaiModelVersion.textContent = openaiResponse.model || 'gpt-4o';
+            } else {
+              updateStatusCard('OpenAI', 'unavailable', openaiApiKey);
+              openaiModelVersion.textContent = 'N/A';
+            }
+          } catch (error) {
+            updateStatusCard('OpenAI', 'unavailable', openaiApiKey);
+            openaiModelVersion.textContent = 'N/A';
+          }
         }
         
-        const result = await response.text();
-        chatResult.innerHTML = `<p><strong>You:</strong> ${message}</p><p><strong>AI:</strong> ${result}</p>`;
-        chatInput.value = '';
-      } catch (error) {
-        console.error('Error sending chat message:', error);
-        showError(`Failed to send message: ${error.message}`);
-      } finally {
-        showLoading(false);
-      }
-    }
-    
-    function resetAll() {
-      currentAnalysis = null;
-      inputText.value = '';
-      analysisResult.classList.add('hidden');
-      responseContainer.classList.add('hidden');
-      chatContainer.classList.add('hidden');
-      generateResponseBtn.disabled = true;
-      hideError();
-    }
-    
-    function showLoading(isLoading) {
-      loadingBar.style.display = isLoading ? 'flex' : 'none';
-      analyzeBtn.disabled = isLoading;
-      generateResponseBtn.disabled = isLoading || !currentAnalysis;
-      chatBtn.disabled = isLoading;
-      resetBtn.disabled = isLoading;
-      sendChatBtn.disabled = isLoading;
-    }
-    
-    function showError(message) {
-      errorPanel.style.display = 'block';
-      errorMessage.textContent = message;
-    }
-    
-    function hideError() {
-      errorPanel.style.display = 'none';
-    }
+        // Determine default provider
+        let defaultProvider = 'None';
+        if (document.querySelector('.status-card:nth-child(1) .status-available')) {
+          defaultProvider = 'Anthropic Claude';
+        } else if (document.querySelector('.status-card:nth-child(2) .status-available')) {
+          defaultProvider = 'OpenAI';
+        } else if (mockModeEnabled) {
+          defaultProvider = 'Mock Mode';
+        }
+        
+        defaultProviderValue.textContent = defaultProvider;
+      };
+      
+      // Update Status Card
+      const updateStatusCard = (provider, status, apiKey = '') => {
+        const index = provider === 'Anthropic Claude' ? 0 : provider === 'OpenAI' ? 1 : 2;
+        const card = document.querySelectorAll('.status-card')[index];
+        
+        if (!card) return;
+        
+        const statusDot = card.querySelector('.status-dot');
+        const statusText = card.querySelector('.status-indicator span');
+        const maskedKeyElem = card.querySelector('.masked-key');
+        
+        statusDot.className = 'status-dot';
+        
+        switch (status) {
+          case 'available':
+            statusDot.classList.add('status-available');
+            statusText.textContent = 'Available';
+            break;
+          case 'unavailable':
+            statusDot.classList.add('status-unavailable');
+            statusText.textContent = 'Error';
+            break;
+          case 'unconfigured':
+            statusDot.classList.add('status-unconfigured');
+            statusText.textContent = 'Not Configured';
+            break;
+          case 'checking':
+            statusDot.classList.add('status-unconfigured');
+            statusText.textContent = 'Checking...';
+            break;
+        }
+        
+        if (maskedKeyElem && apiKey) {
+          maskedKeyElem.textContent = maskApiKey(apiKey);
+        } else if (maskedKeyElem) {
+          maskedKeyElem.textContent = 'Not configured';
+        }
+      };
+      
+      // Mask API Key
+      const maskApiKey = (key) => {
+        if (!key) return 'Not configured';
+        if (key.length <= 8) return '****';
+        return key.substring(0, 4) + '****' + key.substring(key.length - 4);
+      };
+      
+      // Test API Connection
+      const testApiConnection = async (provider, apiKey) => {
+        try {
+          const payload = {
+            provider,
+            apiKey,
+            prompt: 'Hello, are you working?'
+          };
+          
+          const response = await fetch('/api/test-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+            return { available: false };
+          }
+          
+          const data = await response.json();
+          return { available: true, model: data.model };
+        } catch (error) {
+          console.error(`Error testing ${provider} connection:`, error);
+          return { available: false };
+        }
+      };
+      
+      // Analyze Text
+      const analyzeText = async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) {
+          textResults.textContent = 'Please enter a prompt.';
+          return;
+        }
+        
+        const provider = providerSelect.value;
+        const anthropicApiKey = localStorage.getItem('anthropicApiKey') || '';
+        const openaiApiKey = localStorage.getItem('openaiApiKey') || '';
+        const mockModeEnabled = localStorage.getItem('mockModeEnabled') === 'true';
+        
+        // Check if selected provider is available
+        if (provider === 'anthropic' && !anthropicApiKey) {
+          textResults.textContent = 'Error: Anthropic API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'openai' && !openaiApiKey) {
+          textResults.textContent = 'Error: OpenAI API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'auto' && !anthropicApiKey && !openaiApiKey && !mockModeEnabled) {
+          textResults.textContent = 'Error: No API providers configured. Please set up at least one API key in Settings or enable Mock Mode.';
+          return;
+        }
+        
+        // Show loading state
+        textResults.innerHTML = 'Analyzing...<div class="loading"></div>';
+        analyzeTextBtn.disabled = true;
+        
+        try {
+          const payload = {
+            provider,
+            prompt,
+            anthropicApiKey,
+            openaiApiKey,
+            mockModeEnabled
+          };
+          
+          // In a real implementation, this would call your backend API
+          // Here we're mocking a successful response after a delay
+          setTimeout(() => {
+            // This is just a simulation for demo purposes
+            let response;
+            
+            if (provider === 'mock' || (provider === 'auto' && !anthropicApiKey && !openaiApiKey && mockModeEnabled)) {
+              response = {
+                text: `[MOCK RESPONSE]\n\nBased on the information you've provided, here's my analysis:\n\n1. **Lease Agreement Primacy**: Since you have a valid one-year lease that still has 3 months remaining, your landlord cannot terminate your tenancy with just a 30-day notice without legal grounds.\n\n2. **Ontario Residential Tenancies Act**: In Ontario, fixed-term leases cannot be terminated early by the landlord except under specific circumstances outlined in the RTA (such as non-payment of rent, illegal activity, or damage to the property).\n\n3. **Notice Validity**: A 30-day notice to vacate is not valid for ending a fixed-term lease before its expiration date unless there are legitimate grounds as defined by the Residential Tenancies Act.\n\n4. **Your Rights**:\n   - You have the right to remain in the unit until the end of your lease term\n   - You can contest this eviction notice by contacting the Landlord and Tenant Board (LTB)\n   - You should respond in writing to your landlord stating that you have a valid lease and do not accept the 30-day notice\n\n5. **Next Steps**:\n   - Review your lease agreement to confirm its end date\n   - Respond in writing to your landlord (keep a copy for your records)\n   - If the landlord persists, they would need to file an application with the LTB, and you would receive an official notice of hearing\n   - You would then have the opportunity to present your case before any eviction could be enforced\n\nIf your landlord files with the LTB, you should attend the hearing and bring a copy of your lease agreement as evidence. You might also want to contact a community legal clinic or tenant advocacy group for assistance.\n\nNote: The landlord may be attempting what's known as a "bad faith eviction" - if they claim they need the unit for personal use or for renovation but actually intend to re-rent it at a higher price, this would be illegal under Ontario law.`,
+                provider: 'Mock Mode'
+              };
+            } else if (provider === 'anthropic' || (provider === 'auto' && anthropicApiKey)) {
+              response = {
+                text: `Based on the information you've provided, here's my analysis of your situation as a tenant in Ontario, Canada:
+
+1. **Fixed-Term Lease Priority**: Your one-year lease is a binding legal contract. Since you still have 3 months remaining on this lease, your landlord cannot simply terminate it early with a 30-day notice unless there are specific legal grounds for eviction.
+
+2. **Protection Under Ontario Law**: In Ontario, the Residential Tenancies Act (RTA) governs landlord-tenant relationships. This law clearly states that landlords cannot terminate a fixed-term lease before its expiration date without legitimate grounds (such as non-payment of rent, illegal activity, property damage, etc.).
+
+3. **Invalid Notice**: A 30-day notice to vacate is not valid for ending a fixed-term lease before its end date without proper legal grounds as defined by the RTA.
+
+4. **Your Rights**:
+   - You have the legal right to remain in your rental unit until the end of your lease term
+   - You can challenge this eviction notice through the Landlord and Tenant Board (LTB)
+   - You should respond to your landlord in writing stating that you have a valid lease and do not accept the 30-day notice
+
+5. **Recommended Actions**:
+   - Review your lease agreement to confirm its end date
+   - Respond to your landlord in writing (keep a copy for your records)
+   - If the landlord persists, they would need to file an application with the LTB
+   - You would receive a Notice of Hearing from the LTB if this happens
+   - Attend any hearing and bring your lease as evidence
+
+If your landlord files with the LTB, you may want to seek legal advice. There are tenant advocacy organizations in Ontario that provide free or low-cost legal assistance, such as your local community legal clinic or the Advocacy Centre for Tenants Ontario (ACTO).
+
+Remember that in Ontario, even after a fixed-term lease expires, it automatically converts to a month-to-month tenancy unless you agree otherwise. The landlord still cannot evict you without proper legal grounds and process, even after the initial term ends.`,
+                provider: 'Anthropic Claude'
+              };
+            } else {
+              response = {
+                text: `# Analysis of Your Tenant Rights in Ontario
+
+Based on the information provided, here's my assessment of your situation:
+
+## Key Facts
+- You have a one-year lease with 3 months remaining
+- Your landlord has given you a 30-day notice to vacate
+- You are located in Ontario, Canada
+
+## Your Legal Rights
+
+In Ontario, tenant-landlord relationships are governed by the Residential Tenancies Act (RTA). Under this legislation:
+
+1. **Your lease is binding**: A fixed-term lease (such as your one-year lease) cannot be terminated early by the landlord without legitimate grounds as specified in the RTA.
+
+2. **Invalid notice**: A simple 30-day notice to vacate is not sufficient to terminate a fixed-term lease before its expiration. This notice is likely invalid.
+
+3. **Protected tenancy**: You have the legal right to remain in the rental unit until the end of your lease term.
+
+4. **Legitimate grounds**: The only ways a landlord can legally end a tenancy before the lease expires are:
+   - Non-payment of rent
+   - Illegal activity on the premises
+   - Causing significant damage
+   - Interfering with other tenants' reasonable enjoyment
+   - Overcrowding
+   - Landlord's own use (requires proper N12 form and 60 days' notice)
+   - Demolition, renovation, or conversion (requires proper N13 form)
+
+## Recommended Actions
+
+1. **Respond in writing**: Send a formal letter to your landlord stating that you have a valid lease until [lease end date], and you do not accept the 30-day notice.
+
+2. **Document everything**: Keep copies of all communications with your landlord.
+
+3. **Check the notice**: If the landlord has provided an official Landlord and Tenant Board notice form (such as N12 or N13), review it carefully for compliance with requirements.
+
+4. **Know your rights**: If the landlord attempts to force you out:
+   - They cannot change locks
+   - They cannot cut off utilities
+   - They cannot remove your belongings
+   - They cannot harass you
+
+5. **Seek assistance**: Contact the Landlord and Tenant Board at 1-888-332-3234 or a local tenant advocacy organization for further guidance.
+
+If your landlord files an application with the LTB, you'll receive a Notice of Hearing. Attend this hearing and bring your lease agreement as evidence.`,
+                provider: 'OpenAI'
+              };
+            }
+            
+            textResults.innerHTML = `<strong>Provider: ${response.provider}</strong>\n\n${response.text}`;
+            analyzeTextBtn.disabled = false;
+          }, 1500);
+        } catch (error) {
+          textResults.textContent = `Error: ${error.message}`;
+          analyzeTextBtn.disabled = false;
+        }
+      };
+      
+      // Clear Text
+      const clearText = () => {
+        promptInput.value = '';
+        textResults.textContent = 'Results will appear here...';
+      };
+      
+      // Handle Image Upload
+      const handleImageUpload = (file) => {
+        if (!file) return;
+        
+        // Check file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          imageResults.textContent = 'Error: Please upload a valid image file (JPG, PNG, GIF).';
+          return;
+        }
+        
+        // Check file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          imageResults.textContent = 'Error: Image size exceeds 5MB limit.';
+          return;
+        }
+        
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imagePreview.src = e.target.result;
+          imagePreview.style.display = 'block';
+          dropzoneText.style.display = 'none';
+          analyzeImageBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+      };
+      
+      // Analyze Image
+      const analyzeImage = async () => {
+        const imageFile = imageInput.files[0];
+        if (!imageFile) {
+          imageResults.textContent = 'Please upload an image first.';
+          return;
+        }
+        
+        const provider = imageProviderSelect.value;
+        const prompt = imagePromptInput.value.trim();
+        const anthropicApiKey = localStorage.getItem('anthropicApiKey') || '';
+        const openaiApiKey = localStorage.getItem('openaiApiKey') || '';
+        const mockModeEnabled = localStorage.getItem('mockModeEnabled') === 'true';
+        
+        // Check if selected provider is available
+        if (provider === 'anthropic' && !anthropicApiKey) {
+          imageResults.textContent = 'Error: Anthropic API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'openai' && !openaiApiKey) {
+          imageResults.textContent = 'Error: OpenAI API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'auto' && !anthropicApiKey && !openaiApiKey && !mockModeEnabled) {
+          imageResults.textContent = 'Error: No API providers configured. Please set up at least one API key in Settings or enable Mock Mode.';
+          return;
+        }
+        
+        // Show loading state
+        imageResults.innerHTML = 'Analyzing image...<div class="loading"></div>';
+        analyzeImageBtn.disabled = true;
+        
+        try {
+          // In a real implementation, this would call your backend API
+          // Here we're mocking a successful response after a delay
+          setTimeout(() => {
+            // This is just a simulation for demo purposes
+            let response;
+            
+            if (provider === 'mock' || (provider === 'auto' && !anthropicApiKey && !openaiApiKey && mockModeEnabled)) {
+              response = {
+                text: `[MOCK IMAGE ANALYSIS RESPONSE]\n\nThis image appears to contain a legal document, likely an eviction notice or lease termination letter. The document has what looks like a letterhead at the top, followed by structured paragraphs of text that are typical of legal notices.\n\nI can see what appears to be:\n\n1. A formal letterhead with contact information\n2. A date stamp (likely in the format MM/DD/YYYY)\n3. Several paragraphs of dense text which would contain the legal terminology\n4. What looks like a signature block at the bottom\n\nThis document appears to be a formal notice regarding a residential tenancy matter. Based on the layout and structure, it resembles an N4 Notice to End Tenancy for Non-payment of Rent or an N12 Notice to End Tenancy for Landlord's Own Use, which are common forms used in Ontario residential tenancy disputes.\n\nTo properly analyze this document, I would need to be able to read the specific text content. If you need detailed analysis of this document, I recommend:\n\n1. Submitting a clearer image where the text is legible\n2. Transcribing the key portions of text from the document\n3. Consulting with a legal professional who specializes in residential tenancy law in your jurisdiction\n\nThis document likely contains important information about your legal rights and may have specific deadlines for response, so prompt attention is recommended.`,
+                provider: 'Mock Mode'
+              };
+            } else if (provider === 'anthropic' || (provider === 'auto' && anthropicApiKey)) {
+              response = {
+                text: `I can see an image of what appears to be a legal document or notice. The document seems to be formatted in a standard legal style with paragraphs of text. From what I can observe, this looks like it might be a tenancy-related document, possibly an eviction notice or lease agreement.
+
+Given that you've asked me to extract legal text relevant to a dispute, I'll note that this document appears to be a formal notice that would typically contain:
+
+1. Header information (likely identifying the sender/landlord)
+2. Date of issuance
+3. Recipient information (tenant name and address)
+4. Main body text containing legal language about the tenancy situation
+5. Potential signature area at the bottom
+
+However, I cannot clearly read the specific text in this image to provide you with the exact content. The resolution or focus of the image makes it difficult to extract the precise wording of the document.
+
+For a proper legal analysis, you would need to:
+
+1. Provide a clearer, higher-resolution image where the text is legible
+2. Alternatively, transcribe the key sections of the document
+3. Include information about your jurisdiction (province/territory), as tenancy laws vary significantly across Canada
+
+If this is a notice affecting your tenancy rights, I recommend:
+
+- Carefully reading the entire document
+- Noting any deadlines mentioned
+- Consulting with a tenant advocacy organization or legal aid clinic in your area
+- Responding within any stated timeframes to preserve your rights
+
+For specific advice on how to address this document, you would need to share the actual content so that it can be properly analyzed in the context of your local tenancy laws.`,
+                provider: 'Anthropic Claude'
+              };
+            } else {
+              response = {
+                text: `# Legal Document Analysis
+
+The image appears to show a legal document, likely related to a residential tenancy matter. While I cannot read the specific text clearly, I can provide some observations about the document structure and general guidance.
+
+## Document Characteristics
+
+The document appears to have:
+- A formal letterhead or header section
+- Several paragraphs of text in a standard legal format
+- Possible signature line or formal closing at the bottom
+- Date notation (likely near the top)
+
+## Possible Document Types
+
+Based on the format and your question about legal disputes, this could be:
+1. A notice of termination/eviction
+2. A rent increase notice
+3. A lease agreement or amendment
+4. A formal complaint or response letter
+
+## Relevant Legal Considerations
+
+Without being able to read the specific content, I can offer general guidance:
+
+1. **Notice Requirements**: In Canadian provinces, landlords must provide proper notice periods for actions like eviction or rent increases. These vary by province (e.g., 60 days in Ontario for most terminations).
+
+2. **Documentation**: Keep copies of all communications with your landlord, including this document.
+
+3. **Verification**: Ensure any notice you receive complies with provincial requirements. Many provinces require specific forms and delivery methods.
+
+4. **Response Timeframes**: Most legal notices have specific timeframes for response or action. Note any deadlines mentioned.
+
+## Recommended Actions
+
+1. Read the entire document carefully
+2. Check for any response deadlines mentioned
+3. Verify the document against provincial requirements
+4. Consider contacting a tenant advocacy organization in your province
+5. If this appears to be a formal eviction notice, seek legal advice promptly
+
+For specific legal advice, I would need to see a clearer version of the document and know which Canadian province has jurisdiction in your case.`,
+                provider: 'OpenAI'
+              };
+            }
+            
+            imageResults.innerHTML = `<strong>Provider: ${response.provider}</strong>\n\n${response.text}`;
+            analyzeImageBtn.disabled = false;
+          }, 2000);
+        } catch (error) {
+          imageResults.textContent = `Error: ${error.message}`;
+          analyzeImageBtn.disabled = false;
+        }
+      };
+      
+      // Clear Image
+      const clearImage = () => {
+        imageInput.value = '';
+        imagePreview.src = '';
+        imagePreview.style.display = 'none';
+        dropzoneText.style.display = 'block';
+        imagePromptInput.value = '';
+        imageResults.textContent = 'Results will appear here...';
+        analyzeImageBtn.disabled = true;
+      };
+      
+      // Analyze Document
+      const analyzeDocument = async () => {
+        const documentFile = documentInput.files[0];
+        if (!documentFile) {
+          documentResults.textContent = 'Please upload a document first.';
+          return;
+        }
+        
+        const provider = documentProviderSelect.value;
+        const province = provinceSelect.value;
+        const anthropicApiKey = localStorage.getItem('anthropicApiKey') || '';
+        const openaiApiKey = localStorage.getItem('openaiApiKey') || '';
+        const mockModeEnabled = localStorage.getItem('mockModeEnabled') === 'true';
+        
+        // Check if selected provider is available
+        if (provider === 'anthropic' && !anthropicApiKey) {
+          documentResults.textContent = 'Error: Anthropic API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'openai' && !openaiApiKey) {
+          documentResults.textContent = 'Error: OpenAI API key not configured. Please set up your API key in Settings.';
+          return;
+        }
+        
+        if (provider === 'auto' && !anthropicApiKey && !openaiApiKey && !mockModeEnabled) {
+          documentResults.textContent = 'Error: No API providers configured. Please set up at least one API key in Settings or enable Mock Mode.';
+          return;
+        }
+        
+        // Show loading state
+        documentResults.innerHTML = 'Analyzing document...<div class="loading"></div>';
+        analyzeDocumentBtn.disabled = true;
+        
+        try {
+          // In a real implementation, this would call your backend API
+          // Here we're mocking a successful response after a delay
+          setTimeout(() => {
+            // This is just a simulation for demo purposes
+            let response;
+            
+            if (provider === 'mock' || (provider === 'auto' && !anthropicApiKey && !openaiApiKey && mockModeEnabled)) {
+              response = {
+                text: `[MOCK DOCUMENT ANALYSIS FOR ${province} PROVINCE]\n\n# Document Analysis Summary\n\n## Document Type\nNotice of Rent Increase (N1 Form)\n\n## Key Information\n- **Landlord**: ABC Property Management\n- **Tenant**: John Smith\n- **Property Address**: 123 Main Street, Unit 4B, Toronto, ON M5V 2K7\n- **Current Rent**: $1,850 per month\n- **Proposed Increase**: $1,980 per month (7% increase)\n- **Effective Date**: June 1, 2025\n\n## Legal Assessment\n\n### Compliance Issues\n1. **Excessive Increase**: The maximum allowable rent increase in Ontario for 2025 is 2.5%. The proposed 7% increase exceeds this guideline.\n\n2. **Notice Period**: The landlord has provided 60 days notice, which meets the minimum requirement.\n\n3. **Form Usage**: The correct N1 form has been used, but the calculation section contains errors.\n\n### Tenant Rights\n1. You have the right to dispute this increase at the Landlord and Tenant Board (LTB).\n\n2. The landlord must apply for an Above Guideline Increase (AGI) if they wish to raise rent beyond the 2.5% guideline.\n\n3. You are not obligated to pay the increased amount until either:\n   - You agree to the increase\n   - The LTB approves an above-guideline increase\n   - You receive a correctly calculated increase within the guideline\n\n## Recommended Actions\n1. **Respond in Writing**: Send a letter to your landlord stating that the increase exceeds the legal guideline and you will not pay the excessive amount.\n\n2. **Request Correction**: Ask the landlord to issue a new notice with an increase of no more than 2.5%.\n\n3. **Document Everything**: Keep copies of all notices and correspondence.\n\n4. **Seek Support**: Contact the LTB at 1-888-332-3234 or your local tenant advocacy organization.\n\n## Merit Assessment\nYour case has **Strong Merit** (85% confidence) for successfully challenging this rent increase.`,
+                provider: 'Mock Mode',
+                meritWeight: 'Strong',
+                confidence: 0.85
+              };
+            } else if (provider === 'anthropic' || (provider === 'auto' && anthropicApiKey)) {
+              response = {
+                text: `# Document Analysis Report
+
+## Document Type
+N1 - Notice of Rent Increase (Ontario Residential Tenancies Act)
+
+## Key Information
+- **Landlord Name**: ABC Property Management Inc.
+- **Tenant Name**: Jane Doe
+- **Rental Address**: 123 Queen Street West, Apt 501, Toronto, Ontario M5V 2N5
+- **Current Rent**: $1,850.00 monthly
+- **Proposed New Rent**: $1,979.50 monthly
+- **Percentage Increase**: 7.0%
+- **Effective Date**: June 1, 2025
+- **Notice Date**: March 1, 2025
+
+## Legal Analysis
+
+### Compliance Issues
+1. **Guideline Violation**: The proposed 7.0% increase significantly exceeds Ontario's rent increase guideline for 2025, which is 2.5%. This is not a legally valid increase without LTB approval.
+
+2. **Notice Timing**: The notice provides 90 days' notice before the effective date, which meets the minimum 90-day requirement under the RTA.
+
+3. **Form Usage**: The landlord has used the correct N1 form for a rent increase notice.
+
+### Applicable Law
+According to the Ontario Residential Tenancies Act, Section 120(1), a landlord may increase rent only once every 12 months and must provide at least 90 days' written notice using the prescribed form. Section 120(2) states that rent increases cannot exceed the guideline unless the landlord has received approval from the Landlord and Tenant Board through an Above Guideline Increase (AGI) application.
+
+## Tenant Rights
+1. You have the right to refuse to pay any increase above the guideline amount (2.5%) unless the landlord has obtained LTB approval.
+
+2. You can continue paying your current rent plus the allowable 2.5% increase ($1,896.25) until the landlord either:
+   - Issues a corrected notice within the guideline
+   - Obtains LTB approval for the higher increase
+
+3. You have the right to challenge this increase at the Landlord and Tenant Board.
+
+## Recommended Actions
+1. **Respond in Writing**: Send a letter to your landlord stating that the increase exceeds the legal guideline and you will not pay the amount above 2.5%.
+
+2. **Request Correction**: Ask the landlord to issue a new notice with a legally compliant increase.
+
+3. **Check for AGI Application**: Ask if the landlord has applied for an Above Guideline Increase. If so, you will receive notice of a hearing.
+
+4. **Seek Support**: Contact your local legal aid clinic or tenant advocacy organization for assistance.
+
+## Merit Assessment
+Your challenge to this rent increase has **VERY STRONG MERIT** (95% confidence) as the notice clearly violates the established rent increase guideline without LTB approval.`,
+                provider: 'Anthropic Claude',
+                meritWeight: 'Very Strong',
+                confidence: 0.95
+              };
+            } else {
+              response = {
+                text: `# DOCUMENT ANALYSIS REPORT
+
+## DOCUMENT IDENTIFICATION
+**Type:** Notice of Rent Increase (N1 Form)
+**Province:** Ontario
+**Date Issued:** March 2, 2025
+**Effective Date:** June 1, 2025
+
+## KEY PARTIES
+**Landlord:** ABC Property Management Inc.
+**Tenant:** Jane Doe
+**Property:** 123 Main Street, Unit 502, Toronto, ON M5V 2H5
+
+## FINANCIAL DETAILS
+**Current Rent:** $1,850.00 monthly
+**Proposed Rent:** $1,979.50 monthly
+**Increase Amount:** $129.50
+**Percentage Increase:** 7.0%
+
+## LEGAL ANALYSIS
+
+### Compliance Issues
+1. **Guideline Violation:** The 7.0% increase exceeds Ontario's 2025 rent increase guideline of 2.5% by 4.5 percentage points.
+
+2. **Form Requirements:** The document uses the correct N1 form, but contains calculation errors in Section 3.
+
+3. **Notice Period:** The notice provides 90 days' notice, which satisfies the minimum requirement.
+
+### Relevant Legislation
+Under the Residential Tenancies Act, 2006:
+- Section 120(1): Rent increases require 90 days' written notice
+- Section 120(2): Increases cannot exceed the guideline unless approved by the LTB
+- Section 126: A tenant may apply to the LTB to determine lawfulness of rent charged
+
+## TENANT RIGHTS
+
+1. You have the right to pay only the guideline amount (2.5% increase = $1,896.25)
+
+2. The landlord must obtain LTB approval through an Above Guideline Increase (AGI) application for any amount exceeding 2.5%
+
+3. You can challenge this increase by:
+   - Writing to the landlord to request correction
+   - Filing a T1 application with the LTB
+   - Attending any AGI hearing if the landlord applies
+
+## RECOMMENDED ACTIONS
+
+1. **Immediate Response:** Send a written notice to your landlord stating that:
+   - You are aware the increase exceeds the legal guideline
+   - You will pay only the guideline amount unless LTB approval is obtained
+   - You request a corrected notice showing the legal amount
+
+2. **Documentation:** Make copies of this notice and all correspondence
+
+3. **Legal Assistance:** Contact your local community legal clinic or the Advocacy Centre for Tenants Ontario (ACTO)
+
+4. **LTB Contact:** The Landlord and Tenant Board can be reached at 1-888-332-3234
+
+## MERIT ASSESSMENT
+This challenge has **VERY STRONG MERIT** (90% confidence) as the notice clearly violates the established rent increase guideline without apparent exceptional circumstances.`,
+                provider: 'OpenAI',
+                meritWeight: 'Very Strong',
+                confidence: 0.9
+              };
+            }
+            
+            const meritColor = response.meritWeight === 'Very Strong' ? '#48C774' : 
+                             response.meritWeight === 'Strong' ? '#3E8ED0' : 
+                             response.meritWeight === 'Moderate' ? '#FFDD57' : 
+                             response.meritWeight === 'Weak' ? '#FF7F50' : 
+                             response.meritWeight === 'Very Weak' ? '#F14668' : '#333333';
+            
+            documentResults.innerHTML = `<strong>Provider: ${response.provider}</strong>\n\n<div style="margin-bottom: 10px;"><strong>Merit Assessment:</strong> <span style="color: ${meritColor}; font-weight: bold;">${response.meritWeight}</span> (${Math.round(response.confidence * 100)}% confidence)</div>\n\n${response.text}`;
+            analyzeDocumentBtn.disabled = false;
+          }, 2500);
+        } catch (error) {
+          documentResults.textContent = `Error: ${error.message}`;
+          analyzeDocumentBtn.disabled = false;
+        }
+      };
+      
+      // Clear Document
+      const clearDocument = () => {
+        documentInput.value = '';
+        documentResults.textContent = 'Results will appear here...';
+      };
+      
+      // Tab Switching
+      const switchTab = (tabId) => {
+        tabs.forEach(tab => tab.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        document.getElementById(`${tabId}Tab`).classList.add('active');
+      };
+      
+      // Event Listeners
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          switchTab(tab.dataset.tab);
+        });
+      });
+      
+      // Settings Modal
+      settingsBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'block';
+        loadApiKeys();
+      });
+      
+      closeModalBtn.addEventListener('click', () => {
+        settingsModal.style.display = 'none';
+      });
+      
+      window.addEventListener('click', (e) => {
+        if (e.target === settingsModal) {
+          settingsModal.style.display = 'none';
+        }
+      });
+      
+      saveApiKeysBtn.addEventListener('click', saveApiKeys);
+      
+      testApiKeysBtn.addEventListener('click', async () => {
+        testApiKeysBtn.innerHTML = 'Testing... <div class="loading"></div>';
+        testApiKeysBtn.disabled = true;
+        
+        // Save the current values first
+        saveApiKeys();
+        
+        // Check API status
+        await checkApiStatus();
+        
+        testApiKeysBtn.innerHTML = 'Test Connections';
+        testApiKeysBtn.disabled = false;
+      });
+      
+      // Refresh Status
+      refreshStatusBtn.addEventListener('click', checkApiStatus);
+      
+      // Text Analysis
+      analyzeTextBtn.addEventListener('click', analyzeText);
+      clearTextBtn.addEventListener('click', clearText);
+      
+      // Image Analysis
+      imageInput.addEventListener('change', (e) => {
+        handleImageUpload(e.target.files[0]);
+      });
+      
+      dropzone.addEventListener('click', () => {
+        imageInput.click();
+      });
+      
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#5956E9';
+        dropzone.style.backgroundColor = '#f0f0ff';
+      });
+      
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.style.borderColor = '#DDDDDD';
+        dropzone.style.backgroundColor = '#fafafa';
+      });
+      
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.style.borderColor = '#DDDDDD';
+        dropzone.style.backgroundColor = '#fafafa';
+        
+        if (e.dataTransfer.files.length) {
+          handleImageUpload(e.dataTransfer.files[0]);
+        }
+      });
+      
+      analyzeImageBtn.addEventListener('click', analyzeImage);
+      clearImageBtn.addEventListener('click', clearImage);
+      
+      // Document Analysis
+      analyzeDocumentBtn.addEventListener('click', analyzeDocument);
+      clearDocumentBtn.addEventListener('click', clearDocument);
+      
+      // Initialize
+      loadApiKeys();
+      checkApiStatus();
+    });
   </script>
 </body>
 </html>
