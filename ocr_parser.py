@@ -1,297 +1,338 @@
 """
-OCR Parser for SmartDispute.ai
-Handles image preprocessing and text extraction from document images
+OCR Document Processor for SmartDispute.ai
+Takes images and PDFs and extracts structured information with preprocessing for best results
 """
 
+import os
+import re
 import pytesseract
 from PIL import Image, ImageEnhance, ImageFilter
 import io
 import cv2
 import numpy as np
-import re
-import json
-import os
 import logging
-from datetime import datetime
+import json
+import datetime
+from typing import Dict, List, Union, Any, Optional
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('ocr_server.log'),
+        logging.FileHandler('ocr_parser.log'),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger('ocr_parser')
 
 class DocumentProcessor:
-    """Class to handle document image processing and OCR text extraction"""
+    """
+    Document processor class that handles OCR with preprocessing
+    and field extraction for legal documents
+    """
     
     def __init__(self):
-        """Initialize the document processor"""
-        self.tesseract_config = '--oem 3 --psm 6'
-        logger.info("Document processor initialized")
-    
-    def preprocess_image(self, image_path):
+        """Initialize the document processor with default values"""
+        # Document type patterns - these are regex patterns used to identify document types
+        self.document_patterns = {
+            "EVICTION_NOTICE": r"(?i)(notice\s+to\s+end\s+tenancy|eviction\s+notice|notice\s+to\s+vacate|notice\s+of\s+termination)",
+            "RENTAL_AGREEMENT": r"(?i)(rental\s+agreement|lease\s+agreement|tenancy\s+agreement|residential\s+agreement)",
+            "LANDLORD_COMPLAINT": r"(?i)(complaint\s+against\s+landlord|landlord\s+dispute|maintenance\s+request|repair\s+request)",
+            "RENT_INCREASE": r"(?i)(rent\s+increase\s+notice|notice\s+of\s+rent\s+increase|rent\s+adjustment)",
+            "CHILD_SERVICES_NOTICE": r"(?i)(children(')?s\s+aid\s+society|child\s+protection|family\s+services|child\s+welfare|temporary\s+care\s+agreement|supervision\s+order)",
+            "CREDIT_DISPUTE": r"(?i)(credit\s+report|credit\s+bureau|equifax|transunion|experian|credit\s+dispute)",
+            "COURT_SUMMONS": r"(?i)(summons|notice\s+of\s+hearing|court\s+appearance|notice\s+of\s+application)",
+            "DEMAND_LETTER": r"(?i)(demand\s+letter|demand\s+for\s+payment|legal\s+demand|formal\s+demand)"
+        }
+        
+        # Issue patterns - these help identify common issues in documents
+        self.issue_patterns = {
+            "MISSING_DATE": r"(?i)(dated?|on\s+the\s+\d+(?:st|nd|rd|th)?\s+day\s+of)",
+            "MISSING_SIGNATURE": r"(?i)(signed|signature|sign\s+here|sign\s+below)",
+            "MISSING_ADDRESS": r"(?i)(address|premises|property|located\s+at|municipal\s+address)",
+            "INVALID_NOTICE_PERIOD": r"(?i)(\d+\s+days\s+notice|\d+\s+day\s+notice|notice\s+period|\d+\s+days\s+from\s+the\s+date)",
+        }
+        
+        # Date patterns for extraction
+        self.date_patterns = [
+            r"(?i)(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}",
+            r"(?i)\d{1,2}(?:st|nd|rd|th)?\s+(?:january|february|march|april|may|june|july|august|september|october|november|december),?\s+\d{4}",
+            r"\d{1,2}/\d{1,2}/\d{4}",
+            r"\d{4}-\d{1,2}-\d{1,2}",
+            r"\d{1,2}-\d{1,2}-\d{4}",
+        ]
+        
+        # Tenant and landlord patterns
+        self.tenant_patterns = [
+            r"(?i)tenant\s*:\s*([A-Za-z\s.'-]+)",
+            r"(?i)tenant(?:\s+name)?(?:\s*:|\s+is)\s*([A-Za-z\s.'-]+)",
+            r"(?i)tenant(?:'s)?\s+name\s*(?::|\s+is)\s*([A-Za-z\s.'-]+)",
+            r"(?i)lessee\s*:\s*([A-Za-z\s.'-]+)",
+            r"(?i)(?:is|am)\s+(?:leasing|renting)(?:\s+to)?\s+([A-Za-z\s.'-]+)",
+            r"(?i)resident\s*:\s*([A-Za-z\s.'-]+)",
+        ]
+        
+        self.landlord_patterns = [
+            r"(?i)landlord\s*:\s*([A-Za-z\s.'-]+)",
+            r"(?i)landlord(?:\s+name)?(?:\s*:|\s+is)\s*([A-Za-z\s.'-]+)",
+            r"(?i)landlord(?:'s)?\s+name\s*(?::|\s+is)\s*([A-Za-z\s.'-]+)",
+            r"(?i)lessor\s*:\s*([A-Za-z\s.'-]+)",
+            r"(?i)property\s+(?:owner|manager)\s*:?\s*([A-Za-z\s.'-]+)",
+            r"(?i)(?:owned|managed)\s+by\s+([A-Za-z\s.'-]+)",
+        ]
+        
+    def preprocess_image(self, image_path: str) -> Image.Image:
         """
-        Preprocess image for better OCR results
+        Preprocess an image for better OCR results
         
         Args:
             image_path: Path to the image file
             
         Returns:
-            PIL Image: Processed image
+            A PIL Image object, preprocessed for OCR
         """
-        logger.info(f"Preprocessing image: {image_path}")
-        
         try:
-            # Read image
-            if isinstance(image_path, str):
-                # Path to image file
-                img = cv2.imread(image_path)
-            else:
-                # Binary data
-                nparr = np.frombuffer(image_path, np.uint8)
-                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            logger.info(f"Preprocessing image: {image_path}")
             
-            if img is None:
-                logger.error(f"Failed to read image: {image_path}")
-                return None
+            # Open the image
+            img = Image.open(image_path)
+            
+            # Convert to OpenCV format for advanced preprocessing
+            img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
             
             # Convert to grayscale
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
             
-            # Apply thresholding
-            _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+            # Apply Gaussian blur to reduce noise
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
             
-            # Remove noise
-            denoised = cv2.fastNlMeansDenoising(binary, None, 10, 7, 21)
+            # Apply adaptive thresholding
+            thresh = cv2.adaptiveThreshold(
+                blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                cv2.THRESH_BINARY, 11, 2
+            )
             
-            # Convert back to PIL image for OCR
-            pil_img = Image.fromarray(denoised)
+            # Apply dilation to strengthen text
+            kernel = np.ones((1, 1), np.uint8)
+            dilated = cv2.dilate(thresh, kernel, iterations=1)
             
-            # Enhance contrast
-            enhancer = ImageEnhance.Contrast(pil_img)
-            enhanced_img = enhancer.enhance(2.0)
+            # Convert back to PIL format
+            img_pil = Image.fromarray(dilated)
             
-            # Apply sharpening
-            enhanced_img = enhanced_img.filter(ImageFilter.SHARPEN)
+            # Increase contrast
+            enhancer = ImageEnhance.Contrast(img_pil)
+            img_contrast = enhancer.enhance(2.0)
             
-            logger.info("Image preprocessing completed successfully")
-            return enhanced_img
+            # Increase sharpness
+            enhancer = ImageEnhance.Sharpness(img_contrast)
+            img_sharp = enhancer.enhance(2.0)
+            
+            logger.info("Image preprocessing complete")
+            return img_sharp
             
         except Exception as e:
             logger.error(f"Error during image preprocessing: {str(e)}")
-            return None
+            # If preprocessing fails, return original image
+            return Image.open(image_path)
     
-    def extract_text(self, image):
+    def extract_text(self, image: Image.Image) -> str:
         """
-        Extract text from an image using Tesseract OCR
+        Extract text from an image using OCR
         
         Args:
-            image: PIL Image object
+            image: A PIL Image object
             
         Returns:
-            str: Extracted text
+            String containing the extracted text
         """
-        logger.info("Extracting text from image using OCR")
-        
         try:
-            text = pytesseract.image_to_string(image, config=self.tesseract_config)
-            logger.info(f"Extracted {len(text)} characters from image")
+            logger.info("Extracting text using OCR")
+            
+            # Use pytesseract for OCR
+            text = pytesseract.image_to_string(image)
+            
+            # Clean up the text
+            text = text.replace('\n\n', '\n').strip()
+            
+            logger.info(f"Extracted {len(text)} characters of text")
             return text
+            
         except Exception as e:
             logger.error(f"Error during text extraction: {str(e)}")
             return ""
     
-    def detect_document_type(self, text):
+    def detect_document_type(self, text: str) -> str:
         """
-        Detect the type of legal document based on extracted text
+        Determine the type of document based on its content
         
         Args:
-            text: Extracted text from document
+            text: Text extracted from the document
             
         Returns:
-            str: Document type
+            String representing the document type
         """
         logger.info("Detecting document type")
         
-        text_lower = text.lower()
+        # Check for matches with document patterns
+        for doc_type, pattern in self.document_patterns.items():
+            if re.search(pattern, text):
+                logger.info(f"Document type detected: {doc_type}")
+                return doc_type
         
-        # Check for different document types
-        if "notice to terminate" in text_lower or "eviction notice" in text_lower:
-            return "Eviction Notice"
-        elif "notice of rent increase" in text_lower:
-            return "Rent Increase Notice"
-        elif "lease agreement" in text_lower or "rental agreement" in text_lower:
-            return "Lease Agreement"
-        elif "child" in text_lower and "services" in text_lower and any(x in text_lower for x in ["investigation", "allegation", "petition"]):
-            return "Child Services Document"
-        elif "summons" in text_lower or "court date" in text_lower:
-            return "Court Summons"
-        elif "cease and desist" in text_lower:
-            return "Cease and Desist Letter"
-        elif "appeal" in text_lower and any(x in text_lower for x in ["decision", "order", "ruling"]):
-            return "Appeal Document"
-        elif "agreement" in text_lower:
-            return "Legal Agreement"
-        elif any(x in text_lower for x in ["notice", "notification"]):
-            return "Legal Notice"
-        else:
-            return "Unknown Legal Document"
+        # If no match is found, return UNKNOWN
+        logger.info("Document type is UNKNOWN")
+        return "UNKNOWN"
     
-    def extract_dates(self, text):
+    def extract_dates(self, text: str) -> List[str]:
         """
-        Extract dates from document text
+        Extract dates from the document text
         
         Args:
-            text: Extracted text from document
+            text: Text extracted from the document
             
         Returns:
-            list: List of dates found in document
+            List of date strings found in the document
         """
-        logger.info("Extracting dates from text")
-        
-        # Date patterns
-        date_patterns = [
-            r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}\b',
-            r'\b\d{1,2}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b',
-            r'\b\d{1,2}/\d{1,2}/\d{2,4}\b',
-            r'\b\d{4}-\d{1,2}-\d{1,2}\b'
-        ]
+        logger.info("Extracting dates from document")
         
         dates = []
-        for pattern in date_patterns:
-            dates.extend(re.findall(pattern, text))
         
-        logger.info(f"Found {len(dates)} dates in document")
-        return dates
+        # Check for matches with date patterns
+        for pattern in self.date_patterns:
+            matches = re.findall(pattern, text)
+            dates.extend(matches)
+        
+        # Remove duplicates and return
+        unique_dates = list(set(dates))
+        logger.info(f"Found {len(unique_dates)} dates in document")
+        return unique_dates
     
-    def extract_names(self, text):
+    def extract_names(self, text: str) -> Dict[str, str]:
         """
-        Extract potential names from document text
+        Extract tenant and landlord names from the document
         
         Args:
-            text: Extracted text from document
+            text: Text extracted from the document
             
         Returns:
-            dict: Dictionary with tenant and landlord names
+            Dictionary with tenant_name and landlord_name keys
         """
-        logger.info("Extracting names from text")
+        logger.info("Extracting names from document")
         
-        # Look for patterns that might indicate names
-        landlord_patterns = [
-            r'(?:landlord|lessor|owner)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
-            r'(?:from|by)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
-        ]
-        
-        tenant_patterns = [
-            r'(?:tenant|lessee|resident|occupant)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
-            r'(?:to|dear)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
-        ]
-        
-        landlord_name = "Not found"
         tenant_name = "Not found"
+        landlord_name = "Not found"
         
-        # Try to find landlord name
-        for pattern in landlord_patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            if matches:
-                landlord_name = matches[0].strip()
+        # Look for tenant name
+        for pattern in self.tenant_patterns:
+            match = re.search(pattern, text)
+            if match and match.group(1).strip():
+                tenant_name = match.group(1).strip()
+                logger.info(f"Found tenant name: {tenant_name}")
                 break
         
-        # Try to find tenant name
-        for pattern in tenant_patterns:
-            matches = re.findall(pattern, text, re.IGNORECASE)
-            if matches:
-                tenant_name = matches[0].strip()
+        # Look for landlord name
+        for pattern in self.landlord_patterns:
+            match = re.search(pattern, text)
+            if match and match.group(1).strip():
+                landlord_name = match.group(1).strip()
+                logger.info(f"Found landlord name: {landlord_name}")
                 break
         
-        logger.info(f"Extracted names - Tenant: {tenant_name}, Landlord: {landlord_name}")
         return {
             "tenant_name": tenant_name,
             "landlord_name": landlord_name
         }
     
-    def check_for_issues(self, text, document_type):
+    def check_for_issues(self, text: str, document_type: str) -> List[Dict[str, str]]:
         """
-        Check document for potential issues
+        Check for common issues in the document
         
         Args:
-            text: Extracted text from document
-            document_type: Type of the document
+            text: Text extracted from the document
+            document_type: Type of document being analyzed
             
         Returns:
-            list: List of identified issues
+            List of dictionaries containing issue type and description
         """
-        logger.info(f"Checking for issues in {document_type}")
+        logger.info(f"Checking for issues in {document_type} document")
         
         issues = []
         
-        # Common issues for all document types
-        if not re.search(r'sign(ed|ature)', text.lower()):
-            issues.append("Missing signature")
+        # Check for missing date
+        if not re.search(self.issue_patterns["MISSING_DATE"], text):
+            issues.append({
+                "issue_type": "MISSING_DATE",
+                "description": "The document appears to be missing a date, which may affect its validity."
+            })
         
-        # Check for dates
-        dates = self.extract_dates(text)
-        if not dates:
-            issues.append("No date found on document")
+        # Check for missing signature
+        if not re.search(self.issue_patterns["MISSING_SIGNATURE"], text):
+            issues.append({
+                "issue_type": "MISSING_SIGNATURE",
+                "description": "The document appears to be missing a signature, which may affect its validity."
+            })
         
-        # Document-specific checks
-        if document_type == "Eviction Notice":
-            if not re.search(r'days notice', text.lower()):
-                issues.append("Notice period not specified")
-            
-            if not re.search(r'reason', text.lower()) and not re.search(r'grounds', text.lower()):
-                issues.append("Reason for eviction not clearly stated")
+        # Check for missing address
+        if not re.search(self.issue_patterns["MISSING_ADDRESS"], text):
+            issues.append({
+                "issue_type": "MISSING_ADDRESS",
+                "description": "The document appears to be missing an address, which may affect its specificity and enforceability."
+            })
         
-        elif document_type == "Lease Agreement":
-            if not re.search(r'rent(?:al)?\s+(?:amount|payment|fee)', text.lower()):
-                issues.append("Rent amount not specified")
-            
-            if not re.search(r'term', text.lower()) and not re.search(r'period', text.lower()):
-                issues.append("Lease term not clearly specified")
+        # For eviction notices, check for notice period
+        if document_type == "EVICTION_NOTICE" and not re.search(self.issue_patterns["INVALID_NOTICE_PERIOD"], text):
+            issues.append({
+                "issue_type": "INVALID_NOTICE_PERIOD",
+                "description": "The eviction notice may not specify the required notice period, which is typically required by law."
+            })
         
         logger.info(f"Found {len(issues)} issues in document")
         return issues
     
-    def process_document(self, image_path):
+    def process_document(self, filepath: str) -> Dict[str, Any]:
         """
-        Process a document image and extract key information
+        Process a document through the entire pipeline:
+        1. Preprocess the image
+        2. Extract text using OCR
+        3. Detect document type
+        4. Extract dates
+        5. Extract names
+        6. Check for issues
         
         Args:
-            image_path: Path to the image file
+            filepath: Path to the document file
             
         Returns:
-            dict: Extracted document information
+            Dictionary containing the structured extraction results
         """
-        logger.info(f"Processing document: {image_path}")
+        logger.info(f"Processing document: {filepath}")
         
         try:
-            # Preprocess image
-            processed_image = self.preprocess_image(image_path)
-            if processed_image is None:
-                logger.error("Image preprocessing failed")
-                return {"status": "error", "message": "Image preprocessing failed"}
+            # Step 1: Preprocess the image
+            preprocessed_image = self.preprocess_image(filepath)
             
-            # Extract text using OCR
-            text = self.extract_text(processed_image)
+            # Step 2: Extract text using OCR
+            text = self.extract_text(preprocessed_image)
+            
             if not text:
-                logger.error("OCR text extraction failed")
-                return {"status": "error", "message": "Text extraction failed"}
+                logger.warning("No text extracted from document")
+                return {
+                    "status": "error",
+                    "message": "No text could be extracted from the document."
+                }
             
-            # Detect document type
+            # Step 3: Detect document type
             document_type = self.detect_document_type(text)
             
-            # Extract dates
+            # Step 4: Extract dates
             dates = self.extract_dates(text)
             date_str = dates[0] if dates else "Not found"
             
-            # Extract names
+            # Step 5: Extract names
             names = self.extract_names(text)
             
-            # Check for issues
+            # Step 6: Check for issues
             issues = self.check_for_issues(text, document_type)
             
             # Create result dictionary
@@ -307,22 +348,22 @@ class DocumentProcessor:
                 }
             }
             
-            logger.info("Document processing completed successfully")
+            logger.info("Document processing complete")
             return result
             
         except Exception as e:
             logger.error(f"Error during document processing: {str(e)}")
             return {
-                "status": "error", 
-                "message": f"Document processing failed: {str(e)}"
+                "status": "error",
+                "message": f"An error occurred during document processing: {str(e)}"
             }
 
-# For direct testing
+# Direct execution example
 if __name__ == "__main__":
-    processor = DocumentProcessor()
     if len(os.sys.argv) > 1:
-        # Process file provided as command line argument
-        result = processor.process_document(os.sys.argv[1])
+        filepath = os.sys.argv[1]
+        processor = DocumentProcessor()
+        result = processor.process_document(filepath)
         print(json.dumps(result, indent=2))
     else:
-        print("Please provide an image path as command line argument")
+        print("Please provide a file path to process")
