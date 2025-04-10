@@ -399,44 +399,58 @@
             
             // Show loading overlay
             loadingOverlay.style.display = 'flex';
+            
+            // Hide any previous results or errors
+            resultsContainer.style.display = 'none';
             errorContainer.style.display = 'none';
             
-            // Send the request
-            fetch('/ocr-upload', {
+            // Send the file to the server
+            fetch('/api/ocr/ocr-upload', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Failed to process document');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                // Hide loading overlay
                 loadingOverlay.style.display = 'none';
                 
                 if (data.status === 'success') {
-                    displayResults(data);
+                    // Display results
+                    displayResults(data.fields);
+                    resultsContainer.style.display = 'block';
                 } else {
-                    showError(data.message || 'An error occurred while processing your document.');
+                    showError(data.message || 'An unexpected error occurred');
                 }
             })
             .catch(error => {
+                // Hide loading overlay
                 loadingOverlay.style.display = 'none';
-                showError('An error occurred while communicating with the server. Please try again.');
-                console.error('Error:', error);
+                
+                showError(error.message || 'An unexpected error occurred');
             });
         }
         
-        function displayResults(data) {
-            const fields = data.fields;
+        function displayResults(fields) {
+            // Update document info
+            documentType.textContent = fields.document_type || 'Unknown Document Type';
+            documentDate.textContent = fields.date || 'No date found';
             
-            // Update result fields
-            documentType.textContent = fields.document_type || 'Not detected';
-            documentDate.textContent = fields.date || 'Not detected';
-            tenantName.textContent = fields.tenant_name || 'Not detected';
-            landlordName.textContent = fields.landlord_name || 'Not detected';
+            // Update parties
+            tenantName.textContent = fields.tenant_name || 'Not found';
+            landlordName.textContent = fields.landlord_name || 'Not found';
             
             // Update issues
             if (fields.issues && fields.issues.length > 0) {
                 let issuesHTML = '';
                 fields.issues.forEach(issue => {
-                    issuesHTML += `<span class="issue-badge"><i class="fas fa-exclamation-circle me-1"></i>${issue}</span> `;
+                    issuesHTML += `<span class="issue-badge">${issue}</span> `;
                 });
                 issuesContainer.innerHTML = issuesHTML;
             } else {
@@ -444,33 +458,23 @@
             }
             
             // Update full text
-            fullText.textContent = fields.full_text || 'No text extracted';
-            
-            // Show results container
-            resultsContainer.style.display = 'block';
-            
-            // Scroll to results
-            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            fullText.textContent = fields.full_text || 'No text could be extracted';
         }
         
         function showError(message) {
             errorMessage.textContent = message;
             errorContainer.style.display = 'block';
-            errorContainer.scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Reset button
+        // Reset button click
         resetButton.addEventListener('click', () => {
             resetForm();
             resultsContainer.style.display = 'none';
-            errorContainer.style.display = 'none';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
         // Generate response button
         generateResponseButton.addEventListener('click', () => {
-            // This would redirect to response generation page or open a modal
-            alert('This feature is coming soon! It will generate a response based on the document analysis.');
+            alert('Response generation feature will be available in the next update.');
         });
     </script>
 </body>

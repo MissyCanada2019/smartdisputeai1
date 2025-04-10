@@ -1,4 +1,7 @@
-# ocr_parser.py
+"""
+OCR Parser for SmartDispute.ai
+Handles image preprocessing and text extraction from document images
+"""
 
 import pytesseract
 from PIL import Image, ImageEnhance, ImageFilter
@@ -6,272 +9,320 @@ import io
 import cv2
 import numpy as np
 import re
+import json
+import os
 import logging
+from datetime import datetime
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('ocr_server.log'),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger('ocr_parser')
 
-def preprocess_image(image_stream):
-    """
-    Preprocess the image for better OCR results.
-    Includes multiple processing methods in case one fails.
-    """
-    try:
-        # Open image and make a copy of the stream
-        image_bytes = image_stream.read()
-        image_stream_copy = io.BytesIO(image_bytes)
-        image_stream.seek(0)  # Reset the stream position
+class DocumentProcessor:
+    """Class to handle document image processing and OCR text extraction"""
+    
+    def __init__(self):
+        """Initialize the document processor"""
+        self.tesseract_config = '--oem 3 --psm 6'
+        logger.info("Document processor initialized")
+    
+    def preprocess_image(self, image_path):
+        """
+        Preprocess image for better OCR results
         
-        # Method 1: Basic PIL processing
-        try:
-            image = Image.open(image_stream_copy).convert('L')  # Convert to grayscale
-            image = image.filter(ImageFilter.MedianFilter())
-            enhancer = ImageEnhance.Contrast(image)
-            image = enhancer.enhance(2)
+        Args:
+            image_path: Path to the image file
             
-            np_img = np.array(image)
-            _, thresh = cv2.threshold(np_img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
-            return Image.fromarray(thresh)
-        except Exception as e:
-            logger.warning(f"Method 1 failed: {e}, trying Method 2")
-            image_stream.seek(0)  # Reset stream position
-            
-        # Method 2: Advanced OpenCV processing
+        Returns:
+            PIL Image: Processed image
+        """
+        logger.info(f"Preprocessing image: {image_path}")
+        
         try:
-            # Convert to OpenCV format
-            image_stream.seek(0)  # Reset stream position
-            image_bytes = image_stream.read()
-            nparr = np.frombuffer(image_bytes, np.uint8)
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            # Read image
+            if isinstance(image_path, str):
+                # Path to image file
+                img = cv2.imread(image_path)
+            else:
+                # Binary data
+                nparr = np.frombuffer(image_path, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            
+            if img is None:
+                logger.error(f"Failed to read image: {image_path}")
+                return None
             
             # Convert to grayscale
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
-            # Apply adaptive thresholding
-            thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                                          cv2.THRESH_BINARY, 11, 2)
+            # Apply thresholding
+            _, binary = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
             
-            # Noise removal with morphological operations
-            kernel = np.ones((1, 1), np.uint8)
-            opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel)
+            # Remove noise
+            denoised = cv2.fastNlMeansDenoising(binary, None, 10, 7, 21)
             
-            # Deskew the image if needed
-            # ... deskew code would go here if implemented...
+            # Convert back to PIL image for OCR
+            pil_img = Image.fromarray(denoised)
             
-            return Image.fromarray(opening)
+            # Enhance contrast
+            enhancer = ImageEnhance.Contrast(pil_img)
+            enhanced_img = enhancer.enhance(2.0)
+            
+            # Apply sharpening
+            enhanced_img = enhanced_img.filter(ImageFilter.SHARPEN)
+            
+            logger.info("Image preprocessing completed successfully")
+            return enhanced_img
+            
         except Exception as e:
-            logger.warning(f"Method 2 failed: {e}, falling back to basic method")
-            image_stream.seek(0)  # Reset stream position
-            
-        # Final fallback: basic processing
-        image = Image.open(image_stream).convert('L')
-        return image
+            logger.error(f"Error during image preprocessing: {str(e)}")
+            return None
+    
+    def extract_text(self, image):
+        """
+        Extract text from an image using Tesseract OCR
         
-    except Exception as e:
-        logger.error(f"All image preprocessing methods failed: {e}")
-        # If all else fails, try to at least open the image
+        Args:
+            image: PIL Image object
+            
+        Returns:
+            str: Extracted text
+        """
+        logger.info("Extracting text from image using OCR")
+        
         try:
-            image_stream.seek(0)
-            return Image.open(image_stream)
-        except:
-            raise ValueError("Could not process the provided image")
-
-def extract_text(image):
-    """
-    Extract text from the image using multiple configurations and languages.
-    """
-    try:
-        # Try with the default settings
-        text = pytesseract.image_to_string(image)
+            text = pytesseract.image_to_string(image, config=self.tesseract_config)
+            logger.info(f"Extracted {len(text)} characters from image")
+            return text
+        except Exception as e:
+            logger.error(f"Error during text extraction: {str(e)}")
+            return ""
+    
+    def detect_document_type(self, text):
+        """
+        Detect the type of legal document based on extracted text
         
-        # If text is too short, try with additional configuration
-        if len(text.strip()) < 50:
-            logger.info("Default OCR yielded limited results, trying with additional configurations")
+        Args:
+            text: Extracted text from document
             
-            # Try with different PSM modes (page segmentation modes)
-            # PSM 3 - Fully automatic page segmentation, but no OSD (default)
-            # PSM 6 - Assume a single uniform block of text
-            # PSM 4 - Assume a single column of text of variable sizes
-            psm_modes = [3, 6, 4]
-            
-            # Try different languages
-            languages = ['eng']  # Add 'fra' for French if needed
-            
-            # Try different configurations
-            for psm in psm_modes:
-                for lang in languages:
-                    config = f'--psm {psm} -l {lang}'
-                    new_text = pytesseract.image_to_string(image, config=config)
-                    
-                    # If this configuration gives more text, use it
-                    if len(new_text.strip()) > len(text.strip()):
-                        logger.info(f"Better results with config: {config}")
-                        text = new_text
+        Returns:
+            str: Document type
+        """
+        logger.info("Detecting document type")
         
-        return text
-    except Exception as e:
-        logger.error(f"Error during text extraction: {e}")
-        return ""
+        text_lower = text.lower()
+        
+        # Check for different document types
+        if "notice to terminate" in text_lower or "eviction notice" in text_lower:
+            return "Eviction Notice"
+        elif "notice of rent increase" in text_lower:
+            return "Rent Increase Notice"
+        elif "lease agreement" in text_lower or "rental agreement" in text_lower:
+            return "Lease Agreement"
+        elif "child" in text_lower and "services" in text_lower and any(x in text_lower for x in ["investigation", "allegation", "petition"]):
+            return "Child Services Document"
+        elif "summons" in text_lower or "court date" in text_lower:
+            return "Court Summons"
+        elif "cease and desist" in text_lower:
+            return "Cease and Desist Letter"
+        elif "appeal" in text_lower and any(x in text_lower for x in ["decision", "order", "ruling"]):
+            return "Appeal Document"
+        elif "agreement" in text_lower:
+            return "Legal Agreement"
+        elif any(x in text_lower for x in ["notice", "notification"]):
+            return "Legal Notice"
+        else:
+            return "Unknown Legal Document"
+    
+    def extract_dates(self, text):
+        """
+        Extract dates from document text
+        
+        Args:
+            text: Extracted text from document
+            
+        Returns:
+            list: List of dates found in document
+        """
+        logger.info("Extracting dates from text")
+        
+        # Date patterns
+        date_patterns = [
+            r'\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4}\b',
+            r'\b\d{1,2}\s+(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{4}\b',
+            r'\b\d{1,2}/\d{1,2}/\d{2,4}\b',
+            r'\b\d{4}-\d{1,2}-\d{1,2}\b'
+        ]
+        
+        dates = []
+        for pattern in date_patterns:
+            dates.extend(re.findall(pattern, text))
+        
+        logger.info(f"Found {len(dates)} dates in document")
+        return dates
+    
+    def extract_names(self, text):
+        """
+        Extract potential names from document text
+        
+        Args:
+            text: Extracted text from document
+            
+        Returns:
+            dict: Dictionary with tenant and landlord names
+        """
+        logger.info("Extracting names from text")
+        
+        # Look for patterns that might indicate names
+        landlord_patterns = [
+            r'(?:landlord|lessor|owner)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
+            r'(?:from|by)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
+        ]
+        
+        tenant_patterns = [
+            r'(?:tenant|lessee|resident|occupant)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
+            r'(?:to|dear)(?:[:\s]+)([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,4})',
+        ]
+        
+        landlord_name = "Not found"
+        tenant_name = "Not found"
+        
+        # Try to find landlord name
+        for pattern in landlord_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                landlord_name = matches[0].strip()
+                break
+        
+        # Try to find tenant name
+        for pattern in tenant_patterns:
+            matches = re.findall(pattern, text, re.IGNORECASE)
+            if matches:
+                tenant_name = matches[0].strip()
+                break
+        
+        logger.info(f"Extracted names - Tenant: {tenant_name}, Landlord: {landlord_name}")
+        return {
+            "tenant_name": tenant_name,
+            "landlord_name": landlord_name
+        }
+    
+    def check_for_issues(self, text, document_type):
+        """
+        Check document for potential issues
+        
+        Args:
+            text: Extracted text from document
+            document_type: Type of the document
+            
+        Returns:
+            list: List of identified issues
+        """
+        logger.info(f"Checking for issues in {document_type}")
+        
+        issues = []
+        
+        # Common issues for all document types
+        if not re.search(r'sign(ed|ature)', text.lower()):
+            issues.append("Missing signature")
+        
+        # Check for dates
+        dates = self.extract_dates(text)
+        if not dates:
+            issues.append("No date found on document")
+        
+        # Document-specific checks
+        if document_type == "Eviction Notice":
+            if not re.search(r'days notice', text.lower()):
+                issues.append("Notice period not specified")
+            
+            if not re.search(r'reason', text.lower()) and not re.search(r'grounds', text.lower()):
+                issues.append("Reason for eviction not clearly stated")
+        
+        elif document_type == "Lease Agreement":
+            if not re.search(r'rent(?:al)?\s+(?:amount|payment|fee)', text.lower()):
+                issues.append("Rent amount not specified")
+            
+            if not re.search(r'term', text.lower()) and not re.search(r'period', text.lower()):
+                issues.append("Lease term not clearly specified")
+        
+        logger.info(f"Found {len(issues)} issues in document")
+        return issues
+    
+    def process_document(self, image_path):
+        """
+        Process a document image and extract key information
+        
+        Args:
+            image_path: Path to the image file
+            
+        Returns:
+            dict: Extracted document information
+        """
+        logger.info(f"Processing document: {image_path}")
+        
+        try:
+            # Preprocess image
+            processed_image = self.preprocess_image(image_path)
+            if processed_image is None:
+                logger.error("Image preprocessing failed")
+                return {"status": "error", "message": "Image preprocessing failed"}
+            
+            # Extract text using OCR
+            text = self.extract_text(processed_image)
+            if not text:
+                logger.error("OCR text extraction failed")
+                return {"status": "error", "message": "Text extraction failed"}
+            
+            # Detect document type
+            document_type = self.detect_document_type(text)
+            
+            # Extract dates
+            dates = self.extract_dates(text)
+            date_str = dates[0] if dates else "Not found"
+            
+            # Extract names
+            names = self.extract_names(text)
+            
+            # Check for issues
+            issues = self.check_for_issues(text, document_type)
+            
+            # Create result dictionary
+            result = {
+                "status": "success",
+                "fields": {
+                    "document_type": document_type,
+                    "date": date_str,
+                    "tenant_name": names["tenant_name"],
+                    "landlord_name": names["landlord_name"],
+                    "issues": issues,
+                    "full_text": text
+                }
+            }
+            
+            logger.info("Document processing completed successfully")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error during document processing: {str(e)}")
+            return {
+                "status": "error", 
+                "message": f"Document processing failed: {str(e)}"
+            }
 
-def detect_document_type(text):
-    """
-    Detect the type of legal document based on text content
-    """
-    text_lower = text.lower()
-    
-    # Common document types in Canadian tenant/landlord context
-    if re.search(r'\bn[4]\b', text.upper()) or "notice to end tenancy" in text_lower:
-        return "Eviction Notice (N4)"
-    if re.search(r'\bn[1-3]\b', text.upper()) or "notice of rent increase" in text_lower:
-        return "Rent Increase Notice"
-    if re.search(r'\bn[5]\b', text.upper()) or "notice to terminate" in text_lower:
-        return "Termination Notice (N5)"
-    if re.search(r'\bn[7-9]\b', text.upper()):
-        return "Landlord and Tenant Board Notice"
-    if re.search(r'\bl[1-3]\b', text.upper()) or "application" in text_lower:
-        return "LTB Application"
-    if "lease" in text_lower or "tenancy agreement" in text_lower:
-        return "Lease Agreement"
-    if "maintenance" in text_lower or "repair" in text_lower:
-        return "Maintenance Request"
-    if "complaint" in text_lower:
-        return "Complaint Letter"
-    if "cease and desist" in text_lower:
-        return "Cease and Desist Letter"
-    if "receipt" in text_lower:
-        return "Payment Receipt"
-    
-    # Check for Children's Aid Society documents
-    if "children's aid" in text_lower or "child protection" in text_lower or "cas" in text_lower:
-        if "plan of care" in text_lower:
-            return "CAS Plan of Care"
-        if "appeal" in text_lower:
-            return "CAS Appeal"
-        if "records request" in text_lower:
-            return "CAS Records Request"
-        return "CAS Document"
-    
-    return None
-
-def extract_names(text):
-    """
-    Extract names from the document text using multiple patterns
-    """
-    tenant_name = None
-    landlord_name = None
-    
-    # Look for labeled names
-    tenant_matches = re.findall(r'(?:tenant|resident|applicant|respondent)[:\s]+([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})', text, re.IGNORECASE)
-    if tenant_matches:
-        tenant_name = tenant_matches[0].strip()
-    
-    landlord_matches = re.findall(r'(?:landlord|property owner|property manager|lessor)[:\s]+([A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3})', text, re.IGNORECASE)
-    if landlord_matches:
-        landlord_name = landlord_matches[0].strip()
-    
-    # If labeled names not found, try to find names by format
-    if not tenant_name or not landlord_name:
-        name_matches = re.findall(r'[A-Z][a-z]+(?:\s[A-Z][a-z]+){1,3}', text)
-        if name_matches and not tenant_name:
-            tenant_name = name_matches[0]
-        if len(name_matches) > 1 and not landlord_name:
-            landlord_name = name_matches[1]
-    
-    return tenant_name, landlord_name
-
-def extract_dates(text):
-    """
-    Extract dates from the document text using multiple formats
-    """
-    # Look for full month name format (January 1, 2023)
-    full_date_match = re.search(r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{1,2},?\s\d{4}\b', text)
-    if full_date_match:
-        return full_date_match.group(0)
-    
-    # Look for numeric formats (MM/DD/YYYY or DD/MM/YYYY)
-    numeric_date_match = re.search(r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b', text)
-    if numeric_date_match:
-        return numeric_date_match.group(0)
-    
-    # Look for short month format (Jan 1, 2023)
-    short_month_match = re.search(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s\d{1,2},?\s\d{4}\b', text)
-    if short_month_match:
-        return short_month_match.group(0)
-    
-    return None
-
-def identify_issues(text, document_type):
-    """
-    Identify potential issues in the document
-    """
-    issues = []
-    text_lower = text.lower()
-    
-    # Common issues in legal documents
-    if "signature" not in text_lower and "signed" not in text_lower:
-        issues.append("Signature missing")
-    
-    if "non-payment" in text_lower or "unpaid rent" in text_lower:
-        issues.append("Non-payment of rent")
-    
-    if "damage" in text_lower or "property damage" in text_lower:
-        issues.append("Damage to property")
-    
-    if "notice period" in text_lower and "insufficient" in text_lower:
-        issues.append("Insufficient notice period")
-    
-    if document_type == "Eviction Notice (N4)":
-        if "n4" not in text.lower() and "N4" not in text:
-            issues.append("Missing N4 form reference")
-        if "days" not in text_lower or "notice" not in text_lower:
-            issues.append("Notice period not specified")
-    
-    if document_type == "Rent Increase Notice":
-        if "90 days" not in text_lower and "ninety days" not in text_lower:
-            issues.append("90-day notice requirement may not be met")
-        if "%" not in text:
-            issues.append("Percentage increase not specified")
-    
-    # Check for date specifics
-    if not re.search(r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b', text) and not re.search(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s\d{1,2},?\s\d{4}\b', text):
-        issues.append("Date not clearly specified")
-    
-    return issues
-
-def parse_legal_fields(text):
-    """
-    Extract structured data from the OCR text, focusing on legal document fields
-    """
-    # Initialize fields
-    fields = {
-        "tenant_name": None,
-        "landlord_name": None,
-        "date": None,
-        "document_type": None,
-        "issues": [],
-        "full_text": text.strip()
-    }
-    
-    # Detect document type
-    fields["document_type"] = detect_document_type(text)
-    
-    # Extract names
-    tenant_name, landlord_name = extract_names(text)
-    fields["tenant_name"] = tenant_name
-    fields["landlord_name"] = landlord_name
-    
-    # Extract date
-    fields["date"] = extract_dates(text)
-    
-    # Identify issues
-    fields["issues"] = identify_issues(text, fields["document_type"])
-    
-    logger.info(f"Parsed fields: {fields}")
-    return fields
-
-def run_ocr_pipeline(image_stream):
-    preprocessed_image = preprocess_image(image_stream)
-    text = extract_text(preprocessed_image)
-    parsed_fields = parse_legal_fields(text)
-    return parsed_fields
+# For direct testing
+if __name__ == "__main__":
+    processor = DocumentProcessor()
+    if len(os.sys.argv) > 1:
+        # Process file provided as command line argument
+        result = processor.process_document(os.sys.argv[1])
+        print(json.dumps(result, indent=2))
+    else:
+        print("Please provide an image path as command line argument")
