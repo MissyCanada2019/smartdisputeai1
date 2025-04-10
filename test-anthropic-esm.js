@@ -1,5 +1,5 @@
 /**
- * Test script for SmartDispute.ai Anthropic Claude integration
+ * Test script for SmartDispute.ai Anthropic Claude integration (ESM version)
  * 
  * This script tests the Anthropic Claude integration capabilities,
  * including text analysis, document generation, and vision features.
