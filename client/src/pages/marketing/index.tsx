@@ -3,7 +3,6 @@ import { ArrowRight, FileText, Shield, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePageViewTracker } from '@/components/marketing/FunnelTracker';
-import { TestimonialCarousel, legalAdvocacyTestimonials } from '@/components/marketing/TestimonialCarousel';
 
 export default function MarketingIndex() {
   // Track page view
