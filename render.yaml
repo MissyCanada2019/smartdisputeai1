@@ -2,11 +2,12 @@ services:
   - type: web
     name: smartdispute-ai
     env: python
-    buildCommand: "pip install -r requirements-deploy.txt"
-    startCommand: "python app.py"
+    buildCommand: pip install -r requirements-deploy.txt
+    startCommand: gunicorn main:app
     plan: free
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: PORT
         value: 3000
+        
