@@ -6,7 +6,7 @@
  */
 
 import express from 'express';
-import * as aiService from '../services/aiService.js';
+import * as aiService from '../services/aiService';
 
 const router = express.Router();
 

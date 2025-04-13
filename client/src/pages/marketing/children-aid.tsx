@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmailCapturePopup } from '@/components/marketing/EmailCapturePopup';
 import { FunnelTracker, usePageViewTracker, FunnelConversion, FUNNEL_STEPS, trackFunnelEvent } from '@/components/marketing/FunnelTracker';
-import { TestimonialCarousel } from '@/components/marketing/TestimonialCarousel';
+import TestimonialCarousel from '@/components/marketing/TestimonialCarousel';
 
 const FUNNEL_NAME = 'children_aid_campaign';
 
