@@ -15,31 +15,23 @@ import MemoryStore from "memorystore";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Create the session store
 const SessionStore = MemoryStore(session);
 
 const app = express();
-// Increase payload size limits for JSON and URL encoded data
+
+// Increase payload size limits
 app.use(express.json({ limit: '1000mb' }));
 app.use(express.urlencoded({ extended: false, limit: '1000mb' }));
-// Add body parser limit
 app.use(express.raw({ limit: '1000mb' }));
 
-// Enable CORS for both HTTP and HTTPS connections
+// Enable CORS
 app.use((req, res, next) => {
-  // Allow requests from both HTTP and HTTPS origins
   const origin = req.headers.origin;
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-
+  res.header('Access-Control-Allow-Origin', origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
 
-  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     return res.status(204).send();
   }
@@ -47,7 +39,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple request logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
   if (req.path.startsWith("/api")) {
     const start = Date.now();
@@ -58,10 +50,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve Google verification files directly from the root directory
+// Serve verification files
 app.use(express.static(path.join(__dirname, '..'), {
   index: false,
-  // Only allow specific files to be served from the root
   setHeaders: (res, filePath) => {
     const filename = path.basename(filePath);
     if (filename === 'google4b945706e36a5db4.html' || 
@@ -72,10 +63,8 @@ app.use(express.static(path.join(__dirname, '..'), {
 }));
 
 (async () => {
-  // Create storage instance
   const storage = new MemStorage();
 
-  // Seed the database with initial data
   try {
     await seedDatabase(storage);
     log("Database seeded successfully");
@@ -83,26 +72,21 @@ app.use(express.static(path.join(__dirname, '..'), {
     log("Error seeding database:", error instanceof Error ? error.message : String(error));
   }
 
-  // Set up session handling
   app.use(session({
-    store: new SessionStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    store: new SessionStore({ checkPeriod: 86400000 }),
     secret: process.env.SESSION_SECRET || 'smartdispute-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true
     }
   }));
 
-  // Initialize Passport
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Configure passport to use local strategy
   passport.use(new LocalStrategy(
     async (username, password, done) => {
       try {
@@ -117,12 +101,8 @@ app.use(express.static(path.join(__dirname, '..'), {
     }
   ));
 
-  // Serialize user to the session
-  passport.serializeUser((user: any, done) => {
-    done(null, user.id);
-  });
+  passport.serializeUser((user: any, done) => done(null, user.id));
 
-  // Deserialize user from the session
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
@@ -135,46 +115,19 @@ app.use(express.static(path.join(__dirname, '..'), {
     }
   });
 
-  // Authentication middleware
   app.use((req: any, _res: Response, next: NextFunction) => {
-    // Add isAuthenticated method to request object
     req.isAuthenticated = function() {
       return this.user != null;
     };
     next();
   });
 
-  // Add route for Claude API test
-  app.get('/claude-test', (req: Request, res: Response) => {
-    console.log('Serving Claude API test page');
-    const filePath = path.join(__dirname, '../claude-test.html');
-    res.sendFile(filePath);
-  });
-  
-  // Add route for AI fallback test page
-  app.get('/ai-fallback-test', (req: Request, res: Response) => {
-    console.log('Serving AI fallback test page');
-    const filePath = path.join(__dirname, '../ai-fallback-test.html');
-    res.sendFile(filePath);
-  });
-  
-  // Add route for AI service test page
-  app.get('/ai-service-test', (req: Request, res: Response) => {
-    console.log('Serving AI service test page');
-    const filePath = path.join(__dirname, '../ai-service-test.html');
-    res.sendFile(filePath);
+  app.get('/claude-test', (_req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../claude-test.html'));
   });
 
-  const server = await registerRoutes(app);
-
-  // Global error handler
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
-    throw err;
+  app.get('/ai-fallback-test', (_req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../ai-fallback-test.html'));
   });
 
-  // Setup Vite or static serving
-  app.get("env") === "development" ? await setupVite(app, server) : serveStatic(app);
-
-  return server.listen(5000, "0.0.0.0", () => log("serving on port 5000"));
-})();
+  app.get('/ai-service
