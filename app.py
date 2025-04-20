@@ -4,6 +4,10 @@ A Flask application that handles document uploads, AI analysis, and payment proc
 """
 from flask import Flask, request, render_template, redirect, url_for, send_file, render_template_string, jsonify, Blueprint
 import os
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 import stripe
 from werkzeug.utils import secure_filename
 from ai_handler import extract_text_from_file, analyze_text_with_ai
