@@ -5,32 +5,35 @@ from dotenv import load_dotenv
 from pricing_and_pdf import generate_pdf_preview
 from ocr_parser import run_ocr_pipeline
 
-# Load environment variables
+# Load env vars
 load_dotenv()
 
-# Config
+# Configuration
 UPLOAD_FOLDER = 'uploads'
 PREVIEW_FOLDER = 'previews'
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 
-# App setup
+# Flask app setup
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_fallback_key")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback_secret")
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB
 
-# Create folders if missing
+# Create folders if not exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREVIEW_FOLDER, exist_ok=True)
 
+# Helper
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Home route
 @app.route('/')
 def index():
-    return render_template("form.html")
+    return render_template("form.html")  # Make sure this file is in /templates
 
+# Upload route
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'document' not in request.files:
@@ -45,7 +48,7 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # OCR + AI
+        # Run OCR and AI logic
         result = run_ocr_pipeline(filepath)
 
         # Generate preview PDF
@@ -53,36 +56,31 @@ def upload_file():
         preview_path = os.path.join(app.config['PREVIEW_FOLDER'], preview_filename)
         generate_pdf_preview(result, output_path=preview_path)
 
-        # Save preview filename to session for unlocking later
+        # Store filename for download
         session['preview_file'] = preview_filename
 
-        return redirect(url_for('pay'))
+        return render_template("payment.html", filename=filename, price=5.99)
 
     return "Invalid file type", 400
 
-@app.route('/pay')
-def pay():
-    filename = session.get('preview_file')
-    if not filename:
-        return "No file found in session", 400
-
-    price = 5.99
-    return render_template('payment.html', filename=filename, price=price)
-
+# Download route
 @app.route('/download')
 def download_preview():
     filename = session.get('preview_file')
     if not filename:
-        return "Unauthorized or session expired", 403
+        return "Session expired or unauthorized", 403
 
     file_path = os.path.join(app.config['PREVIEW_FOLDER'], filename)
     if os.path.exists(file_path):
         return send_file(file_path, as_attachment=True)
     return "File not found", 404
 
+# PayPal redirect success
 @app.route('/paypal-success')
 def paypal_success():
     return redirect(url_for('download_preview'))
 
+# Start app
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
