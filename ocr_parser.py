@@ -31,7 +31,18 @@ class DocumentProcessor:
     Document processor class that handles OCR with preprocessing
     and field extraction for legal documents
     """
-    
+    def run_ocr_pipeline(filepath: str) -> dict:
+    processor = DocumentProcessor()
+    return processor.process_document(filepath)
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1:
+        filepath = sys.argv[1]
+        result = run_ocr_pipeline(filepath)
+        print(json.dumps(result, indent=2))
+    else:
+        print("Please provide a file path to process")
     def __init__(self):
         """Initialize the document processor with default values"""
         # Document type patterns - these are regex patterns used to identify document types
