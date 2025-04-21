@@ -25,15 +25,14 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger('ocr_parser')
-
+  """
+    def run_ocr_pipeline(filepath: str) -> dict:
+    processor = DocumentProcessor()
+    return processor.process_document(filepath)
 class DocumentProcessor:
     """
     Document processor class that handles OCR with preprocessing
     and field extraction for legal documents
-    """
-    def run_ocr_pipeline(filepath: str) -> dict:
-    processor = DocumentProcessor()
-    return processor.process_document(filepath)
 
 if __name__ == "__main__":
     import sys
