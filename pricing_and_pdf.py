@@ -168,3 +168,26 @@ def generate_pdf_preview(data, output_path="output.pdf"):
     c.drawText(text)
     c.showPage()
     c.save()
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+
+def generate_pdf_preview(data, output_path="output.pdf"):
+    c = canvas.Canvas(output_path, pagesize=letter)
+    text = c.beginText(40, 750)
+    text.setFont("Helvetica", 12)
+
+    text.textLine("SmartDispute.ai Legal Document Analysis")
+    text.textLine("-" * 50)
+    text.textLine(f"Document Type: {data['fields']['document_type']}")
+    text.textLine(f"Date Found: {data['fields']['date']}")
+    text.textLine(f"Tenant Name: {data['fields']['tenant_name']}")
+    text.textLine(f"Landlord Name: {data['fields']['landlord_name']}")
+    text.textLine("")
+
+    text.textLine("Identified Issues:")
+    for issue in data['fields']['issues']:
+        text.textLine(f"- {issue['issue_type']}: {issue['description']}")
+
+    c.drawText(text)
+    c.showPage()
+    c.save()
