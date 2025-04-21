@@ -371,3 +371,39 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Results | SmartDispute.ai</title>
+  <style>
+    body { background: #111; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 2em; }
+    .container { background: #222; padding: 2em; border-radius: 10px; max-width: 800px; margin: auto; }
+    h1 { color: #ff0000; }
+    .issue { background: #333; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .raw { background: #000; color: #aaa; padding: 1em; margin-top: 2em; white-space: pre-wrap; text-align: left; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Document Analysis Complete</h1>
+    <p><strong>Type:</strong> {{ result.fields.document_type }}</p>
+    <p><strong>Date:</strong> {{ result.fields.date }}</p>
+    <p><strong>Tenant:</strong> {{ result.fields.tenant_name }}</p>
+    <p><strong>Landlord:</strong> {{ result.fields.landlord_name }}</p>
+
+    <h3>Identified Issues:</h3>
+    {% for issue in result.fields.issues %}
+      <div class="issue">
+        <strong>{{ issue.issue_type }}</strong><br>
+        {{ issue.description }}
+      </div>
+    {% endfor %}
+
+    <div class="raw">
+      <h3>Extracted Text:</h3>
+      {{ result.fields.full_text }}
+    </div>
+  </div>
+</body>
+</html>
