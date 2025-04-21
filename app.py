@@ -46,3 +46,21 @@ def upload_file():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+@app.route('/')
+def index():
+    return render_template("form.html")
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'document' not in request.files:
+        return "No file part", 400
+
+    file = request.files['document']
+    if file.filename == '':
+        return "No selected file", 400
+
+    filepath = os.path.join("uploads", file.filename)
+    file.save(filepath)
+
+    result = run_ocr_pipeline(filepath)
+    return render_template("success.html", result=result)
