@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 from pricing_and_pdf import generate_pdf_preview
 from ocr_parser import run_ocr_pipeline
 
-# Load environment variables
+# Load .env variables
 load_dotenv()
 
-# Flask app config
+# --- Flask App Config ---
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "default_secret_key")
 
@@ -20,24 +20,24 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
-# Ensure folders exist
+# Ensure required folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREVIEW_FOLDER, exist_ok=True)
 
-# File type check
+# --- Helper: Allowed file types ---
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# --- Routes ---
+# --- ROUTES ---
 
 @app.route('/')
 def index():
-    return render_template('form.html')  # Upload form template
+    return render_template('form.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'document' not in request.files:
-        return "No file uploaded", 400
+        return "No file part in the form", 400
 
     file = request.files['document']
     if file.filename == '':
@@ -48,17 +48,17 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Run OCR and AI analysis
+        # Run OCR + generate PDF preview
         result = run_ocr_pipeline(filepath)
-
-        # Generate preview
         preview_filename = f"{filename}_preview.pdf"
         preview_path = os.path.join(app.config['PREVIEW_FOLDER'], preview_filename)
         generate_pdf_preview(result, output_path=preview_path)
 
-        # Save preview name in session
+        # Store in session
         session['preview_file'] = preview_filename
+        session['original_file'] = filename
 
+        # Render payment screen
         return render_template('payment.html', filename=filename, price=5.99)
 
     return "Invalid file type", 400
@@ -67,7 +67,7 @@ def upload_file():
 def download_file():
     filename = session.get('preview_file')
     if not filename:
-        return "No file available for download", 403
+        return "Session expired or no file ready", 403
 
     path = os.path.join(app.config['PREVIEW_FOLDER'], filename)
     if os.path.exists(path):
