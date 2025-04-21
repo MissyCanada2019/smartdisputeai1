@@ -542,3 +542,27 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Your Legal Document | SmartDispute.ai</title>
+  <style>
+    body { background: #111; color: #fff; font-family: Arial, sans-serif; text-align: center; padding: 2em; }
+    .container { background: #222; padding: 2em; border-radius: 10px; display: inline-block; margin-top: 2em; }
+    h1 { color: #ff0000; }
+    input[type="file"] { margin: 1em 0; }
+    input[type="submit"] { background: #ff0000; color: #fff; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SmartDispute.ai</h1>
+    <p>Upload your legal document or image and let us analyze it for issues, missing details, and case type.</p>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+      <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png" required><br>
+      <input type="submit" value="Analyze Document">
+    </form>
+  </div>
+</body>
+</html>
