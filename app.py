@@ -2,6 +2,7 @@
 SmartDispute.ai Document Upload Handler
 A Flask application that handles document uploads, AI analysis, and payment processing
 """
+from flask import render_template
 from flask import Flask, request, render_template, redirect, url_for, send_file, render_template_string, jsonify, Blueprint
 import os
 
