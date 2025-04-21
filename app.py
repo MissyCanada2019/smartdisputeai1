@@ -56,10 +56,18 @@ def upload_file():
         # Save preview filename to session for unlocking later
         session['preview_file'] = preview_filename
 
-        # Go to payment page
-        return render_template("payment.html", price=5.99)
+        return redirect(url_for('pay'))
 
     return "Invalid file type", 400
+
+@app.route('/pay')
+def pay():
+    filename = session.get('preview_file')
+    if not filename:
+        return "No file found in session", 400
+
+    price = 5.99
+    return render_template('payment.html', filename=filename, price=price)
 
 @app.route('/download')
 def download_preview():
@@ -74,9 +82,7 @@ def download_preview():
 
 @app.route('/paypal-success')
 def paypal_success():
-    # After PayPal confirms payment, user lands here
     return redirect(url_for('download_preview'))
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
-return render_template('payment.html', filename=filename, price=price)
