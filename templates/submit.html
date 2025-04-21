@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Submit a Dispute</title>
+</head>
+<body>
+  <h2>SmartDispute.ai - Submit Your Dispute</h2>
+  <form id="disputeForm">
+    <label>Email:<br><input type="email" name="user_email" required></label><br><br>
+    <label>Dispute Type:<br>
+      <select name="dispute_type" required>
+        <option>Housing</option>
+        <option>Credit Report</option>
+        <option>CAS (Children’s Aid)</option>
+        <option>Other</option>
+      </select>
+    </label><br><br>
+    <label>Description:<br>
+      <textarea name="description" rows="5" required></textarea>
+    </label><br><br>
+    <label>File URL (from Supabase):<br><input type="url" name="file_url" required></label><br><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <p id="result"></p>
+
+  <script>
+    const form = document.getElementById('disputeForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      const data = {};
+      formData.forEach((value, key) => data[key] = value);
+
+      const response = await fetch('/submit-dispute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      document.getElementById('result').innerText = result.message || 'Error submitting dispute.';
+    });
+  </script>
+</body>
+</html>
