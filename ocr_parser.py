@@ -24,9 +24,9 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-logger = logging.getLogger('ocr_parser')
-  """
-    def run_ocr_pipeline(filepath: str) -> dict:
+logger = logging.getLogger(
+'ocr_parser')
+"""def run_ocr_pipeline(filepath: str) -> dict:
     processor = DocumentProcessor()
     return processor.process_document(filepath)
 class DocumentProcessor:
