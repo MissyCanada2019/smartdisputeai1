@@ -64,3 +64,19 @@ def upload_file():
 
     result = run_ocr_pipeline(filepath)
     return render_template("success.html", result=result)
+from pricing_and_pdf import generate_pdf_preview
+
+...
+
+filename = secure_filename(file.filename)
+filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+file.save(filepath)
+
+result = run_ocr_pipeline(filepath)
+
+preview_path = os.path.join(app.config['PREVIEW_FOLDER'], f"{filename}_preview.pdf")
+generate_pdf_preview(result, output_path=preview_path)
+
+# Store filename in session for post-payment
+session['preview_file'] = f"{filename}_preview.pdf"
+return render_template("payment.html", price=5.99)
