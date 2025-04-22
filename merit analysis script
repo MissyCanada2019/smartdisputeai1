@@ -1,0 +1,38 @@
+# merit_weight.py
+
+canadian_cases = [
+    {
+        "province": "Ontario",
+        "keywords": ["tenant", "mold", "repair", "landlord", "L2 application"],
+        "summary": "Ontario tenant won a case due to landlord neglecting mold repairs, based on RTA Section 20."
+    },
+    {
+        "province": "British Columbia",
+        "keywords": ["eviction", "notice", "illegal", "discrimination", "RTB"],
+        "summary": "BC tenant received damages after being evicted unfairly without proper notice or hearing."
+    },
+    {
+        "province": "Alberta",
+        "keywords": ["lease", "early termination", "health hazard", "residential tenancies act"],
+        "summary": "Alberta ruling favored tenant ending lease early due to health hazard."
+    }
+]
+
+def analyze_merit_weight(document_text: str, user_province: str):
+    document_text = document_text.lower()
+    scores = []
+    matched_summaries = []
+
+    for case in canadian_cases:
+        if case["province"].lower() != user_province.lower():
+            continue
+        match_score = sum(1 for word in case["keywords"] if word in document_text)
+        scores.append(match_score)
+        if match_score > 2:
+            matched_summaries.append(case["summary"])
+
+    merit_score = max(scores, default=0) * 10  # Scale to 100
+    merit_score = min(merit_score, 100)
+
+    notes = matched_summaries if matched_summaries else ["No strong match found in legal database."]
+    return merit_score, notes
