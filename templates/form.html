@@ -1,13 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Upload a File</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Document | SmartDispute.ai</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #111;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        h1 {
+            text-align: center;
+            color: #ff0000;
+        }
+        p.description {
+            text-align: center;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        input[type="file"] {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            background: #ff0000;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .note {
+            font-size: 0.9em;
+            color: #999;
+            text-align: center;
+        }
+        footer {
+            text-align: center;
+            color: #666;
+            margin-top: 40px;
+            font-size: 0.8em;
+        }
+    </style>
 </head>
 <body>
-    <h1>SmartDispute.ai</h1>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="document" required>
-        <input type="submit" value="Upload">
-    </form>
+    <div class="container">
+        <h1>Upload a Document</h1>
+        <p class="description">Our system will scan your document for legal issues, rate its urgency, and generate a preview PDF for you.</p>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="document" accept=".pdf,.jpg,.jpeg,.png" required>
+            <input type="submit" value="Analyze Document">
+        </form>
+        <p class="note">Accepted formats: PDF, JPG, JPEG, PNG. Max size: 32MB.</p>
+    </div>
+    <footer>
+        SmartDispute.ai - No more fear. Just facts, tools, and your voice.
+    </footer>
 </body>
 </html>
