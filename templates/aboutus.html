@@ -81,6 +81,37 @@
             text-decoration: none;
             font-weight: bold;
         }
+        .testimonials {
+            margin-top: 40px;
+            padding: 20px;
+            background: #1a1a1a;
+            border-left: 4px solid #ff0000;
+        }
+        .testimonials blockquote {
+            font-style: italic;
+            margin: 0;
+            color: #eee;
+        }
+        .testimonials cite {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.9em;
+            color: #999;
+        }
+        .marquee {
+            overflow: hidden;
+            white-space: nowrap;
+            box-sizing: border-box;
+            padding: 10px 0;
+            color: #ff0000;
+            background: #111;
+            font-weight: bold;
+            animation: marquee 25s linear infinite;
+        }
+        @keyframes marquee {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
         footer {
             text-align: center;
             color: #666;
@@ -99,6 +130,9 @@
         <a href="/upload">Upload</a>
     </div>
 </nav>
+<div class="marquee">
+    Recent Success: John from Toronto fought his landlord and won · Maria secured her CAS file in 3 days · Kevin stopped an illegal eviction · YOU'RE NEXT
+</div>
 <div class="container">
     <h1>About SmartDispute.ai</h1>
     <p>
@@ -128,6 +162,16 @@
         <p>Our tools don’t just create documents — they help you take a stand, be heard, and make change happen.</p>
         <a href="/upload">Start Now — Generate Your First Document</a>
     </div>
+
+    <div class="testimonials">
+        <h2>What People Are Saying</h2>
+        <blockquote>“I used this tool and finally got repairs in my apartment after a year of being ignored. Life changing.”<br><cite>— Janelle, Toronto</cite></blockquote>
+        <blockquote>“I had no idea how to handle CAS. This gave me the words and confidence to stand my ground.”<br><cite>— Tony, Hamilton</cite></blockquote>
+        <blockquote>“Feels like someone finally built something for people like me — not just lawyers.”<br><cite>— Nina, Ottawa</cite></blockquote>
+    </div>
 </div>
 <footer>
-    SmartDispute.ai — Powered by purpose. Driven by justice
+    SmartDispute.ai — Powered by purpose. Driven by justice.
+</footer>
+</body>
+</html>
