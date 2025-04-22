@@ -1,36 +1,36 @@
 import os
-from flask import Flask, request, render_template, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, redirect, url_for, send_file, session
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from pricing_and_pdf import generate_pdf_preview
 from ocr_parser import run_ocr_pipeline
+from merit_weight import analyze_merit_weight
 
-# Load .env variables
+# Load environment variables
 load_dotenv()
 
-# Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super_secret_fallback_key")
 
-# Config for upload limits and folders
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['PREVIEW_FOLDER'] = 'previews'
-app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64MB upload limit
+UPLOAD_FOLDER = 'uploads'
+PREVIEW_FOLDER = 'previews'
 ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg', 'png'}
 
-# Ensure upload/preview folders exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['PREVIEW_FOLDER'], exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB
+
+# Ensure folders exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PREVIEW_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Homepage / Upload Form
 @app.route('/')
 def index():
     return render_template('form.html')
 
-# File Upload Endpoint
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'document' not in request.files:
@@ -45,39 +45,46 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # OCR + AI logic
+        # Run OCR pipeline
         result = run_ocr_pipeline(filepath)
+
+        # Run merit scoring
+        merit_score, merit_notes = analyze_merit_weight(result)
 
         # Generate preview PDF
         preview_filename = f"{filename}_preview.pdf"
         preview_path = os.path.join(app.config['PREVIEW_FOLDER'], preview_filename)
         generate_pdf_preview(result, output_path=preview_path)
 
-        # Save filename in session
+        # Store in session
         session['preview_file'] = preview_filename
+        session['merit_score'] = merit_score
+        session['merit_notes'] = merit_notes
 
-        return render_template("payment.html", filename=filename, price=5.99)
+        return render_template('payment.html',
+                               filename=filename,
+                               price=5.99,
+                               merit_score=merit_score,
+                               merit_notes=merit_notes)
 
     return "Invalid file type", 400
 
-# Download Final PDF After Payment
 @app.route('/download')
-def download_preview():
+def download_file():
     filename = session.get('preview_file')
     if not filename:
-        return "Unauthorized or session expired", 403
+        return "No file available for download", 403
 
-    file_path = os.path.join(app.config['PREVIEW_FOLDER'], filename)
-    if os.path.exists(file_path):
-        return send_file(file_path, as_attachment=True)
+    path = os.path.join(app.config['PREVIEW_FOLDER'], filename)
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
     return "File not found", 404
 
-# PayPal redirect success
 @app.route('/paypal-success')
 def paypal_success():
-    return redirect(url_for('download_preview'))
+    return redirect(url_for('download_file'))
 
-# Run server
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8000))
     app.run(host='0.0.0.0', port=port)
+
