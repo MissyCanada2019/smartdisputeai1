@@ -1,0 +1,5 @@
+[deploy]
+  restartPolicyType = "on-failure"
+
+[services.web]
+  maxUploadSizeMb = 25
