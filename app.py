@@ -80,7 +80,10 @@ def download_file():
     if os.path.exists(path):
         return send_file(path, as_attachment=True)
     return "File not found", 404
-
+def analyze_case():
+    data = request.get_json()
+    result = analyze_merit_weight(data)
+    return jsonify(result)
 @app.route('/paypal-success')
 def paypal_success():
     return redirect(url_for('download_file'))
@@ -88,4 +91,7 @@ def paypal_success():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8000))
     app.run(host='0.0.0.0', port=port)
+    @app.route("/analyze", methods=["POST"])
+
+
 
