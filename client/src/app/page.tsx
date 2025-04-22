@@ -16,11 +16,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import OptimizedImage from "@/components/common/OptimizedImage";
-import {List , LucideIcon, PanelLeft} from "lucide-react";
+import { SidebarHeader, SidebarProvider } from "@/components/ui/sidebar";
+import { List, LucideIcon, PanelLeft } from "lucide-react";
 import React from "react";
 
 // Corrected import path
-import logoPath from "@/assets/logo.png";
+import logoPath from "@/public/logo.png";
 
 export default function Home() {
   return (
@@ -43,48 +44,48 @@ export default function Home() {
               <SidebarMenuItem>
                 <SidebarMenuButton>AI Legal Assistant</SidebarMenuButton>
               </SidebarMenuItem>
-	      <SidebarGroup>
-	      <SidebarGroupLabel>Landlord Tenant Disputes</SidebarGroupLabel>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Ontario</SidebarMenuButton>
-			      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>British Columbia</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Alberta</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      	<SidebarMenuItem>
-		      		<SidebarMenuButton>Manitoba</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      	<SidebarMenuItem>
-		      		<SidebarMenuButton>Quebec</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>New Brunswick</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Nova Scotia</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Prince Edward Island</SidebarMenuButton>
-			      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Saskatchewan</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>New FoundLand and Labrador</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>NorthWest Territories</SidebarMenuButton>
-		      </SidebarMenuItem>
-		       <SidebarMenuItem>
-		      		<SidebarMenuButton>Yukon</SidebarMenuButton>
-		      </SidebarMenuItem>
-		      <SidebarMenuItem>
-		      		<SidebarMenuButton>Nunavut</SidebarMenuButton>
-		      </SidebarMenuItem>
-	      </SidebarGroup>
+              <SidebarGroup>
+                <SidebarGroupLabel>Landlord Tenant Disputes</SidebarGroupLabel>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Ontario</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>British Columbia</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Alberta</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Manitoba</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Quebec</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>New Brunswick</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Nova Scotia</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Prince Edward Island</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Saskatchewan</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>New FoundLand and Labrador</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>NorthWest Territories</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Yukon</SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>Nunavut</SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarGroup>
               <SidebarMenuItem>
                 <SidebarMenuButton>Document Analysis</SidebarMenuButton>
               </SidebarMenuItem>
@@ -132,4 +133,3 @@ export default function Home() {
     </SidebarProvider>
   );
 }
-
