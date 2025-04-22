@@ -2,85 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment - SmartDispute.ai</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-            padding: 20px;
-        }
-        h1, h2 {
-            color: #ff0000;
-        }
-        .container {
-            background-color: #111;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .payment-box {
-            background-color: #222;
-            padding: 20px;
-            border-radius: 5px;
-            margin: 20px 0;
-        }
-        .price {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        button {
-            background-color: #ff0000;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 0;
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .payment-option {
-            margin: 30px 0;
-        }
-        .divider {
-            margin: 20px 0;
-            color: #666;
-        }
-        #paypal-button-container {
-            width: 300px;
-            margin: 0 auto;
-        }
+        body { background: #000; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #111; padding: 20px; border-radius: 8px; }
+        h1 { color: #ff0000; text-align: center; }
+        .summary { margin: 20px 0; }
+        .summary p { margin: 8px 0; }
+        .price { font-size: 1.2em; font-weight: bold; }
+        .merit-section { margin: 20px 0; }
+        .merit-section h2 { margin-bottom: 10px; }
+        .merit-bar { width: 100%; height: 20px; background: #333; border-radius: 10px; overflow: hidden; margin-bottom: 5px; }
+        .merit-fill { height: 100%; background: linear-gradient(to right, #e53e3e, #dd6b20, #38a169); }
+        .merit-scale-labels { display: flex; justify-content: space-between; font-size: 0.9em; color: #bbb; }
+        .merit-notes { list-style: disc inside; margin-top: 10px; padding-left: 20px; color: #ccc; }
+        .payment-box { text-align: center; margin-top: 30px; }
+        .button { background: #ff0000; color: #fff; padding: 12px 24px; border: none; border-radius: 5px; font-size: 1em; cursor: pointer; }
+        .divider { margin: 20px 0; color: #666; }
+        #paypal-button-container { margin: 0 auto; width: 300px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Complete Your Purchase</h1>
-        <p>You're one step away from receiving your customized legal document.</p>
+        <div class="summary">
+            <p>Document: <strong>{{ filename }}</strong></p>
+            <p class="price">Total: ${{ price }}</p>
+        </div>
+
+        <div class="merit-section">
+            <h2>Case Merit Score: {{ merit_score }}/100</h2>
+            <div class="merit-bar">
+                <div class="merit-fill" style="width: {{ merit_score }}%;"></div>
+            </div>
+            <div class="merit-scale-labels">
+                <span>Low</span>
+                <span>Medium</span>
+                <span>High</span>
+            </div>
+            <ul class="merit-notes">
+                {% for note in merit_notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </div>
 
         <div class="payment-box">
-            <h2>Order Summary</h2>
-            <p>Document: <strong>{{ filename }}</strong></p>
-            <div class="price">Total: ${{ price }}</div>
-
-            <div class="payment-option">
-                <form action="/create-stripe-session" method="post">
-                    <input type="hidden" name="file" value="{{ filename }}">
-                    <input type="hidden" name="price" value="{{ price }}">
-                    <button type="submit">Pay with Credit Card</button>
-                </form>
-
-                <div class="divider">OR</div>
-
-                <div id="paypal-button-container"></div>
-            </div>
+            <form action="/paypal-success" method="get">
+                <button type="submit" class="button">Pay with PayPal</button>
+            </form>
+            <div class="divider">OR</div>
+            <div id="paypal-button-container"></div>
         </div>
     </div>
 
@@ -88,15 +61,11 @@
     <script>
         paypal.Buttons({
             createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: { value: '{{ price }}' }
-                    }]
-                });
+                return actions.order.create({ purchase_units: [{ amount: { value: '{{ price }}' } }] });
             },
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(details) {
-                    window.location.href = "/download?file={{ filename }}_preview.pdf";
+                    window.location.href = "/paypal-success";
                 });
             }
         }).render('#paypal-button-container');
