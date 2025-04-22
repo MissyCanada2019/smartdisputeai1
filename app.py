@@ -1,11 +1,11 @@
-from merit_weight import analyze_merit_weight
-import os
-from flask import Flask, render_template, request, redirect, url_for, send_file, session
+from flask import Flask, render_template, request, redirect, url_for, send_file, session, jsonify
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from pricing_and_pdf import generate_pdf_preview
+import os
+
 from ocr_parser import run_ocr_pipeline
 from merit_weight import analyze_merit_weight
+from pricing_and_pdf import generate_pdf_preview
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +21,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PREVIEW_FOLDER'] = PREVIEW_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 32 * 1024 * 1024  # 32MB
 
-# Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PREVIEW_FOLDER, exist_ok=True)
 
@@ -46,18 +45,13 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Run OCR pipeline
         result = run_ocr_pipeline(filepath)
-
-        # Run merit scoring
         merit_score, merit_notes = analyze_merit_weight(result)
 
-        # Generate preview PDF
         preview_filename = f"{filename}_preview.pdf"
         preview_path = os.path.join(app.config['PREVIEW_FOLDER'], preview_filename)
         generate_pdf_preview(result, output_path=preview_path)
 
-        # Store in session
         session['preview_file'] = preview_filename
         session['merit_score'] = merit_score
         session['merit_notes'] = merit_notes
@@ -80,10 +74,13 @@ def download_file():
     if os.path.exists(path):
         return send_file(path, as_attachment=True)
     return "File not found", 404
+
+@app.route("/analyze", methods=["POST"])
 def analyze_case():
     data = request.get_json()
     result = analyze_merit_weight(data)
     return jsonify(result)
+
 @app.route('/paypal-success')
 def paypal_success():
     return redirect(url_for('download_file'))
@@ -91,7 +88,3 @@ def paypal_success():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8000))
     app.run(host='0.0.0.0', port=port)
-    @app.route("/analyze", methods=["POST"])
-
-
-
