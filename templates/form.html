@@ -12,9 +12,29 @@
             margin: 0;
             padding: 20px;
         }
+        nav {
+            background-color: #111;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .brand {
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 15px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
         .container {
             max-width: 600px;
-            margin: 0 auto;
+            margin: 40px auto;
             background: #111;
             padding: 30px;
             border-radius: 10px;
@@ -84,6 +104,15 @@
     </style>
 </head>
 <body>
+    <nav>
+        <div class="brand">SmartDispute.ai</div>
+        <div>
+            <a href="/">Home</a>
+            <a href="/about">About Us</a>
+            <a href="/upload">Upload</a>
+        </div>
+    </nav>
+
     <div class="container">
         <div class="logo">
             <img src="/static/logo.png" alt="SmartDispute.ai Logo">
@@ -118,24 +147,24 @@
     </script>
     <style>
         .lds-dual-ring {
-          display: inline-block;
-          width: 64px;
-          height: 64px;
+            display: inline-block;
+            width: 64px;
+            height: 64px;
         }
         .lds-dual-ring:after {
-          content: " ";
-          display: block;
-          width: 46px;
-          height: 46px;
-          margin: 1px;
-          border-radius: 50%;
-          border: 5px solid #ff0000;
-          border-color: #ff0000 transparent #ff0000 transparent;
-          animation: lds-dual-ring 1.2s linear infinite;
+            content: " ";
+            display: block;
+            width: 46px;
+            height: 46px;
+            margin: 1px;
+            border-radius: 50%;
+            border: 5px solid #ff0000;
+            border-color: #ff0000 transparent #ff0000 transparent;
+            animation: lds-dual-ring 1.2s linear infinite;
         }
         @keyframes lds-dual-ring {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </body>
