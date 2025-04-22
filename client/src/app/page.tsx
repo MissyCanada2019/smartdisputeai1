@@ -22,6 +22,7 @@ import React from "react";
 
 // Corrected import path
 import logoPath from "@/public/logo.png";
+import profilePic from "@/public/profile-pic.png";
 
 export default function Home() {
   return (
@@ -111,6 +112,22 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
+                <div className="flex items-center gap-4">
+                  <OptimizedImage
+                    src={profilePic}
+                    alt="Founder Photo"
+                    width={80}
+                    height={80}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <h2 className="text-lg font-bold">Teresa</h2>
+                    <p className="text-sm text-muted-foreground">
+                      They’ve rigged the game and called it justice. <br />
+                      <span className="text-primary">We’re not playing by their rules anymore.</span>
+                    </p>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium leading-none pb-1">
                     Ask a question:
