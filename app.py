@@ -1,3 +1,4 @@
+from merit_weight import analyze_merit_weight
 import os
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
 from werkzeug.utils import secure_filename
