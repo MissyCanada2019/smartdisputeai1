@@ -22,7 +22,6 @@ import React from "react";
 
 // Corrected import path
 import logoPath from "@/public/logo.png";
-import profilePic from "@/public/profile-pic.png";
 
 export default function Home() {
   return (
@@ -102,7 +101,7 @@ export default function Home() {
             <p className="text-xs">© 2024 SmartResolve</p>
           </SidebarFooter>
         </Sidebar>
-        <main className="flex-1 p-4">
+        <main className="flex-1 p-4 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Welcome to SmartResolve</CardTitle>
@@ -112,22 +111,6 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                <div className="flex items-center gap-4">
-                  <OptimizedImage
-                    src={profilePic}
-                    alt="Founder Photo"
-                    width={80}
-                    height={80}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <h2 className="text-lg font-bold">Teresa</h2>
-                    <p className="text-sm text-muted-foreground">
-                      They’ve rigged the game and called it justice. <br />
-                      <span className="text-primary">We’re not playing by their rules anymore.</span>
-                    </p>
-                  </div>
-                </div>
                 <div>
                   <label className="block text-sm font-medium leading-none pb-1">
                     Ask a question:
@@ -142,6 +125,22 @@ export default function Home() {
                 </div>
                 <Button>Submit</Button>
               </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Our Mission: Level the Legal Playing Field</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed">
+                The legal system was built to serve the people—yet too often, it only serves those who can afford to navigate it. At <strong>SmartDispute Canada</strong>, we say: <em>enough</em>.
+                <br /><br />
+                We’re taking over the legal system the only way that truly matters: by making it <strong>fair</strong>, <strong>accessible</strong>, and <strong>empowering</strong> for everyone.
+                <br /><br />
+                You shouldn’t need a law degree or thousands of dollars to understand your rights, defend yourself, or hold others accountable. Through AI-powered document analysis, real Canadian case law comparison, and guided legal form generation, we’re giving people the tools that were once only available to the privileged few.
+                <br /><br />
+                This isn’t just software. It’s a justice revolution—fueled by truth, technology, and the belief that the law belongs to the people.
+              </p>
             </CardContent>
           </Card>
         </main>
