@@ -1,0 +1,7 @@
+Date: {{ date }}
+
+Dear {{ landlord_name }},
+
+My name is {{ tenant_name }}, residing at {{ address }}. I am writing to address the following issue: {{ issue }}.
+
+...
