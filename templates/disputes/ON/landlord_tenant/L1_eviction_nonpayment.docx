@@ -1,0 +1,7 @@
+{{ landlord_name }}
+{{ tenant_name }}
+{{ rental_address }}
+{{ rent_owing_amount }}
+{{ rent_due_dates }}
+{{ date_N4_served }}
+{{ deadline_to_pay }}
