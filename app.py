@@ -69,3 +69,24 @@ def generate():
     doc.save(output_path)
 
     return send_file(output_path, as_attachment=True)
+    from docxtpl import DocxTemplate
+from datetime import datetime
+
+@app.route("/generate", methods=["POST"])
+def generate_document():
+    data = request.form.to_dict()
+    template_path = f"templates/disputes/{data['province']}/landlord_tenant/repair_notice.docx"
+    doc = DocxTemplate(template_path)
+
+    doc.render({
+        "date": datetime.now().strftime("%B %d, %Y"),
+        "landlord_name": data.get("landlord_name"),
+        "tenant_name": data.get("tenant_name"),
+        "address": data.get("address"),
+        "issue": data.get("issue")
+    })
+
+    output_path = os.path.join("outputs", f"repair_notice_{datetime.now().timestamp()}.docx")
+    os.makedirs("outputs", exist_ok=True)
+    doc.save(output_path)
+    return send_from_directory("outputs", os.path.basename(output_path), as_attachment=True)
