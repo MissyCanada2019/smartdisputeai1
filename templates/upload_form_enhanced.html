@@ -2,73 +2,96 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SmartDispute.ai - Upload Document</title>
+  <title>SmartDispute.ai - Upload Evidence</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       background-color: #000;
       color: #fff;
-      margin: 0;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      color: #ff0000;
     }
     .container {
       max-width: 700px;
       margin: 0 auto;
-      padding: 30px;
       background-color: #111;
+      padding: 30px;
       border-radius: 10px;
     }
-    h1 {
-      color: #ff0000;
-      text-align: center;
+    .upload-box {
+      border: 2px dashed #555;
+      padding: 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #222;
     }
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: bold;
+    .upload-box:hover {
+      border-color: #ff0000;
     }
     input[type="file"] {
+      display: none;
+    }
+    .file-list {
       margin-top: 10px;
-      padding: 10px;
-      background-color: #222;
-      border: none;
-      border-radius: 5px;
-      color: #fff;
-      width: 100%;
+      color: #ccc;
+      font-size: 14px;
     }
     .submit-btn {
       background-color: #ff0000;
-      color: #fff;
-      padding: 12px 20px;
       border: none;
-      border-radius: 5px;
+      color: #fff;
+      padding: 12px 25px;
       font-size: 16px;
+      border-radius: 6px;
       margin-top: 20px;
-      width: 100%;
       cursor: pointer;
     }
     .submit-btn:hover {
       background-color: #cc0000;
     }
-    .file-types {
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-top: 8px;
-    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Upload a Legal Document</h1>
-    <p>Submit your document for AI-powered analysis. We support PDF, Word, and image formats.</p>
-    
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <label for="document">Choose File</label>
-      <input type="file" name="document" id="document" accept=".pdf,.docx,.jpg,.jpeg,.png" required>
-      <div class="file-types">Accepted formats: PDF, DOCX, JPG, PNG</div>
+    <h1>Upload Your Evidence</h1>
+    <p>Attach any documents, images, or files to compile your case package. Max 50MB total.</p>
 
-      <button type="submit" class="submit-btn">Analyze Document</button>
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+      <label for="documents" class="upload-box" id="drop-zone">
+        Click or Drag & Drop Files Here
+        <input type="file" id="documents" name="documents" multiple>
+        <div class="file-list" id="file-list">No files selected.</div>
+      </label>
+      <button type="submit" class="submit-btn">Generate ZIP Package</button>
     </form>
   </div>
+
+  <script>
+    const input = document.getElementById('documents');
+    const fileList = document.getElementById('file-list');
+    const dropZone = document.getElementById('drop-zone');
+
+    input.addEventListener('change', () => {
+      fileList.innerHTML = Array.from(input.files).map(f => f.name).join('<br>') || 'No files selected.';
+    });
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#ff0000';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = '#555';
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      input.files = e.dataTransfer.files;
+      fileList.innerHTML = Array.from(input.files).map(f => f.name).join('<br>') || 'No files selected.';
+    });
+  </script>
 </body>
 </html>
