@@ -1,92 +1,60 @@
-from flask import send_file
+# Step 1: AI Analysis Result (Simulated)
+from flask import Flask, request, send_file, jsonify
 from docxtpl import DocxTemplate
+from datetime import datetime
 from zipfile import ZipFile
+import os
 
-@app.route("/generate", methods=["POST"])
-def generate_document():
-    # Replace with actual analysis result
+app = Flask(__name__)
+
+@app.route("/generate-legal-package", methods=["POST"])
+def generate_legal_package():
+    data = request.get_json()  # You can later switch this to read from form or session
+
+    # Simulated AI output (replace this with real analysis)
     analysis_results = {
-        "case_type": "landlord_tenant",
-        "recommended_form": "repair_notice",
-        "province": "ON",
-        "key_facts": "Tenant has reported ongoing water damage and no repairs have been made despite multiple requests."
+        "issue_type": "landlord_tenant",
+        "recommended_forms": ["n4_notice_non_payment", "repair_notice"],
+        "province": data.get("province", "ON"),
+        "facts": data.get("facts", "Tenant has unpaid rent and unit damage complaints.")
     }
+
     user_info = {
-        "name": "John Doe",
-        "address": "123 Example Street, Toronto, ON",
-        "user_id": "user123",
-        "filename": "evidence.pdf"  # This file should exist in uploads/
+        "name": data.get("name", "John Doe"),
+        "address": data.get("address", "123 Example St, Toronto, ON"),
+        "user_id": data.get("user_id", "test_user"),
+        "evidence_file": data.get("evidence_filename", "sample.pdf")
     }
 
-    template_path = f"templates/forms/landlord/{analysis_results['recommended_form']}.docx"
-    generated_path = f"generated_forms/{user_info['user_id']}_form.docx"
-    evidence_path = f"uploads/{user_info['filename']}"
-    zip_path = f"generated_forms/{user_info['user_id']}_bundle.zip"
+    output_folder = "generated_forms"
+    os.makedirs(output_folder, exist_ok=True)
 
-    doc = DocxTemplate(template_path)
-    doc.render({
-        "full_name": user_info["name"],
-        "address": user_info["address"],
-        "province": analysis_results["province"],
-        "facts": analysis_results["key_facts"]
-    })
-    doc.save(generated_path)
+    doc_paths = []
+    for form in analysis_results["recommended_forms"]:
+        template_path = f"templates/forms/landlord/{form}.docx"
+        output_path = os.path.join(output_folder, f"{user_info['user_id']}_{form}.docx")
 
-    # Zip it with evidence
-    with ZipFile(zip_path, "w") as zipf:
-        zipf.write(generated_path, os.path.basename(generated_path))
-        zipf.write(evidence_path, os.path.basename(evidence_path))
+        doc = DocxTemplate(template_path)
+        doc.render({
+            "date": datetime.now().strftime("%B %d, %Y"),
+            "tenant_name": user_info["name"],
+            "landlord_name": "Landlord",  # You can auto-fill this from analysis or user profile
+            "address": user_info["address"],
+            "issue": analysis_results["facts"]
+        })
+        doc.save(output_path)
+        doc_paths.append(output_path)
+
+    # Bundle ZIP
+    zip_path = os.path.join(output_folder, f"{user_info['user_id']}_legal_package.zip")
+    with ZipFile(zip_path, 'w') as zipf:
+        for path in doc_paths:
+            zipf.write(path, os.path.basename(path))
+        evidence_path = f"uploads/{user_info['evidence_file']}"
+        if os.path.exists(evidence_path):
+            zipf.write(evidence_path, os.path.basename(evidence_path))
 
     return send_file(zip_path, as_attachment=True)
-    from docxtpl import DocxTemplate
-from flask import send_file
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    # Get form data
-    tenant_name = request.form.get("tenant_name")
-    landlord_name = request.form.get("landlord_name")
-    address = request.form.get("address")
-    issue = request.form.get("issue")
-    date = request.form.get("date")
-
-    # Template path
-    template_path = "templates/disputes/ON/landlord_tenant/template.docx"
-    
-    # Load and render the docx template
-    doc = DocxTemplate(template_path)
-    context = {
-        "tenant_name": tenant_name,
-        "landlord_name": landlord_name,
-        "address": address,
-        "issue": issue,
-        "date": date
-    }
-    doc.render(context)
-
-    # Save generated file
-    output_path = "generated_letter.docx"
-    doc.save(output_path)
-
-    return send_file(output_path, as_attachment=True)
-    from docxtpl import DocxTemplate
-from datetime import datetime
-
-@app.route("/generate", methods=["POST"])
-def generate_document():
-    data = request.form.to_dict()
-    template_path = f"templates/disputes/{data['province']}/landlord_tenant/repair_notice.docx"
-    doc = DocxTemplate(template_path)
-
-    doc.render({
-        "date": datetime.now().strftime("%B %d, %Y"),
-        "landlord_name": data.get("landlord_name"),
-        "tenant_name": data.get("tenant_name"),
-        "address": data.get("address"),
-        "issue": data.get("issue")
-    })
-
-    output_path = os.path.join("outputs", f"repair_notice_{datetime.now().timestamp()}.docx")
-    os.makedirs("outputs", exist_ok=True)
-    doc.save(output_path)
-    return send_from_directory("outputs", os.path.basename(output_path), as_attachment=True)
+if __name__ == "__main__":
+    app.run(debug=True)
