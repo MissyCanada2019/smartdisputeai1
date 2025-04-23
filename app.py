@@ -38,3 +38,34 @@ def generate_document():
         zipf.write(evidence_path, os.path.basename(evidence_path))
 
     return send_file(zip_path, as_attachment=True)
+    from docxtpl import DocxTemplate
+from flask import send_file
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    # Get form data
+    tenant_name = request.form.get("tenant_name")
+    landlord_name = request.form.get("landlord_name")
+    address = request.form.get("address")
+    issue = request.form.get("issue")
+    date = request.form.get("date")
+
+    # Template path
+    template_path = "templates/disputes/ON/landlord_tenant/template.docx"
+    
+    # Load and render the docx template
+    doc = DocxTemplate(template_path)
+    context = {
+        "tenant_name": tenant_name,
+        "landlord_name": landlord_name,
+        "address": address,
+        "issue": issue,
+        "date": date
+    }
+    doc.render(context)
+
+    # Save generated file
+    output_path = "generated_letter.docx"
+    doc.save(output_path)
+
+    return send_file(output_path, as_attachment=True)
