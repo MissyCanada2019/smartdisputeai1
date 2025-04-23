@@ -1,0 +1,16 @@
+<!-- templates/canlii_results.html -->
+<h2>Results for "{{ keyword }}"</h2>
+
+{% if cases %}
+  <ul>
+    {% for case in cases %}
+      <li>
+        <a href="{{ case.url }}" target="_blank">{{ case.title }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No cases found.</p>
+{% endif %}
+
+<a href="/">Back to Home</a>
