@@ -1,17 +1,15 @@
 from flask import Flask
-from models import db
-from routes import register_routes
+from server.models import db
+from server.routes.routes import register_routes
 
 app = Flask(__name__)
 
-# Configure SQLAlchemy
+# Database config
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///smartdispute.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize the database with the app
+# Initialize DB and register routes
 db.init_app(app)
-
-# Register routes
 register_routes(app)
 
 @app.route("/")
