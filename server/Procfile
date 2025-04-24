@@ -1,1 +1,1 @@
-web: gunicorn 'server:create_app()' --chdir server --bind 0.0.0.0:$PORT
+web: PYTHONPATH=. python3 server/app.py
